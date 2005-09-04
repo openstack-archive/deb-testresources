@@ -77,8 +77,9 @@ class TestOptimisingTestSuite(unittest.TestCase):
 
         suite = testresources.OptimisingTestSuite()
         case = ResourceChecker("getResourceCount")
+        case2 = ResourceChecker("getResourceCount")
         suite.addTest(case)
-        suite.addTest(case)
+        suite.addTest(case2)
         result = unittest.TestResult()
         suite.run(result)
         self.assertEqual(result.testsRun, 2)
@@ -100,3 +101,73 @@ class TestOptimisingTestSuite(unittest.TestCase):
         self.assertEqual(result.testsRun, 1)
         self.assertEqual(result.errors, [])
         self.assertEqual(result.failures, [])
+
+    def testSortTestsCalled(self):
+        class MockOptimisingTestSuite(testresources.OptimisingTestSuite):
+            def sortTests(self):
+                self.sorted = True
+
+        suite = MockOptimisingTestSuite()
+        suite.sorted = False
+        suite.run(None)
+        self.assertEqual(suite.sorted, True)
+
+class TestGraphStuff(unittest.TestCase):
+
+    def setUp(self):
+
+        class MockTest(unittest.TestCase):
+            def test_one(self):
+                pass
+            def test_two(self):
+                pass
+            def test_three(self):
+                pass
+            def test_four(self):
+                pass
+        
+        class ResourceOne(testresources.TestResource):
+            pass
+
+        class ResourceTwo(testresources.TestResource):
+            pass
+
+        class ResourceThree(testresources.TestResource):
+            pass
+        
+        self.suite = testresources.OptimisingTestSuite()
+        self.case1 = MockTest("test_one")
+        self.case1._resources = [("_one", ResourceOne),
+                                 ("_two", ResourceTwo)]
+        self.case2 = MockTest("test_two")
+        self.case2._resources = [("_two", ResourceTwo),
+                                 ("_three", ResourceThree)]
+        self.case3 = MockTest("test_three")
+        self.case3._resources = [("_three", ResourceThree)]
+        self.case4 = MockTest("test_four")
+        self.suite.addTests([self.case3, self.case1, self.case4, self.case2])
+        # acceptable sorted orders are:
+        # 1, 2, 3, 4
+        # 3, 2, 1, 4
+
+    def testBasicSortTests(self):
+        self.suite.sortTests()
+        print self.suite._tests
+        return
+        self.failUnless(self.suite._tests == [self.case1, self.case2,
+                                              self.case3, self.case4] or
+                        self.suite._tests == [self.case3, self.case2,
+                                              self.case1, self.case4])
+
+    def testGetGraph(self):
+        graph, legacy = self.suite._getGraph()
+        case1vertex = {self.case2:2, self.case3:3}
+        case2vertex = {self.case1:2, self.case3:1}
+        case3vertex = {self.case1:3, self.case2:1}
+        self.assertEqual(legacy, [self.case4])
+        self.assertEqual(graph[self.case1], case1vertex)
+        self.assertEqual(graph[self.case2], case2vertex)
+        self.assertEqual(graph[self.case3], case3vertex)
+        self.assertEqual(graph, {self.case1:case1vertex,
+                                 self.case2:case2vertex,
+                                 self.case3:case3vertex})

@@ -18,6 +18,7 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+from copy import copy
 import unittest
 import testresources.tests.TestUtil as TestUtil
 
@@ -49,6 +50,7 @@ class OptimisingTestSuite(unittest.TestSuite):
         TestUtil.visitTests(suite, testAdder)
         
     def run(self, result):
+        self.sortTests()
         current_resources = {}
         for test in self._tests:
             if result.shouldStop:
@@ -67,10 +69,63 @@ class OptimisingTestSuite(unittest.TestSuite):
         for resource, value in current_resources.items():
             resource.finishedWith(value)
         return result
+
+    def sortTests(self):
+        """Attempt to topographically sort the contained tests.
+
+        Feel free to override to improve the sort behaviour.
+        """
+        # quick hack on the plane. Need to lookup graph textbook.
+        sorted = []
+        graph, legacy = self._getGraph()
+        # now we have a graph, we can do lovely things like 
+        # travelling salesman on it. Blech. So we just take the 
+        # dijkstra for this. I think this will usually generate reasonable
+        # behaviour - its just that the needed starting resources
+        # are quite arbitrary and can thus make things less than
+        # optimal.
+        from testresources.dijkstra import Dijkstra
+        if len(graph.keys()) > 0:
+            distances, predecessors = Dijkstra(graph, graph.keys()[0])
+            # and sort by distance
+            nodes = distances.items()
+            nodes.sort(key=lambda x:x[1])
+            for test, distance in nodes:
+                sorted.append(test)
+        self._tests = sorted + legacy 
+
+    def _getGraph(self):
+        """Build a graph of the resource using nodes."""
+        # build a mesh graph where a node is a test, and
+        # and the number of resources to change to another test
+        # is the cost to travel straight to that node.
+        legacy = []
+        graph = {}
+        pending = []
+        temp_pending = copy(self._tests)
+        if len(temp_pending) == 0:
+            return {}, []
+        for test in temp_pending:
+            if not hasattr(test, "_resources"):
+                legacy.append(test)
+                continue
+            pending.append(test)
+            graph[test] = {}
+        while len(pending):
+            test = pending.pop()
+            test_resources = set(test._resources)
+            for othertest in pending:
+                othertest_resources = set(othertest._resources)
+                cost = len(test_resources.symmetric_difference(
+                                othertest_resources))
+                graph[test][othertest] = cost
+                graph[othertest][test] = cost
+        return graph, legacy
     
 class TestLoader(unittest.TestLoader):
     """Custom TestLoader to set the right TestSuite class."""
     suiteClass = OptimisingTestSuite
+
 
 class TestResource(object):
     """A TestResource for persistent resources needed across tests."""
