@@ -18,7 +18,16 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import unittest
+
 def test_suite():
     import testresources.tests
     return testresources.tests.test_suite()
 
+
+class OptimisingTestSuite(unittest.TestSuite):
+    """A resource creation optimising TestSuite."""
+    
+class TestLoader(unittest.TestLoader):
+    """Custom TestLoader to set the right TestSuite class."""
+    suiteClass = OptimisingTestSuite

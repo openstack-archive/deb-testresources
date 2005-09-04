@@ -35,6 +35,8 @@ There are three main components to make UnitResources work:
    the same TestResource, should return the same object.
    XXX the same object requirement may not be needed - but for expensive 
    resources that is the optimisation goal.
+   The goals for TestResources that cannot finish properly are not yet clear,
+   so for now the behaviour will to silently continue.
    See pydoc testresources.TestResource for details. 
 2) testresources.OptimisingTestSuite
    This TestSuite will introspect all the test cases it holds directly and

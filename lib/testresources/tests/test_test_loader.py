@@ -18,11 +18,18 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import testresources
-from testresources.tests import TestUtil
+import unittest
+import testresources.tests
 
 def test_suite():
-    import testresources.tests.test_test_loader
-    result = TestUtil.TestSuite()
-    result.addTest(testresources.tests.test_test_loader.test_suite())
+    loader = testresources.tests.TestUtil.TestLoader()
+    result = loader.loadTestsFromName(__name__)
     return result
+
+
+class TestTestLoader(unittest.TestCase):
+
+    def testSuiteType(self):
+        loader = testresources.TestLoader()
+        suite = loader.loadTestsFromName(__name__)
+        self.failUnless(isinstance(suite, testresources.OptimisingTestSuite))
