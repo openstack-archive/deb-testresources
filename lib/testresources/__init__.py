@@ -31,3 +31,7 @@ class OptimisingTestSuite(unittest.TestSuite):
 class TestLoader(unittest.TestLoader):
     """Custom TestLoader to set the right TestSuite class."""
     suiteClass = OptimisingTestSuite
+
+class TestResource(object):
+    """A TestResource for persistent resources needed across tests."""
+
