@@ -58,7 +58,7 @@ class TestTestResource(unittest.TestCase):
         self.doTestNestedGetAndFinish(testresources.TestResource,
                                       "You need to implement your own "
                                       "getResource.")                              
-    def doTestNestedGetAndFinish(self, cls, resourcevalue):
+    def doTestNestedGetAndFinish(self, cls, resourcevalue, markDirty=False):
         cls._currentResource = None
         cls._uses = 0
         resource = cls.getResource()
@@ -66,6 +66,8 @@ class TestTestResource(unittest.TestCase):
         self.assertEqual(resource2, resourcevalue)
         self.assertEqual(id(resource), id(resource2))
         self.assertEqual(id(resource2), id(cls._currentResource))
+        if markDirty:
+            cls.dirtied(resource2)
         cls.finishedWith(resource2)
         self.assertEqual(id(resource), id(cls._currentResource))
         cls.finishedWith(resource)
@@ -98,3 +100,16 @@ class TestTestResource(unittest.TestCase):
                                       "getResource.")
         self.assertEqual(MockResource.cleans, 1)
 
+    def testDirtied(self):
+        class MockResource(testresources.TestResource):
+
+            cleans = 0
+            def _cleanResource(self, resource):
+                self.cleans += 1
+            _cleanResource = classmethod(_cleanResource)
+
+        self.doTestNestedGetAndFinish(MockResource, 
+                                      "You need to implement your own "
+                                      "getResource.",
+                                      True)
+        self.assertEqual(MockResource.cleans, 2)

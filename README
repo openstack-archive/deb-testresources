@@ -71,3 +71,4 @@ There are three main components to make UnitResources work:
 
 TODO:
  * write everything.
+ * resource dirty markers on non current resources - ignore? keep a history ?

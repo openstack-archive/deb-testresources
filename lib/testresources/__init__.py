@@ -36,22 +36,30 @@ class TestResource(object):
     """A TestResource for persistent resources needed across tests."""
 
     _currentResource = None
+    _dirty = False
     _uses = 0
 
     def _cleanResource(cls, resource):
         """Override this to class method to hook into resource removal."""
     _cleanResource = classmethod(_cleanResource)
 
+    def dirtied(cls, resource):
+        cls._dirty = True
+    dirtied = classmethod(dirtied)
+
     def finishedWith(cls, resource):
         cls._uses -= 1
         if cls._uses == 0:
             cls._cleanResource(resource)
             cls._currentResource = None
+        elif cls._dirty:
+            cls._cleanResource(resource)
+            cls.setResource()
     finishedWith = classmethod(finishedWith)
 
     def getResource(cls):
         if cls._uses == 0:
-            cls._currentResource = cls._makeResource()
+            cls.setResource()
         cls._uses += 1
         return cls._currentResource
     getResource = classmethod(getResource)
@@ -59,3 +67,9 @@ class TestResource(object):
     def _makeResource(cls):
         return "You need to implement your own getResource."
     _makeResource = classmethod(_makeResource)
+
+    def setResource(cls):
+        """Set the current resource to a new value."""
+        cls._currentResource = cls._makeResource()
+        cls._dirty = False
+    setResource = classmethod(setResource)
