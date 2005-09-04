@@ -34,33 +34,34 @@ class TestTestResource(unittest.TestCase):
         from testresources import TestResource
 
     def testDefaultResource(self):
-        testresources.TestResource._currentResource = None
-        testresources.TestResource._uses = 0
-        resource = testresources.TestResource.getResource()
+        self.assertRaises(NotImplementedError,
+                          testresources.TestResource.getResource)
+        self.failUnless(hasattr(testresources.TestResource, "_currentResource"))
+        self.failUnless(hasattr(testresources.TestResource, "_uses"))
+        self.failUnless(hasattr(testresources.TestResource, "_dirty"))
+        delattr(testresources.TestResource, "_currentResource")
+        delattr(testresources.TestResource, "_uses")
+        delattr(testresources.TestResource, "_dirty")
+
+    def testSampleResource(self):
+        resource = testresources.SampleTestResource.getResource()
         self.assertEqual(resource, "You need to implement your own "
                                    "getResource.")
         self.assertEqual(id(resource), 
-                         id(testresources.TestResource._currentResource))
-        testresources.TestResource._currentResource = None
-        testresources.TestResource._uses = 0
-
-    def testDefaultFinish(self):
-        testresources.TestResource._currentResource = None
-        testresources.TestResource._uses = 0
-        resource = testresources.TestResource.getResource()
-        testresources.TestResource.finishedWith(resource)
-        self.assertEqual(testresources.TestResource._currentResource, None)
-        self.assertEqual(testresources.TestResource._uses, 0)
-        testresources.TestResource._currentResource = None
-        testresources.TestResource._uses = 0
+                         id(testresources.SampleTestResource._currentResource))
+        self.failIf(hasattr(testresources.TestResource, "_currentResource"))
+        self.failIf(hasattr(testresources.TestResource, "_uses"))
+        self.failIf(hasattr(testresources.TestResource, "_dirty"))
+        testresources.SampleTestResource.finishedWith(resource)
+        self.assertEqual(testresources.SampleTestResource._currentResource,
+                         None)
+        self.assertEqual(testresources.SampleTestResource._uses, 0)
 
     def testNestedGetAndFinish(self):
-        self.doTestNestedGetAndFinish(testresources.TestResource,
+        self.doTestNestedGetAndFinish(testresources.SampleTestResource,
                                       "You need to implement your own "
                                       "getResource.")                              
     def doTestNestedGetAndFinish(self, cls, resourcevalue, markDirty=False):
-        cls._currentResource = None
-        cls._uses = 0
         resource = cls.getResource()
         resource2 = cls.getResource()
         self.assertEqual(resource2, resourcevalue)
@@ -73,8 +74,6 @@ class TestTestResource(unittest.TestCase):
         cls.finishedWith(resource)
         self.assertEqual(cls._currentResource, None)
         self.assertEqual(cls._uses, 0)
-        cls._currentResource = None
-        cls._uses = 0
 
     def testOverriding_makeResource(self):
        
@@ -95,21 +94,43 @@ class TestTestResource(unittest.TestCase):
                 self.cleans += 1
             _cleanResource = classmethod(_cleanResource)
 
-        self.doTestNestedGetAndFinish(MockResource, 
-                                      "You need to implement your own "
-                                      "getResource.")
+            @classmethod
+            def _makeResource(self):
+                return "Boo!"
+
+        self.doTestNestedGetAndFinish(MockResource, "Boo!")
         self.assertEqual(MockResource.cleans, 1)
 
     def testDirtied(self):
         class MockResource(testresources.TestResource):
 
             cleans = 0
+
+            @classmethod
             def _cleanResource(self, resource):
                 self.cleans += 1
-            _cleanResource = classmethod(_cleanResource)
 
-        self.doTestNestedGetAndFinish(MockResource, 
-                                      "You need to implement your own "
-                                      "getResource.",
-                                      True)
+            @classmethod
+            def _makeResource(self):
+                return "Boo!"
+
+        self.doTestNestedGetAndFinish(MockResource, "Boo!", True)
         self.assertEqual(MockResource.cleans, 2)
+
+    def testTwoResources(self):
+
+        class MockResource(testresources.TestResource):
+
+            def _makeResource(self):
+                return "Boo!"
+            _makeResource = classmethod(_makeResource)
+
+        resource = testresources.SampleTestResource.getResource()
+        resource2 = MockResource.getResource()
+        self.assertEqual(MockResource._uses, 1)
+        self.assertEqual(testresources.SampleTestResource._uses, 1)
+        self.assertNotEqual(id(resource), id(resource2))
+        MockResource.finishedWith(resource2)
+        testresources.SampleTestResource.finishedWith(resource)
+        self.assertEqual(MockResource._uses, 0)
+        self.assertEqual(testresources.SampleTestResource._uses, 0)

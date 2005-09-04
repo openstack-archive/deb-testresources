@@ -35,10 +35,6 @@ class TestLoader(unittest.TestLoader):
 class TestResource(object):
     """A TestResource for persistent resources needed across tests."""
 
-    _currentResource = None
-    _dirty = False
-    _uses = 0
-
     def _cleanResource(cls, resource):
         """Override this to class method to hook into resource removal."""
     _cleanResource = classmethod(_cleanResource)
@@ -58,18 +54,56 @@ class TestResource(object):
     finishedWith = classmethod(finishedWith)
 
     def getResource(cls):
+        if not hasattr(cls, "_uses"):
+            cls._currentResource = None
+            cls._dirty = False
+            cls._uses = 0
         if cls._uses == 0:
             cls.setResource()
         cls._uses += 1
         return cls._currentResource
     getResource = classmethod(getResource)
 
+    @classmethod
     def _makeResource(cls):
-        return "You need to implement your own getResource."
-    _makeResource = classmethod(_makeResource)
+        """Override this to construct resources."""
+        raise NotImplementedError("Override _makeResource to construct "
+                                  "resources.")
 
     def setResource(cls):
         """Set the current resource to a new value."""
         cls._currentResource = cls._makeResource()
         cls._dirty = False
     setResource = classmethod(setResource)
+
+class SampleTestResource(TestResource):
+
+    @classmethod
+    def _makeResource(cls):
+        return "You need to implement your own getResource."
+
+
+class ResourcedTestCase(unittest.TestCase):
+    """A TestCase parent or utility that enables cross-test resource usage."""
+
+    _resources = []
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.setUpResources(self)
+
+    @staticmethod
+    def setUpResources(case):
+        for resource in case._resources:
+            setattr(case, resource[0], resource[1].getResource())
+
+    def tearDown(self):
+        self.tearDownResources(self)
+        unittest.TestCase.tearDown(self)
+
+    @staticmethod
+    def tearDownResources(case):
+        for resource in case._resources:
+            resource[1].finishedWith(getattr(case, resource[0]))
+            delattr(case, resource[0])
+
