@@ -35,3 +35,18 @@ class TestLoader(unittest.TestLoader):
 class TestResource(object):
     """A TestResource for persistent resources needed across tests."""
 
+    _currentResource = None
+    _uses = 0
+
+    def finishedWith(cls, resource):
+        cls._uses -= 1
+        if cls._uses == 0:
+            cls._currentResource = None
+    finishedWith = classmethod(finishedWith)
+
+    def getResource(cls):
+        if cls._uses == 0:
+            cls._currentResource = "You need to implement your own getResource."
+        cls._uses += 1
+        return cls._currentResource
+    getResource = classmethod(getResource)

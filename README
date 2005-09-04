@@ -29,10 +29,11 @@ There are three main components to make UnitResources work:
 1) testresources.TestResource
    A TestResource is a object that tests can use, which provide a getResource()
    method that returns and object implementing whichever interface the client
-   needs, and which will accept that same object back on its finished() method.
+   needs, and which will accept that same object back on its finishedWith()
+   method.
    Commonly the TestResource will be a class, though that is not a requirement.
-   Most importantly, two getResources with no finished call in the middle, to
-   the same TestResource, should return the same object.
+   Most importantly, two getResources with no finishedWith call in the middle,
+   to the same TestResource, should return the same object.
    XXX the same object requirement may not be needed - but for expensive 
    resources that is the optimisation goal.
    The goals for TestResources that cannot finish properly are not yet clear,
@@ -42,8 +43,8 @@ There are three main components to make UnitResources work:
    This TestSuite will introspect all the test cases it holds directly and
    if they declare needed resources, will run the tests in an order that 
    attempts to minimise the number of setup and tear downs required. 
-   It attempts to achieve this by callling getResource() and finished() around
-   the sequence of tests that use a specific resource.
+   It attempts to achieve this by callling getResource() and finishedWith()
+   around the sequence of tests that use a specific resource.
 
    OptimisingTestSuite has a new method over normal TestSuites:
    adsorbSuite(suite), which scans another test suite and incorporates all of

@@ -32,3 +32,43 @@ class TestTestResource(unittest.TestCase):
 
     def testImports(self):
         from testresources import TestResource
+
+    def testDefaultResource(self):
+        testresources.TestResource._currentResource = None
+        testresources.TestResource._uses = 0
+        resource = testresources.TestResource.getResource()
+        self.assertEqual(resource, "You need to implement your own "
+                                   "getResource.")
+        self.assertEqual(id(resource), 
+                         id(testresources.TestResource._currentResource))
+        testresources.TestResource._currentResource = None
+        testresources.TestResource._uses = 0
+
+    def testDefaultFinish(self):
+        testresources.TestResource._currentResource = None
+        testresources.TestResource._uses = 0
+        resource = testresources.TestResource.getResource()
+        testresources.TestResource.finishedWith(resource)
+        self.assertEqual(testresources.TestResource._currentResource, None)
+        self.assertEqual(testresources.TestResource._uses, 0)
+        testresources.TestResource._currentResource = None
+        testresources.TestResource._uses = 0
+
+    def testNestedGetAndFinish(self):
+        testresources.TestResource._currentResource = None
+        testresources.TestResource._uses = 0
+        resource = testresources.TestResource.getResource()
+        resource2 = testresources.TestResource.getResource()
+        self.assertEqual(resource2, "You need to implement your own "
+                                   "getResource.")
+        self.assertEqual(id(resource), id(resource2))
+        self.assertEqual(id(resource2),
+                         id(testresources.TestResource._currentResource))
+        testresources.TestResource.finishedWith(resource2)
+        self.assertEqual(id(resource), 
+                         id(testresources.TestResource._currentResource))
+        testresources.TestResource.finishedWith(resource)
+        self.assertEqual(testresources.TestResource._currentResource, None)
+        self.assertEqual(testresources.TestResource._uses, 0)
+        testresources.TestResource._currentResource = None
+        testresources.TestResource._uses = 0
