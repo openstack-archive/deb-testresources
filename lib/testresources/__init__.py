@@ -46,7 +46,11 @@ class TestResource(object):
 
     def getResource(cls):
         if cls._uses == 0:
-            cls._currentResource = "You need to implement your own getResource."
+            cls._currentResource = cls._makeResource()
         cls._uses += 1
         return cls._currentResource
     getResource = classmethod(getResource)
+
+    def _makeResource(cls):
+        return "You need to implement your own getResource."
+    _makeResource = classmethod(_makeResource)

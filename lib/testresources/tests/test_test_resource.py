@@ -26,7 +26,7 @@ def test_suite():
     loader = testresources.tests.TestUtil.TestLoader()
     result = loader.loadTestsFromName(__name__)
     return result
-
+    
 
 class TestTestResource(unittest.TestCase):
 
@@ -55,20 +55,31 @@ class TestTestResource(unittest.TestCase):
         testresources.TestResource._uses = 0
 
     def testNestedGetAndFinish(self):
-        testresources.TestResource._currentResource = None
-        testresources.TestResource._uses = 0
-        resource = testresources.TestResource.getResource()
-        resource2 = testresources.TestResource.getResource()
-        self.assertEqual(resource2, "You need to implement your own "
-                                   "getResource.")
+        self.doTestNestedGetAndFinish(testresources.TestResource,
+                                      "You need to implement your own "
+                                      "getResource.")                              
+    def doTestNestedGetAndFinish(self, cls, resourcevalue):
+        cls._currentResource = None
+        cls._uses = 0
+        resource = cls.getResource()
+        resource2 = cls.getResource()
+        self.assertEqual(resource2, resourcevalue)
         self.assertEqual(id(resource), id(resource2))
-        self.assertEqual(id(resource2),
-                         id(testresources.TestResource._currentResource))
-        testresources.TestResource.finishedWith(resource2)
-        self.assertEqual(id(resource), 
-                         id(testresources.TestResource._currentResource))
-        testresources.TestResource.finishedWith(resource)
-        self.assertEqual(testresources.TestResource._currentResource, None)
-        self.assertEqual(testresources.TestResource._uses, 0)
-        testresources.TestResource._currentResource = None
-        testresources.TestResource._uses = 0
+        self.assertEqual(id(resource2), id(cls._currentResource))
+        cls.finishedWith(resource2)
+        self.assertEqual(id(resource), id(cls._currentResource))
+        cls.finishedWith(resource)
+        self.assertEqual(cls._currentResource, None)
+        self.assertEqual(cls._uses, 0)
+        cls._currentResource = None
+        cls._uses = 0
+
+    def testOverriding_makeResource(self):
+       
+        class MockResource(testresources.TestResource):
+
+            def _makeResource(self):
+                return "Boo!"
+            _makeResource = classmethod(_makeResource)
+
+        self.doTestNestedGetAndFinish(MockResource, "Boo!")    
