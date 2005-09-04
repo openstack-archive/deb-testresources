@@ -47,6 +47,19 @@ class OptimisingTestSuite(unittest.TestSuite):
         """
         testAdder = TestAdder(self)
         TestUtil.visitTests(suite, testAdder)
+        
+    def run(self, result):
+        for test in self._tests:
+            if result.shouldStop:
+                break
+            current_resources = {}
+            for attribute, resource in test._resources:
+                if not resource in current_resources.keys():
+                    current_resources[resource] = resource.getResource()
+            test(result)
+            for resource, value in current_resources.items():
+                resource.finishedWith(value)
+        return result
     
 class TestLoader(unittest.TestLoader):
     """Custom TestLoader to set the right TestSuite class."""
