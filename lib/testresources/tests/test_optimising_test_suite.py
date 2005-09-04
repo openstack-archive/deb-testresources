@@ -152,8 +152,6 @@ class TestGraphStuff(unittest.TestCase):
 
     def testBasicSortTests(self):
         self.suite.sortTests()
-        print self.suite._tests
-        return
         self.failUnless(self.suite._tests == [self.case1, self.case2,
                                               self.case3, self.case4] or
                         self.suite._tests == [self.case3, self.case2,

@@ -121,7 +121,8 @@ class OptimisingTestSuite(unittest.TestSuite):
                 graph[test][othertest] = cost
                 graph[othertest][test] = cost
         return graph, legacy
-    
+ 
+
 class TestLoader(unittest.TestLoader):
     """Custom TestLoader to set the right TestSuite class."""
     suiteClass = OptimisingTestSuite
