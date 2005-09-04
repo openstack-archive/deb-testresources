@@ -1,0 +1,70 @@
+    
+  testresources: extensions to python unittest to allow declaritive use
+  of resources by test cases.
+  Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+UnitResources is attempting to extend unittest with a clean and simple api to
+provide test optimisation where expensive common resources are needed for test
+cases - for example sample working trees for VCS systems, reference databases
+for enterprise applications, or web servers ... let imagination run wild.
+
+How UnitResources works:
+========================
+There are three main components to make UnitResources work:
+1) testresources.TestResource
+   A TestResource is a object that tests can use, which provide a getResource()
+   method that returns and object implementing whichever interface the client
+   needs, and which will accept that same object back on its finished() method.
+   Commonly the TestResource will be a class, though that is not a requirement.
+   Most importantly, two getResources with no finished call in the middle, to
+   the same TestResource, should return the same object.
+   XXX the same object requirement may not be needed - but for expensive 
+   resources that is the optimisation goal.
+   See pydoc testresources.TestResource for details. 
+2) testresources.OptimisingTestSuite
+   This TestSuite will introspect all the test cases it holds directly and
+   if they declare needed resources, will run the tests in an order that 
+   attempts to minimise the number of setup and tear downs required. 
+   It attempts to achieve this by callling getResource() and finished() around
+   the sequence of tests that use a specific resource.
+
+   OptimisingTestSuite has a new method over normal TestSuites:
+   adsorbSuite(suite), which scans another test suite and incorporates all of
+   its tests directly into the OptimisingTestSuite. This allows for you to 
+   optimise across as broad or small a collection of tests as you wish.
+   
+3) testresources.ResourcedTestCase
+   ResourceTestCase can be used as a base class for tests, and when that is 
+   done tests will have their _resources attribute automatically checked for
+   resources by both OptimisingTestSuite and their own setUp() and tearDown()
+   methods. (This allows tests to remain functional without needing this 
+   specific TestSuite as a container). Alternatively, you can call
+   ResourceTestCase.setUpResources(self) and
+   ResourceTestCase.tearDownResources(self) from your own classes setUp and 
+   tearDown and the same behaviour will be activated.
+
+   Do declare the use of a resource, set _resources as an attribute listing
+   tuples of attribute name, TestResource. During setUp self._attribute_name 
+   will be set to TestResource.getResource(), and finsh() will be called for
+   you during tearDown().
+
+4) testresources.TestLoader
+   This is a trivial TestLoader that creates OptimisingTestSuites by default.
+
+TODO:
+ * write everything.
