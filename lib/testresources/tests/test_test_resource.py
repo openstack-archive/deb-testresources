@@ -82,4 +82,19 @@ class TestTestResource(unittest.TestCase):
                 return "Boo!"
             _makeResource = classmethod(_makeResource)
 
-        self.doTestNestedGetAndFinish(MockResource, "Boo!")    
+        self.doTestNestedGetAndFinish(MockResource, "Boo!")
+
+    def testOverriding_cleanResource(self):
+
+        class MockResource(testresources.TestResource):
+
+            cleans = 0
+            def _cleanResource(self, resource):
+                self.cleans += 1
+            _cleanResource = classmethod(_cleanResource)
+
+        self.doTestNestedGetAndFinish(MockResource, 
+                                      "You need to implement your own "
+                                      "getResource.")
+        self.assertEqual(MockResource.cleans, 1)
+

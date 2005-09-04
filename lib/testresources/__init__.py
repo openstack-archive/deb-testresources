@@ -38,9 +38,14 @@ class TestResource(object):
     _currentResource = None
     _uses = 0
 
+    def _cleanResource(cls, resource):
+        """Override this to class method to hook into resource removal."""
+    _cleanResource = classmethod(_cleanResource)
+
     def finishedWith(cls, resource):
         cls._uses -= 1
         if cls._uses == 0:
+            cls._cleanResource(resource)
             cls._currentResource = None
     finishedWith = classmethod(finishedWith)
 
