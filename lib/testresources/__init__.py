@@ -53,15 +53,16 @@ class OptimisingTestSuite(unittest.TestSuite):
         for test in self._tests:
             if result.shouldStop:
                 break
-            new_resources = {}
-            for attribute, resource in test._resources:
-                if not resource in current_resources.keys():
-                    current_resources[resource] = resource.getResource()
-                new_resources[resource] = current_resources[resource]
-            for resource in current_resources.keys():
-                if not resource in new_resources:
-                    resource.finishedWith(current_resources[resource])
-            current_resources = new_resources
+            if hasattr(test, "_resources"):
+                new_resources = {}
+                for attribute, resource in test._resources:
+                    if not resource in current_resources.keys():
+                        current_resources[resource] = resource.getResource()
+                    new_resources[resource] = current_resources[resource]
+                for resource in current_resources.keys():
+                    if not resource in new_resources:
+                        resource.finishedWith(current_resources[resource])
+                current_resources = new_resources
             test(result)
         for resource, value in current_resources.items():
             resource.finishedWith(value)

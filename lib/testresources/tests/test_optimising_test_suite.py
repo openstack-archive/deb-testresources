@@ -87,3 +87,16 @@ class TestOptimisingTestSuite(unittest.TestCase):
         self.assertEqual(MakeCounter._uses, 0)
         self.assertEqual(MakeCounter.makes, 1)
         self.assertEqual(MakeCounter.cleans, 1)
+
+    def testOptimisedRunNonResourcedTestCase(self):
+        class MockTest(unittest.TestCase):
+            def test_nothing(self):
+                pass
+        suite = testresources.OptimisingTestSuite()
+        case = MockTest("test_nothing")
+        suite.addTest(case)
+        result = unittest.TestResult()
+        suite.run(result)
+        self.assertEqual(result.testsRun, 1)
+        self.assertEqual(result.errors, [])
+        self.assertEqual(result.failures, [])
