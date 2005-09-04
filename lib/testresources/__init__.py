@@ -19,14 +19,34 @@
 #
 
 import unittest
+import testresources.tests.TestUtil as TestUtil
 
 def test_suite():
     import testresources.tests
     return testresources.tests.test_suite()
 
 
+class TestAdder(TestUtil.TestVisitor):
+
+    def __init__(self, suite):
+        self._suite = suite
+
+    def visitCase(self, case):
+        self._suite.addTest(case)
+
+
 class OptimisingTestSuite(unittest.TestSuite):
     """A resource creation optimising TestSuite."""
+
+    def adsorbSuite(self, suite):
+        """adsorb all the tests in suite recursively.
+
+        This allows full optimisation of the tests, but will remove
+        any containing TestSuites, which might be extending unittest
+        around those tests.
+        """
+        testAdder = TestAdder(self)
+        TestUtil.visitTests(suite, testAdder)
     
 class TestLoader(unittest.TestLoader):
     """Custom TestLoader to set the right TestSuite class."""

@@ -19,16 +19,23 @@
 #
 
 import testresources
-from testresources.tests import TestUtil
+import testresources.tests
+import unittest
 
 def test_suite():
-    import testresources.tests.test_optimising_test_suite
-    import testresources.tests.test_resourced_test_case
-    import testresources.tests.test_test_loader
-    import testresources.tests.test_test_resource
-    result = TestUtil.TestSuite()
-    result.addTest(testresources.tests.test_test_loader.test_suite())
-    result.addTest(testresources.tests.test_test_resource.test_suite())
-    result.addTest(testresources.tests.test_resourced_test_case.test_suite())
-    result.addTest(testresources.tests.test_optimising_test_suite.test_suite())
+    loader = testresources.tests.TestUtil.TestLoader()
+    result = loader.loadTestsFromName(__name__)
     return result
+    
+
+class TestOptimisingTestSuite(unittest.TestCase):
+
+    def testImports(self):
+        from testresources import OptimisingTestSuite
+
+    def testAdsorbSuiteWithCase(self):
+        suite = testresources.OptimisingTestSuite()
+        case = unittest.TestCase("run")
+        suite.adsorbSuite(case)
+        self.assertEqual(len(suite._tests), 1)
+        self.assertEqual(suite._tests[0], case)

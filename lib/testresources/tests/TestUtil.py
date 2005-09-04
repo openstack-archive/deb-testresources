@@ -41,6 +41,9 @@ def makeCollectingLogger():
 
 def visitTests(suite, visitor):
     """A foreign method for visiting the tests in a test suite."""
+    if isinstance(suite, unittest.TestCase):
+        visitor.visitCase(suite)
+        return
     for test in suite._tests:
         #Abusing types to avoid monkey patching unittest.TestCase. 
         # Maybe that would be better?
