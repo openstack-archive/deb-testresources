@@ -56,4 +56,34 @@ class TestOptimisingTestSuite(unittest.TestCase):
         self.assertEqual(result.failures, [])
         self.assertEqual(testresources.SampleTestResource._uses, 0)
         
+    def testResourceReuse(self):
         
+        class MakeCounter(testresources.TestResource):
+
+            cleans = 0
+            makes = 0
+            @classmethod
+            def _cleanResource(cls, resource):
+                cls.cleans += 1 
+            @classmethod
+            def _makeResource(cls):
+                cls.makes += 1
+                return "boo"
+                
+        class ResourceChecker(testresources.ResourcedTestCase):
+            _resources = [("_default", MakeCounter)]
+            def getResourceCount(self):
+                self.assertEqual(MakeCounter._uses, 2)
+
+        suite = testresources.OptimisingTestSuite()
+        case = ResourceChecker("getResourceCount")
+        suite.addTest(case)
+        suite.addTest(case)
+        result = unittest.TestResult()
+        suite.run(result)
+        self.assertEqual(result.testsRun, 2)
+        self.assertEqual(result.errors, [])
+        self.assertEqual(result.failures, [])
+        self.assertEqual(MakeCounter._uses, 0)
+        self.assertEqual(MakeCounter.makes, 1)
+        self.assertEqual(MakeCounter.cleans, 1)
