@@ -77,3 +77,6 @@ TODO:
    the containing TestSuites but at a chosen granularity, so that all tests in
    the resulting suites have identical resource requirements and allowing
    optimisation to still occur.
+ * add a setUpCost field to TestResources
+ * during graph calculation, create a fake root with cost-of-resource paths to 
+   all resources, better than choosing an arbitrary node.
