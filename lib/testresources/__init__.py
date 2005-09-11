@@ -131,6 +131,11 @@ class TestLoader(unittest.TestLoader):
 class TestResource(object):
     """A TestResource for persistent resources needed across tests."""
 
+    setUpCost = 1
+    """The relative cost to construct a resource of this type."""
+    tearDownCost = 1
+    """The relative cost to tear down a resource of this type."""
+
     def _cleanResource(cls, resource):
         """Override this to class method to hook into resource removal."""
     _cleanResource = classmethod(_cleanResource)
@@ -172,7 +177,11 @@ class TestResource(object):
         cls._dirty = False
     setResource = classmethod(setResource)
 
+
 class SampleTestResource(TestResource):
+
+    setUpCost = 2
+    tearDownCost = 2
 
     @classmethod
     def _makeResource(cls):

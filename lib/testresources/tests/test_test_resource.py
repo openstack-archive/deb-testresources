@@ -1,4 +1,4 @@
-#
+
 #  testresources: extensions to python unittest to allow declaritive use
 #  of resources by test cases.
 #  Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
@@ -39,6 +39,8 @@ class TestTestResource(unittest.TestCase):
         self.failUnless(hasattr(testresources.TestResource, "_currentResource"))
         self.failUnless(hasattr(testresources.TestResource, "_uses"))
         self.failUnless(hasattr(testresources.TestResource, "_dirty"))
+        self.assertEqual(testresources.TestResource.setUpCost, 1)
+        self.assertEqual(testresources.TestResource.tearDownCost, 1)
         delattr(testresources.TestResource, "_currentResource")
         delattr(testresources.TestResource, "_uses")
         delattr(testresources.TestResource, "_dirty")
@@ -49,6 +51,8 @@ class TestTestResource(unittest.TestCase):
                                    "getResource.")
         self.assertEqual(id(resource), 
                          id(testresources.SampleTestResource._currentResource))
+        self.assertEqual(testresources.SampleTestResource.setUpCost, 2)
+        self.assertEqual(testresources.SampleTestResource.tearDownCost, 2)
         self.failIf(hasattr(testresources.TestResource, "_currentResource"))
         self.failIf(hasattr(testresources.TestResource, "_uses"))
         self.failIf(hasattr(testresources.TestResource, "_dirty"))
