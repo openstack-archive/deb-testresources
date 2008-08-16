@@ -19,7 +19,7 @@
 #
 
 import testresources
-import testresources.tests
+from testresources.tests import SampleTestResource
 import unittest
 
 
@@ -36,27 +36,27 @@ class TestResourcedTestCase(unittest.TestCase):
 
     def testSingleResource(self):
         case = testresources.ResourcedTestCase("run")
-        case.resources = [("_default", testresources.tests.SampleTestResource)]
+        case.resources = [("_default", SampleTestResource)]
         case.setUpResources()
         self.assertEqual(case._default,
                          "You need to implement your own "
                          "getResource.")
-        self.assertEqual(testresources.tests.SampleTestResource._uses, 1)
+        self.assertEqual(SampleTestResource._uses, 1)
         case.tearDownResources()
         self.failIf(hasattr(case, "_default"))
-        self.assertEqual(testresources.tests.SampleTestResource._uses, 0)
+        self.assertEqual(SampleTestResource._uses, 0)
 
     def testSingleWithSetup(self):
         case = testresources.ResourcedTestCase("run")
-        case.resources = [("_default", testresources.tests.SampleTestResource)]
+        case.resources = [("_default", SampleTestResource)]
         case.setUp()
         self.assertEqual(case._default,
                          "You need to implement your own "
                          "getResource.")
-        self.assertEqual(testresources.tests.SampleTestResource._uses, 1)
+        self.assertEqual(SampleTestResource._uses, 1)
         case.tearDown()
         self.failIf(hasattr(case, "_default"))
-        self.assertEqual(testresources.tests.SampleTestResource._uses, 0)
+        self.assertEqual(SampleTestResource._uses, 0)
 
     def testMultipleResources(self):
 
@@ -67,18 +67,18 @@ class TestResourcedTestCase(unittest.TestCase):
                 return "Boo!"
 
         case = testresources.ResourcedTestCase("run")
-        case.resources = [("_default", testresources.tests.SampleTestResource),
+        case.resources = [("_default", SampleTestResource),
                           ("_mock", MockResource)]
         case.setUpResources()
         self.assertEqual(case._default,
                          "You need to implement your own "
                          "getResource.")
         self.assertEqual(case._mock, "Boo!")
-        self.assertEqual(testresources.tests.SampleTestResource._uses, 1)
+        self.assertEqual(SampleTestResource._uses, 1)
         self.assertEqual(MockResource._uses, 1)
         case.tearDownResources()
         self.failIf(hasattr(case, "_default"))
-        self.assertEqual(testresources.tests.SampleTestResource._uses, 0)
+        self.assertEqual(SampleTestResource._uses, 0)
         self.failIf(hasattr(case, "_mock"))
         self.assertEqual(MockResource._uses, 0)
 
