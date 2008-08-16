@@ -37,11 +37,11 @@ class TestResourcedTestCase(unittest.TestCase):
         case = testresources.ResourcedTestCase("run")
         case.setUpResources()
         case.tearDownResources()
-        self.assertEqual(case._resources, [])
+        self.assertEqual(case.resources, [])
 
     def testSingleResource(self):
         case = testresources.ResourcedTestCase("run")
-        case._resources = [("_default", testresources.tests.SampleTestResource)]
+        case.resources = [("_default", testresources.tests.SampleTestResource)]
         case.setUpResources()
         self.assertEqual(case._default,
                          "You need to implement your own "
@@ -53,7 +53,7 @@ class TestResourcedTestCase(unittest.TestCase):
 
     def testSingleWithSetup(self):
         case = testresources.ResourcedTestCase("run")
-        case._resources = [("_default", testresources.tests.SampleTestResource)]
+        case.resources = [("_default", testresources.tests.SampleTestResource)]
         case.setUp()
         self.assertEqual(case._default,
                          "You need to implement your own "
@@ -72,8 +72,8 @@ class TestResourcedTestCase(unittest.TestCase):
                 return "Boo!"
 
         case = testresources.ResourcedTestCase("run")
-        case._resources = [("_default", testresources.tests.SampleTestResource),
-                           ("_mock", MockResource)]
+        case.resources = [("_default", testresources.tests.SampleTestResource),
+                          ("_mock", MockResource)]
         case.setUpResources()
         self.assertEqual(case._default,
                          "You need to implement your own "

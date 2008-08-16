@@ -42,7 +42,7 @@ class TestOptimizingTestSuite(unittest.TestCase):
 
     def testSingleCaseResourceAcquisition(self):
         class ResourceChecker(testresources.ResourcedTestCase):
-            _resources = [("_default", testresources.tests.SampleTestResource)]
+            resources = [("_default", testresources.tests.SampleTestResource)]
             def getResourceCount(self):
                 self.assertEqual(testresources.tests.SampleTestResource._uses, 2)
 
@@ -71,7 +71,7 @@ class TestOptimizingTestSuite(unittest.TestCase):
                 return "boo"
 
         class ResourceChecker(testresources.ResourcedTestCase):
-            _resources = [("_default", MakeCounter)]
+            resources = [("_default", MakeCounter)]
             def getResourceCount(self):
                 self.assertEqual(MakeCounter._uses, 2)
 
@@ -137,13 +137,13 @@ class TestGraphStuff(unittest.TestCase):
 
         self.suite = testresources.OptimizingTestSuite()
         self.case1 = MockTest("test_one")
-        self.case1._resources = [("_one", ResourceOne),
+        self.case1.resources = [("_one", ResourceOne),
                                  ("_two", ResourceTwo)]
         self.case2 = MockTest("test_two")
-        self.case2._resources = [("_two", ResourceTwo),
+        self.case2.resources = [("_two", ResourceTwo),
                                  ("_three", ResourceThree)]
         self.case3 = MockTest("test_three")
-        self.case3._resources = [("_three", ResourceThree)]
+        self.case3.resources = [("_three", ResourceThree)]
         self.case4 = MockTest("test_four")
         self.suite.addTests([self.case3, self.case1, self.case4, self.case2])
         # acceptable sorted orders are:

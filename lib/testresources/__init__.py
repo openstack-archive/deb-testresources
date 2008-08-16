@@ -1,4 +1,3 @@
-#
 #  testresources: extensions to python unittest to allow declaritive use
 #  of resources by test cases.
 #  Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
@@ -58,7 +57,7 @@ class OptimizingTestSuite(unittest.TestSuite):
         for test in self._tests:
             if result.shouldStop:
                 break
-            resources = getattr(test, '_resources', None)
+            resources = getattr(test, 'resources', None)
             if resources is not None:
                 new_resources = {}
                 for attribute, resource in resources:
@@ -109,16 +108,16 @@ class OptimizingTestSuite(unittest.TestSuite):
         if len(temp_pending) == 0:
             return {}, []
         for test in temp_pending:
-            if getattr(test, '_resources', None) is None:
+            if getattr(test, 'resources', None) is None:
                 legacy.append(test)
                 continue
             pending.append(test)
             graph[test] = {}
         while len(pending):
             test = pending.pop()
-            test_resources = set(test._resources)
+            test_resources = set(test.resources)
             for othertest in pending:
-                othertest_resources = set(othertest._resources)
+                othertest_resources = set(othertest.resources)
                 cost = len(test_resources.symmetric_difference(
                                 othertest_resources))
                 graph[test][othertest] = cost
@@ -194,9 +193,8 @@ class TestResource(object):
 class ResourcedTestCase(unittest.TestCase):
     """A TestCase parent or utility that enables cross-test resource usage."""
 
-    # XXX: No underscore prefix.
     # XXX: Document contents.
-    _resources = []
+    resources = []
 
     def setUp(self):
         unittest.TestCase.setUp(self)
@@ -204,7 +202,7 @@ class ResourcedTestCase(unittest.TestCase):
 
     # XXX: Docstring.
     def setUpResources(self):
-        for resource in self._resources:
+        for resource in self.resources:
             setattr(self, resource[0], resource[1].getResource())
 
     def tearDown(self):
@@ -213,7 +211,7 @@ class ResourcedTestCase(unittest.TestCase):
 
     # XXX: Docstring.
     def tearDownResources(self):
-        for resource in self._resources:
+        for resource in self.resources:
             resource[1].finishedWith(getattr(self, resource[0]))
             delattr(self, resource[0])
 
