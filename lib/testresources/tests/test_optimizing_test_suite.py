@@ -22,11 +22,6 @@ import testresources
 import testresources.tests
 import unittest
 
-def test_suite():
-    loader = testresources.tests.TestUtil.TestLoader()
-    result = loader.loadTestsFromName(__name__)
-    return result
-
 
 class TestOptimizingTestSuite(unittest.TestCase):
 
@@ -169,3 +164,9 @@ class TestGraphStuff(unittest.TestCase):
         self.assertEqual(graph, {self.case1:case1vertex,
                                  self.case2:case2vertex,
                                  self.case3:case3vertex})
+
+
+def test_suite():
+    loader = testresources.tests.TestUtil.TestLoader()
+    result = loader.loadTestsFromName(__name__)
+    return result

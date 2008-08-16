@@ -22,11 +22,6 @@ import testresources
 import testresources.tests
 import unittest
 
-def test_suite():
-    loader = testresources.tests.TestUtil.TestLoader()
-    result = loader.loadTestsFromName(__name__)
-    return result
-
 
 class TestTestResource(unittest.TestCase):
 
@@ -138,3 +133,9 @@ class TestTestResource(unittest.TestCase):
         testresources.tests.SampleTestResource.finishedWith(resource)
         self.assertEqual(MockResource._uses, 0)
         self.assertEqual(testresources.tests.SampleTestResource._uses, 0)
+
+
+def test_suite():
+    loader = testresources.tests.TestUtil.TestLoader()
+    result = loader.loadTestsFromName(__name__)
+    return result
