@@ -48,13 +48,14 @@ class OptimisingTestSuite(unittest.TestSuite):
         """
         testAdder = TestAdder(self)
         TestUtil.visitTests(suite, testAdder)
-        
+
     def run(self, result):
         self.sortTests()
         current_resources = {}
         for test in self._tests:
             if result.shouldStop:
                 break
+            # XXX: Use getattr.
             if hasattr(test, "_resources"):
                 new_resources = {}
                 for attribute, resource in test._resources:
@@ -78,12 +79,11 @@ class OptimisingTestSuite(unittest.TestSuite):
         # quick hack on the plane. Need to lookup graph textbook.
         sorted = []
         graph, legacy = self._getGraph()
-        # now we have a graph, we can do lovely things like 
-        # travelling salesman on it. Blech. So we just take the 
-        # dijkstra for this. I think this will usually generate reasonable
-        # behaviour - its just that the needed starting resources
-        # are quite arbitrary and can thus make things less than
-        # optimal.
+        # now we have a graph, we can do lovely things like travelling
+        # salesman on it. Blech. So we just take the dijkstra for this. I
+        # think this will usually generate reasonable behaviour - its just
+        # that the needed starting resources are quite arbitrary and can thus
+        # make things less than optimal.
         from testresources.dijkstra import Dijkstra
         if len(graph.keys()) > 0:
             distances, predecessors = Dijkstra(graph, graph.keys()[0])
@@ -92,7 +92,7 @@ class OptimisingTestSuite(unittest.TestSuite):
             nodes.sort(key=lambda x:x[1])
             for test, distance in nodes:
                 sorted.append(test)
-        self._tests = sorted + legacy 
+        self._tests = sorted + legacy
 
     def _getGraph(self):
         """Build a graph of the resource using nodes."""
@@ -106,6 +106,7 @@ class OptimisingTestSuite(unittest.TestSuite):
         if len(temp_pending) == 0:
             return {}, []
         for test in temp_pending:
+            # XXX: Use getattr.
             if not hasattr(test, "_resources"):
                 legacy.append(test)
                 continue
@@ -121,7 +122,7 @@ class OptimisingTestSuite(unittest.TestSuite):
                 graph[test][othertest] = cost
                 graph[othertest][test] = cost
         return graph, legacy
- 
+
 
 class TestLoader(unittest.TestLoader):
     """Custom TestLoader to set the right TestSuite class."""
@@ -130,20 +131,30 @@ class TestLoader(unittest.TestLoader):
 
 class TestResource(object):
     """A TestResource for persistent resources needed across tests."""
+    # XXX: Everything here is class-level. Why?
+    # XXX: Fuller docstring.
 
+    # XXX: Document ways to estimate cost.
+    # XXX: Introduce timing hooks.
     setUpCost = 1
     """The relative cost to construct a resource of this type."""
     tearDownCost = 1
     """The relative cost to tear down a resource of this type."""
 
+    # XXX: This shouldn't have an underscore prefix.
+    # XXX: Use decorator syntax.
     def _cleanResource(cls, resource):
         """Override this to class method to hook into resource removal."""
     _cleanResource = classmethod(_cleanResource)
 
+    # XXX: Use decorator syntax.
+    # XXX: Docstring.
     def dirtied(cls, resource):
         cls._dirty = True
     dirtied = classmethod(dirtied)
 
+    # XXX: Use decorator syntax.
+    # XXX: Docstring.
     def finishedWith(cls, resource):
         cls._uses -= 1
         if cls._uses == 0:
@@ -154,7 +165,10 @@ class TestResource(object):
             cls.setResource()
     finishedWith = classmethod(finishedWith)
 
+    # XXX: Use decorator syntax.
+    # XXX: Docstring.
     def getResource(cls):
+        # XXX: Use getattr.
         if not hasattr(cls, "_uses"):
             cls._currentResource = None
             cls._dirty = False
@@ -166,11 +180,14 @@ class TestResource(object):
     getResource = classmethod(getResource)
 
     @classmethod
+    # XXX: This shouldn't have an underscore prefix.
     def _makeResource(cls):
         """Override this to construct resources."""
         raise NotImplementedError("Override _makeResource to construct "
                                   "resources.")
 
+    # XXX: Use decorator syntax.
+    # XXX: No way should this be public.
     def setResource(cls):
         """Set the current resource to a new value."""
         cls._currentResource = cls._makeResource()
@@ -178,6 +195,7 @@ class TestResource(object):
     setResource = classmethod(setResource)
 
 
+# XXX: This shouldn't be in the file.
 class SampleTestResource(TestResource):
 
     setUpCost = 2
@@ -191,12 +209,16 @@ class SampleTestResource(TestResource):
 class ResourcedTestCase(unittest.TestCase):
     """A TestCase parent or utility that enables cross-test resource usage."""
 
+    # XXX: No underscore prefix.
+    # XXX: Document contents.
     _resources = []
 
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.setUpResources(self)
 
+    # XXX: Why is this a staticmethod not a classmethod?
+    # XXX: Docstring.
     @staticmethod
     def setUpResources(case):
         for resource in case._resources:
@@ -206,9 +228,16 @@ class ResourcedTestCase(unittest.TestCase):
         self.tearDownResources(self)
         unittest.TestCase.tearDown(self)
 
+    # XXX: Why is this a staticmethod not a classmethod?
+    # XXX: Docstring.
     @staticmethod
     def tearDownResources(case):
         for resource in case._resources:
             resource[1].finishedWith(getattr(case, resource[0]))
             delattr(case, resource[0])
 
+# XXX: Needs to be fun to use even if you don't care about optimization.
+# XXX:
+# - To replace layers, need a resource that runs test in subprocess.
+# - alternatively, resource that is never torn down.
+# XXX: How to combine resources?
