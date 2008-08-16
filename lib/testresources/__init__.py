@@ -131,29 +131,46 @@ class TestLoader(unittest.TestLoader):
 
 
 class TestResource(object):
-    """A TestResource for persistent resources needed across tests."""
-    # XXX: Everything here is class-level. Why?
-    # XXX: Fuller docstring.
+    """A resource that can be shared across tests.
 
-    # XXX: Document ways to estimate cost.
+    :cvar setUpCost: The relative cost to construct a resource of this type.
+         One good approach is to set this to the number of seconds it normally
+         takes to set up the resource.
+    :cvar tearDownCost: The relative cost to tear down a resource of this
+         type. One good approach is to set this to the number of seconds it
+         normally takes to tear down the resource.
+    """
+    # XXX: Everything here is class-level. Why?
+
     # XXX: Introduce timing hooks.
     setUpCost = 1
-    """The relative cost to construct a resource of this type."""
     tearDownCost = 1
-    """The relative cost to tear down a resource of this type."""
 
     @classmethod
     def cleanResource(cls, resource):
         """Override this to class method to hook into resource removal."""
 
-    # XXX: Docstring.
     @classmethod
     def dirtied(cls, resource):
+        """Mark the resource as having been 'dirtied'.
+
+        A resource is dirty when it is no longer suitable for use by other
+        tests.
+
+        e.g. a shared database that has had rows changed.
+        """
         cls._dirty = True
 
-    # XXX: Docstring.
     @classmethod
     def finishedWith(cls, resource):
+        """Indicate that 'resource' has one less user.
+
+        If there are no more registered users of 'resource' then we trigger
+        the `cleanResource` hook, which should do any resource-specific
+        cleanup.
+
+        :param resource: A resource returned by `TestResource.getResource`.
+        """
         cls._uses -= 1
         if cls._uses == 0:
             cls.cleanResource(resource)
@@ -162,9 +179,15 @@ class TestResource(object):
             cls.cleanResource(resource)
             cls._setResource()
 
-    # XXX: Docstring.
     @classmethod
     def getResource(cls):
+        """Get the resource for this class and record that it's being used.
+
+        The resource is constructed using the `makeResource` hook.
+
+        Once done with the resource, pass it to `finishedWith` to indicated
+        that it is no longer needed.
+        """
         uses = getattr(cls, '_uses', None)
         if uses is None:
             cls._currentResource = None
@@ -189,17 +212,21 @@ class TestResource(object):
 
 
 class ResourcedTestCase(unittest.TestCase):
-    """A TestCase parent or utility that enables cross-test resource usage."""
+    """A TestCase parent or utility that enables cross-test resource usage.
 
-    # XXX: Document contents.
+    :ivar resources: A list of (name, resource) pairs, where 'resource' is a
+        subclass of `TestResource` and 'name' is the name of the attribute
+        that the resource should be stored on.
+    """
+
     resources = []
 
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.setUpResources()
 
-    # XXX: Docstring.
     def setUpResources(self):
+        """Set up any resources that this test needs."""
         for resource in self.resources:
             setattr(self, resource[0], resource[1].getResource())
 
@@ -207,8 +234,8 @@ class ResourcedTestCase(unittest.TestCase):
         self.tearDownResources()
         unittest.TestCase.tearDown(self)
 
-    # XXX: Docstring.
     def tearDownResources(self):
+        """Tear down any resources that this test declares."""
         for resource in self.resources:
             resource[1].finishedWith(getattr(self, resource[0]))
             delattr(self, resource[0])
