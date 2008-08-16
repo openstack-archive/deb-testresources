@@ -142,19 +142,17 @@ class TestResource(object):
     """The relative cost to tear down a resource of this type."""
 
     # XXX: This shouldn't have an underscore prefix.
-    # XXX: Use decorator syntax.
+    @classmethod
     def _cleanResource(cls, resource):
         """Override this to class method to hook into resource removal."""
-    _cleanResource = classmethod(_cleanResource)
 
-    # XXX: Use decorator syntax.
     # XXX: Docstring.
+    @classmethod
     def dirtied(cls, resource):
         cls._dirty = True
-    dirtied = classmethod(dirtied)
 
-    # XXX: Use decorator syntax.
     # XXX: Docstring.
+    @classmethod
     def finishedWith(cls, resource):
         cls._uses -= 1
         if cls._uses == 0:
@@ -163,10 +161,9 @@ class TestResource(object):
         elif cls._dirty:
             cls._cleanResource(resource)
             cls.setResource()
-    finishedWith = classmethod(finishedWith)
 
-    # XXX: Use decorator syntax.
     # XXX: Docstring.
+    @classmethod
     def getResource(cls):
         # XXX: Use getattr.
         if not hasattr(cls, "_uses"):
@@ -177,7 +174,6 @@ class TestResource(object):
             cls.setResource()
         cls._uses += 1
         return cls._currentResource
-    getResource = classmethod(getResource)
 
     @classmethod
     # XXX: This shouldn't have an underscore prefix.
@@ -186,13 +182,12 @@ class TestResource(object):
         raise NotImplementedError("Override _makeResource to construct "
                                   "resources.")
 
-    # XXX: Use decorator syntax.
     # XXX: No way should this be public.
+    @classmethod
     def setResource(cls):
         """Set the current resource to a new value."""
         cls._currentResource = cls._makeResource()
         cls._dirty = False
-    setResource = classmethod(setResource)
 
 
 # XXX: This shouldn't be in the file.
