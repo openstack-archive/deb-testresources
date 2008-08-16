@@ -19,7 +19,7 @@
 #
 
 import testresources
-import testresources.tests
+from testresources.tests import SampleTestResource
 import unittest
 
 
@@ -37,9 +37,9 @@ class TestOptimizingTestSuite(unittest.TestCase):
 
     def testSingleCaseResourceAcquisition(self):
         class ResourceChecker(testresources.ResourcedTestCase):
-            resources = [("_default", testresources.tests.SampleTestResource)]
+            resources = [("_default", SampleTestResource)]
             def getResourceCount(self):
-                self.assertEqual(testresources.tests.SampleTestResource._uses, 2)
+                self.assertEqual(SampleTestResource._uses, 2)
 
         suite = testresources.OptimizingTestSuite()
         case = ResourceChecker("getResourceCount")
@@ -49,7 +49,7 @@ class TestOptimizingTestSuite(unittest.TestCase):
         self.assertEqual(result.testsRun, 1)
         self.assertEqual(result.errors, [])
         self.assertEqual(result.failures, [])
-        self.assertEqual(testresources.tests.SampleTestResource._uses, 0)
+        self.assertEqual(SampleTestResource._uses, 0)
 
     def testResourceReuse(self):
 
@@ -167,6 +167,7 @@ class TestGraphStuff(unittest.TestCase):
 
 
 def test_suite():
-    loader = testresources.tests.TestUtil.TestLoader()
+    from testresources.tests import TestUtil
+    loader = TestUtil.TestLoader()
     result = loader.loadTestsFromName(__name__)
     return result
