@@ -31,7 +31,8 @@ class TestTestResource(unittest.TestCase):
     def testDefaultResource(self):
         self.assertRaises(NotImplementedError,
                           testresources.TestResource.getResource)
-        self.failUnless(hasattr(testresources.TestResource, "_currentResource"))
+        self.failUnless(
+            hasattr(testresources.TestResource, "_currentResource"))
         self.failUnless(hasattr(testresources.TestResource, "_uses"))
         self.failUnless(hasattr(testresources.TestResource, "_dirty"))
         self.assertEqual(testresources.TestResource.setUpCost, 1)
@@ -52,14 +53,13 @@ class TestTestResource(unittest.TestCase):
         self.failIf(hasattr(testresources.TestResource, "_uses"))
         self.failIf(hasattr(testresources.TestResource, "_dirty"))
         SampleTestResource.finishedWith(resource)
-        self.assertEqual(SampleTestResource._currentResource,
-                         None)
+        self.assertEqual(SampleTestResource._currentResource, None)
         self.assertEqual(SampleTestResource._uses, 0)
 
     def testNestedGetAndFinish(self):
-        self.doTestNestedGetAndFinish(SampleTestResource,
-                                      "You need to implement your own "
-                                      "getResource.")
+        self.doTestNestedGetAndFinish(
+            SampleTestResource, "You need to implement your own getResource.")
+
     def doTestNestedGetAndFinish(self, cls, resourcevalue, markDirty=False):
         resource = cls.getResource()
         resource2 = cls.getResource()

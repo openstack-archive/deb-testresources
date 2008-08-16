@@ -107,6 +107,7 @@ class TestOptimizingTestSuite(unittest.TestCase):
         suite.run(None)
         self.assertEqual(suite.sorted, True)
 
+
 class TestGraphStuff(unittest.TestCase):
 
     def setUp(self):
@@ -132,11 +133,10 @@ class TestGraphStuff(unittest.TestCase):
 
         self.suite = testresources.OptimizingTestSuite()
         self.case1 = MockTest("test_one")
-        self.case1.resources = [("_one", ResourceOne),
-                                 ("_two", ResourceTwo)]
+        self.case1.resources = [("_one", ResourceOne), ("_two", ResourceTwo)]
         self.case2 = MockTest("test_two")
-        self.case2.resources = [("_two", ResourceTwo),
-                                 ("_three", ResourceThree)]
+        self.case2.resources = [
+            ("_two", ResourceTwo), ("_three", ResourceThree)]
         self.case3 = MockTest("test_three")
         self.case3.resources = [("_three", ResourceThree)]
         self.case4 = MockTest("test_four")
@@ -154,16 +154,17 @@ class TestGraphStuff(unittest.TestCase):
 
     def testGetGraph(self):
         graph, legacy = self.suite._getGraph()
-        case1vertex = {self.case2:2, self.case3:3}
-        case2vertex = {self.case1:2, self.case3:1}
-        case3vertex = {self.case1:3, self.case2:1}
+        case1vertex = {self.case2: 2, self.case3: 3}
+        case2vertex = {self.case1: 2, self.case3: 1}
+        case3vertex = {self.case1: 3, self.case2: 1}
         self.assertEqual(legacy, [self.case4])
         self.assertEqual(graph[self.case1], case1vertex)
         self.assertEqual(graph[self.case2], case2vertex)
         self.assertEqual(graph[self.case3], case3vertex)
-        self.assertEqual(graph, {self.case1:case1vertex,
-                                 self.case2:case2vertex,
-                                 self.case3:case3vertex})
+        self.assertEqual(
+            graph, {self.case1: case1vertex,
+                    self.case2: case2vertex,
+                    self.case3: case3vertex})
 
 
 def test_suite():
