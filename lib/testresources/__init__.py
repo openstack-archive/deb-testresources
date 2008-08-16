@@ -210,26 +210,22 @@ class ResourcedTestCase(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.setUpResources(self)
+        self.setUpResources()
 
-    # XXX: Why is this a staticmethod not a classmethod?
     # XXX: Docstring.
-    @staticmethod
-    def setUpResources(case):
-        for resource in case._resources:
-            setattr(case, resource[0], resource[1].getResource())
+    def setUpResources(self):
+        for resource in self._resources:
+            setattr(self, resource[0], resource[1].getResource())
 
     def tearDown(self):
-        self.tearDownResources(self)
+        self.tearDownResources()
         unittest.TestCase.tearDown(self)
 
-    # XXX: Why is this a staticmethod not a classmethod?
     # XXX: Docstring.
-    @staticmethod
-    def tearDownResources(case):
-        for resource in case._resources:
-            resource[1].finishedWith(getattr(case, resource[0]))
-            delattr(case, resource[0])
+    def tearDownResources(self):
+        for resource in self._resources:
+            resource[1].finishedWith(getattr(self, resource[0]))
+            delattr(self, resource[0])
 
 # XXX: Needs to be fun to use even if you don't care about optimization.
 # XXX:
