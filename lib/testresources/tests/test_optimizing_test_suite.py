@@ -63,7 +63,7 @@ class TestOptimizingTestSuite(unittest.TestCase):
             cleans = 0
             makes = 0
             @classmethod
-            def _cleanResource(cls, resource):
+            def cleanResource(cls, resource):
                 cls.cleans += 1
             @classmethod
             def _makeResource(cls):

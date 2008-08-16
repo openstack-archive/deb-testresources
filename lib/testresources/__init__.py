@@ -144,7 +144,7 @@ class TestResource(object):
 
     # XXX: This shouldn't have an underscore prefix.
     @classmethod
-    def _cleanResource(cls, resource):
+    def cleanResource(cls, resource):
         """Override this to class method to hook into resource removal."""
 
     # XXX: Docstring.
@@ -157,10 +157,10 @@ class TestResource(object):
     def finishedWith(cls, resource):
         cls._uses -= 1
         if cls._uses == 0:
-            cls._cleanResource(resource)
+            cls.cleanResource(resource)
             cls._currentResource = None
         elif cls._dirty:
-            cls._cleanResource(resource)
+            cls.cleanResource(resource)
             cls._setResource()
 
     # XXX: Docstring.

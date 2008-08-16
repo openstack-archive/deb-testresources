@@ -89,14 +89,14 @@ class TestTestResource(unittest.TestCase):
 
         self.doTestNestedGetAndFinish(MockResource, "Boo!")
 
-    def testOverriding_cleanResource(self):
+    def testOverridingCleanResource(self):
 
         class MockResource(testresources.TestResource):
 
             cleans = 0
-            def _cleanResource(self, resource):
+            @classmethod
+            def cleanResource(self, resource):
                 self.cleans += 1
-            _cleanResource = classmethod(_cleanResource)
 
             @classmethod
             def _makeResource(self):
@@ -111,7 +111,7 @@ class TestTestResource(unittest.TestCase):
             cleans = 0
 
             @classmethod
-            def _cleanResource(self, resource):
+            def cleanResource(self, resource):
                 self.cleans += 1
 
             @classmethod
