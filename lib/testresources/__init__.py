@@ -160,7 +160,7 @@ class TestResource(object):
             cls._currentResource = None
         elif cls._dirty:
             cls._cleanResource(resource)
-            cls.setResource()
+            cls._setResource()
 
     # XXX: Docstring.
     @classmethod
@@ -171,7 +171,7 @@ class TestResource(object):
             cls._dirty = False
             cls._uses = 0
         if cls._uses == 0:
-            cls.setResource()
+            cls._setResource()
         cls._uses += 1
         return cls._currentResource
 
@@ -182,9 +182,8 @@ class TestResource(object):
         raise NotImplementedError("Override _makeResource to construct "
                                   "resources.")
 
-    # XXX: No way should this be public.
     @classmethod
-    def setResource(cls):
+    def _setResource(cls):
         """Set the current resource to a new value."""
         cls._currentResource = cls._makeResource()
         cls._dirty = False
