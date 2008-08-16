@@ -32,4 +32,4 @@ class TestTestLoader(unittest.TestCase):
     def testSuiteType(self):
         loader = testresources.TestLoader()
         suite = loader.loadTestsFromName(__name__)
-        self.failUnless(isinstance(suite, testresources.OptimisingTestSuite))
+        self.failUnless(isinstance(suite, testresources.OptimizingTestSuite))

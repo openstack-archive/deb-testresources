@@ -36,7 +36,7 @@ class TestAdder(TestUtil.TestVisitor):
         self._suite.addTest(case)
 
 
-class OptimisingTestSuite(unittest.TestSuite):
+class OptimizingTestSuite(unittest.TestSuite):
     """A resource creation optimising TestSuite."""
 
     def adsorbSuite(self, suite):
@@ -126,7 +126,7 @@ class OptimisingTestSuite(unittest.TestSuite):
 
 class TestLoader(unittest.TestLoader):
     """Custom TestLoader to set the right TestSuite class."""
-    suiteClass = OptimisingTestSuite
+    suiteClass = OptimizingTestSuite
 
 
 class TestResource(object):

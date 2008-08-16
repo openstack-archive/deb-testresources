@@ -22,7 +22,7 @@ import testresources
 from testresources.tests import TestUtil
 
 def test_suite():
-    import testresources.tests.test_optimising_test_suite
+    import testresources.tests.test_optimizing_test_suite
     import testresources.tests.test_resourced_test_case
     import testresources.tests.test_test_loader
     import testresources.tests.test_test_resource
@@ -30,5 +30,5 @@ def test_suite():
     result.addTest(testresources.tests.test_test_loader.test_suite())
     result.addTest(testresources.tests.test_test_resource.test_suite())
     result.addTest(testresources.tests.test_resourced_test_case.test_suite())
-    result.addTest(testresources.tests.test_optimising_test_suite.test_suite())
+    result.addTest(testresources.tests.test_optimizing_test_suite.test_suite())
     return result
