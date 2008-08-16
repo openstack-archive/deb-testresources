@@ -140,9 +140,7 @@ class TestResource(object):
          type. One good approach is to set this to the number of seconds it
          normally takes to tear down the resource.
     """
-    # XXX: Everything here is class-level. Why?
 
-    # XXX: Introduce timing hooks.
     setUpCost = 1
     tearDownCost = 1
 
@@ -245,3 +243,5 @@ class ResourcedTestCase(unittest.TestCase):
 # - To replace layers, need a resource that runs test in subprocess.
 # - alternatively, resource that is never torn down.
 # XXX: How to combine resources?
+# XXX: Introduce timing hooks for setUpCost and tearDownCost.
+# XXX: Get rid of class-level shenanigans with TestResource.
