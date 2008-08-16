@@ -176,7 +176,6 @@ class TestResource(object):
         return cls._currentResource
 
     @classmethod
-    # XXX: This shouldn't have an underscore prefix.
     def makeResource(cls):
         """Override this to construct resources."""
         raise NotImplementedError("Override makeResource to construct "
