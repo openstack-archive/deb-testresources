@@ -32,3 +32,13 @@ def test_suite():
     result.addTest(testresources.tests.test_resourced_test_case.test_suite())
     result.addTest(testresources.tests.test_optimizing_test_suite.test_suite())
     return result
+
+
+class SampleTestResource(testresources.TestResource):
+
+    setUpCost = 2
+    tearDownCost = 2
+
+    @classmethod
+    def _makeResource(cls):
+        return "You need to implement your own getResource."

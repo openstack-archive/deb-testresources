@@ -42,9 +42,9 @@ class TestOptimizingTestSuite(unittest.TestCase):
 
     def testSingleCaseResourceAcquisition(self):
         class ResourceChecker(testresources.ResourcedTestCase):
-            _resources = [("_default", testresources.SampleTestResource)]
+            _resources = [("_default", testresources.tests.SampleTestResource)]
             def getResourceCount(self):
-                self.assertEqual(testresources.SampleTestResource._uses, 2)
+                self.assertEqual(testresources.tests.SampleTestResource._uses, 2)
 
         suite = testresources.OptimizingTestSuite()
         case = ResourceChecker("getResourceCount")
@@ -54,7 +54,7 @@ class TestOptimizingTestSuite(unittest.TestCase):
         self.assertEqual(result.testsRun, 1)
         self.assertEqual(result.errors, [])
         self.assertEqual(result.failures, [])
-        self.assertEqual(testresources.SampleTestResource._uses, 0)
+        self.assertEqual(testresources.tests.SampleTestResource._uses, 0)
 
     def testResourceReuse(self):
 

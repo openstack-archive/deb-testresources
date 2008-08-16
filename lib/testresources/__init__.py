@@ -20,7 +20,6 @@
 
 from copy import copy
 import unittest
-import testresources.tests.TestUtil as TestUtil
 
 
 def test_suite():
@@ -28,13 +27,16 @@ def test_suite():
     return testresources.tests.test_suite()
 
 
-class TestAdder(TestUtil.TestVisitor):
-
-    def __init__(self, suite):
-        self._suite = suite
-
-    def visitCase(self, case):
-        self._suite.addTest(case)
+def iterate_tests(test_suite_or_case):
+    """Iterate through all of the test cases in `test_suite_or_case`."""
+    try:
+        suite = iter(test_suite_or_case)
+    except TypeError:
+        yield test_suite_or_case
+    else:
+        for test in suite:
+            for subtest in iterate_tests(test):
+                yield subtest
 
 
 class OptimizingTestSuite(unittest.TestSuite):
@@ -47,8 +49,8 @@ class OptimizingTestSuite(unittest.TestSuite):
         any containing TestSuites, which might be extending unittest
         around those tests.
         """
-        testAdder = TestAdder(self)
-        TestUtil.visitTests(suite, testAdder)
+        for test in iterate_tests(suite):
+            self.addTest(test)
 
     def run(self, result):
         self.sortTests()
@@ -187,17 +189,6 @@ class TestResource(object):
         """Set the current resource to a new value."""
         cls._currentResource = cls._makeResource()
         cls._dirty = False
-
-
-# XXX: This shouldn't be in the file.
-class SampleTestResource(TestResource):
-
-    setUpCost = 2
-    tearDownCost = 2
-
-    @classmethod
-    def _makeResource(cls):
-        return "You need to implement your own getResource."
 
 
 class ResourcedTestCase(unittest.TestCase):
