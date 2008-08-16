@@ -19,7 +19,7 @@
 #
 
 import testresources
-import testresources.tests
+from testresources.tests import SampleTestResource
 import unittest
 
 
@@ -41,23 +41,23 @@ class TestTestResource(unittest.TestCase):
         delattr(testresources.TestResource, "_dirty")
 
     def testSampleResource(self):
-        resource = testresources.tests.SampleTestResource.getResource()
+        resource = SampleTestResource.getResource()
         self.assertEqual(resource, "You need to implement your own "
                                    "getResource.")
         self.assertEqual(id(resource),
-                         id(testresources.tests.SampleTestResource._currentResource))
-        self.assertEqual(testresources.tests.SampleTestResource.setUpCost, 2)
-        self.assertEqual(testresources.tests.SampleTestResource.tearDownCost, 2)
+                         id(SampleTestResource._currentResource))
+        self.assertEqual(SampleTestResource.setUpCost, 2)
+        self.assertEqual(SampleTestResource.tearDownCost, 2)
         self.failIf(hasattr(testresources.TestResource, "_currentResource"))
         self.failIf(hasattr(testresources.TestResource, "_uses"))
         self.failIf(hasattr(testresources.TestResource, "_dirty"))
-        testresources.tests.SampleTestResource.finishedWith(resource)
-        self.assertEqual(testresources.tests.SampleTestResource._currentResource,
+        SampleTestResource.finishedWith(resource)
+        self.assertEqual(SampleTestResource._currentResource,
                          None)
-        self.assertEqual(testresources.tests.SampleTestResource._uses, 0)
+        self.assertEqual(SampleTestResource._uses, 0)
 
     def testNestedGetAndFinish(self):
-        self.doTestNestedGetAndFinish(testresources.tests.SampleTestResource,
+        self.doTestNestedGetAndFinish(SampleTestResource,
                                       "You need to implement your own "
                                       "getResource.")
     def doTestNestedGetAndFinish(self, cls, resourcevalue, markDirty=False):
@@ -124,15 +124,15 @@ class TestTestResource(unittest.TestCase):
             def makeResource(self):
                 return "Boo!"
 
-        resource = testresources.tests.SampleTestResource.getResource()
+        resource = SampleTestResource.getResource()
         resource2 = MockResource.getResource()
         self.assertEqual(MockResource._uses, 1)
-        self.assertEqual(testresources.tests.SampleTestResource._uses, 1)
+        self.assertEqual(SampleTestResource._uses, 1)
         self.assertNotEqual(id(resource), id(resource2))
         MockResource.finishedWith(resource2)
-        testresources.tests.SampleTestResource.finishedWith(resource)
+        SampleTestResource.finishedWith(resource)
         self.assertEqual(MockResource._uses, 0)
-        self.assertEqual(testresources.tests.SampleTestResource._uses, 0)
+        self.assertEqual(SampleTestResource._uses, 0)
 
 
 def test_suite():
