@@ -19,11 +19,12 @@
 #
 
 import unittest
-import testresources.tests
+from testresources import TestLoader, OptimizingTestSuite
+from testresources.tests import TestUtil
 
 
 def test_suite():
-    loader = testresources.tests.TestUtil.TestLoader()
+    loader = TestUtil.TestLoader()
     result = loader.loadTestsFromName(__name__)
     return result
 
@@ -33,6 +34,6 @@ class TestTestLoader(unittest.TestCase):
     def testSuiteType(self):
         # The testresources TestLoader loads tests into an
         # OptimizingTestSuite.
-        loader = testresources.TestLoader()
+        loader = TestLoader()
         suite = loader.loadTestsFromName(__name__)
-        self.failUnless(isinstance(suite, testresources.OptimizingTestSuite))
+        self.failUnless(isinstance(suite, OptimizingTestSuite))
