@@ -44,9 +44,9 @@ class OptimizingTestSuite(unittest.TestSuite):
     def adsorbSuite(self, suite):
         """adsorb all the tests in suite recursively.
 
-        This allows full optimisation of the tests, but will remove
-        any containing TestSuites, which might be extending unittest
-        around those tests.
+        This allows full optimisation of the tests, but will remove any
+        containing TestSuites, which might be extending unittest around those
+        tests.
         """
         for test in iterate_tests(suite):
             self.addTest(test)
@@ -98,9 +98,9 @@ class OptimizingTestSuite(unittest.TestSuite):
 
     def _getGraph(self):
         """Build a graph of the resource using nodes."""
-        # build a mesh graph where a node is a test, and
-        # and the number of resources to change to another test
-        # is the cost to travel straight to that node.
+        # build a mesh graph where a node is a test, and and the number of
+        # resources to change to another test is the cost to travel straight
+        # to that node.
         legacy = []
         graph = {}
         pending = []
