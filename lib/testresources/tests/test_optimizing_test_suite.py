@@ -66,7 +66,7 @@ class TestOptimizingTestSuite(unittest.TestCase):
             def cleanResource(cls, resource):
                 cls.cleans += 1
             @classmethod
-            def _makeResource(cls):
+            def makeResource(cls):
                 cls.makes += 1
                 return "boo"
 

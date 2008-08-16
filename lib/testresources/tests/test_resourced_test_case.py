@@ -68,7 +68,7 @@ class TestResourcedTestCase(unittest.TestCase):
         class MockResource(testresources.TestResource):
 
             @classmethod
-            def _makeResource(self):
+            def makeResource(self):
                 return "Boo!"
 
         case = testresources.ResourcedTestCase("run")

@@ -142,7 +142,6 @@ class TestResource(object):
     tearDownCost = 1
     """The relative cost to tear down a resource of this type."""
 
-    # XXX: This shouldn't have an underscore prefix.
     @classmethod
     def cleanResource(cls, resource):
         """Override this to class method to hook into resource removal."""
@@ -178,15 +177,15 @@ class TestResource(object):
 
     @classmethod
     # XXX: This shouldn't have an underscore prefix.
-    def _makeResource(cls):
+    def makeResource(cls):
         """Override this to construct resources."""
-        raise NotImplementedError("Override _makeResource to construct "
+        raise NotImplementedError("Override makeResource to construct "
                                   "resources.")
 
     @classmethod
     def _setResource(cls):
         """Set the current resource to a new value."""
-        cls._currentResource = cls._makeResource()
+        cls._currentResource = cls.makeResource()
         cls._dirty = False
 
 

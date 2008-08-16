@@ -79,13 +79,13 @@ class TestTestResource(unittest.TestCase):
         self.assertEqual(cls._currentResource, None)
         self.assertEqual(cls._uses, 0)
 
-    def testOverriding_makeResource(self):
+    def testOverridingMakeResource(self):
 
         class MockResource(testresources.TestResource):
 
-            def _makeResource(self):
+            @classmethod
+            def makeResource(self):
                 return "Boo!"
-            _makeResource = classmethod(_makeResource)
 
         self.doTestNestedGetAndFinish(MockResource, "Boo!")
 
@@ -99,7 +99,7 @@ class TestTestResource(unittest.TestCase):
                 self.cleans += 1
 
             @classmethod
-            def _makeResource(self):
+            def makeResource(self):
                 return "Boo!"
 
         self.doTestNestedGetAndFinish(MockResource, "Boo!")
@@ -115,7 +115,7 @@ class TestTestResource(unittest.TestCase):
                 self.cleans += 1
 
             @classmethod
-            def _makeResource(self):
+            def makeResource(self):
                 return "Boo!"
 
         self.doTestNestedGetAndFinish(MockResource, "Boo!", True)
@@ -125,9 +125,9 @@ class TestTestResource(unittest.TestCase):
 
         class MockResource(testresources.TestResource):
 
-            def _makeResource(self):
+            @classmethod
+            def makeResource(self):
                 return "Boo!"
-            _makeResource = classmethod(_makeResource)
 
         resource = testresources.tests.SampleTestResource.getResource()
         resource2 = MockResource.getResource()
