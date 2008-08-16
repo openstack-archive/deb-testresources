@@ -56,10 +56,10 @@ class OptimizingTestSuite(unittest.TestSuite):
         for test in self._tests:
             if result.shouldStop:
                 break
-            # XXX: Use getattr.
-            if hasattr(test, "_resources"):
+            resources = getattr(test, '_resources', None)
+            if resources is not None:
                 new_resources = {}
-                for attribute, resource in test._resources:
+                for attribute, resource in resources:
                     if not resource in current_resources.keys():
                         current_resources[resource] = resource.getResource()
                     new_resources[resource] = current_resources[resource]
@@ -107,8 +107,7 @@ class OptimizingTestSuite(unittest.TestSuite):
         if len(temp_pending) == 0:
             return {}, []
         for test in temp_pending:
-            # XXX: Use getattr.
-            if not hasattr(test, "_resources"):
+            if getattr(test, '_resources', None) is None:
                 legacy.append(test)
                 continue
             pending.append(test)
@@ -166,8 +165,8 @@ class TestResource(object):
     # XXX: Docstring.
     @classmethod
     def getResource(cls):
-        # XXX: Use getattr.
-        if not hasattr(cls, "_uses"):
+        uses = getattr(cls, '_uses', None)
+        if uses is None:
             cls._currentResource = None
             cls._dirty = False
             cls._uses = 0
