@@ -26,7 +26,7 @@ def test_suite():
     loader = testresources.tests.TestUtil.TestLoader()
     result = loader.loadTestsFromName(__name__)
     return result
-    
+
 
 class TestTestResource(unittest.TestCase):
 
@@ -49,7 +49,7 @@ class TestTestResource(unittest.TestCase):
         resource = testresources.SampleTestResource.getResource()
         self.assertEqual(resource, "You need to implement your own "
                                    "getResource.")
-        self.assertEqual(id(resource), 
+        self.assertEqual(id(resource),
                          id(testresources.SampleTestResource._currentResource))
         self.assertEqual(testresources.SampleTestResource.setUpCost, 2)
         self.assertEqual(testresources.SampleTestResource.tearDownCost, 2)
@@ -64,7 +64,7 @@ class TestTestResource(unittest.TestCase):
     def testNestedGetAndFinish(self):
         self.doTestNestedGetAndFinish(testresources.SampleTestResource,
                                       "You need to implement your own "
-                                      "getResource.")                              
+                                      "getResource.")
     def doTestNestedGetAndFinish(self, cls, resourcevalue, markDirty=False):
         resource = cls.getResource()
         resource2 = cls.getResource()
@@ -80,7 +80,7 @@ class TestTestResource(unittest.TestCase):
         self.assertEqual(cls._uses, 0)
 
     def testOverriding_makeResource(self):
-       
+
         class MockResource(testresources.TestResource):
 
             def _makeResource(self):

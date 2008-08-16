@@ -26,7 +26,7 @@ def test_suite():
     loader = testresources.tests.TestUtil.TestLoader()
     result = loader.loadTestsFromName(__name__)
     return result
-    
+
 
 class TestOptimizingTestSuite(unittest.TestCase):
 
@@ -45,7 +45,7 @@ class TestOptimizingTestSuite(unittest.TestCase):
             _resources = [("_default", testresources.SampleTestResource)]
             def getResourceCount(self):
                 self.assertEqual(testresources.SampleTestResource._uses, 2)
-                
+
         suite = testresources.OptimizingTestSuite()
         case = ResourceChecker("getResourceCount")
         suite.addTest(case)
@@ -55,21 +55,21 @@ class TestOptimizingTestSuite(unittest.TestCase):
         self.assertEqual(result.errors, [])
         self.assertEqual(result.failures, [])
         self.assertEqual(testresources.SampleTestResource._uses, 0)
-        
+
     def testResourceReuse(self):
-        
+
         class MakeCounter(testresources.TestResource):
 
             cleans = 0
             makes = 0
             @classmethod
             def _cleanResource(cls, resource):
-                cls.cleans += 1 
+                cls.cleans += 1
             @classmethod
             def _makeResource(cls):
                 cls.makes += 1
                 return "boo"
-                
+
         class ResourceChecker(testresources.ResourcedTestCase):
             _resources = [("_default", MakeCounter)]
             def getResourceCount(self):
@@ -125,7 +125,7 @@ class TestGraphStuff(unittest.TestCase):
                 pass
             def test_four(self):
                 pass
-        
+
         class ResourceOne(testresources.TestResource):
             pass
 
@@ -134,7 +134,7 @@ class TestGraphStuff(unittest.TestCase):
 
         class ResourceThree(testresources.TestResource):
             pass
-        
+
         self.suite = testresources.OptimizingTestSuite()
         self.case1 = MockTest("test_one")
         self.case1._resources = [("_one", ResourceOne),

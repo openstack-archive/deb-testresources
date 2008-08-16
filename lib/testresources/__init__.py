@@ -22,6 +22,7 @@ from copy import copy
 import unittest
 import testresources.tests.TestUtil as TestUtil
 
+
 def test_suite():
     import testresources.tests
     return testresources.tests.test_suite()

@@ -26,7 +26,7 @@ def test_suite():
     loader = testresources.tests.TestUtil.TestLoader()
     result = loader.loadTestsFromName(__name__)
     return result
-    
+
 
 class TestResourcedTestCase(unittest.TestCase):
 
@@ -43,7 +43,7 @@ class TestResourcedTestCase(unittest.TestCase):
         case = testresources.ResourcedTestCase("run")
         case._resources = [("_default", testresources.SampleTestResource)]
         case.setUpResources(case)
-        self.assertEqual(case._default, 
+        self.assertEqual(case._default,
                          "You need to implement your own "
                          "getResource.")
         self.assertEqual(testresources.SampleTestResource._uses, 1)
@@ -55,7 +55,7 @@ class TestResourcedTestCase(unittest.TestCase):
         case = testresources.ResourcedTestCase("run")
         case._resources = [("_default", testresources.SampleTestResource)]
         case.setUp()
-        self.assertEqual(case._default, 
+        self.assertEqual(case._default,
                          "You need to implement your own "
                          "getResource.")
         self.assertEqual(testresources.SampleTestResource._uses, 1)
@@ -75,7 +75,7 @@ class TestResourcedTestCase(unittest.TestCase):
         case._resources = [("_default", testresources.SampleTestResource),
                            ("_mock", MockResource)]
         case.setUpResources(case)
-        self.assertEqual(case._default, 
+        self.assertEqual(case._default,
                          "You need to implement your own "
                          "getResource.")
         self.assertEqual(case._mock, "Boo!")
