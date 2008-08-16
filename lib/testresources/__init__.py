@@ -178,8 +178,8 @@ class TestResource(object):
     @classmethod
     def makeResource(cls):
         """Override this to construct resources."""
-        raise NotImplementedError("Override makeResource to construct "
-                                  "resources.")
+        raise NotImplementedError(
+            "Override makeResource to construct resources.")
 
     @classmethod
     def _setResource(cls):
