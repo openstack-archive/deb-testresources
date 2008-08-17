@@ -133,10 +133,10 @@ class TestLoader(unittest.TestLoader):
 class TestResource(object):
     """A resource that can be shared across tests.
 
-    :cvar setUpCost: The relative cost to construct a resource of this type.
+    :ivar setUpCost: The relative cost to construct a resource of this type.
          One good approach is to set this to the number of seconds it normally
          takes to set up the resource.
-    :cvar tearDownCost: The relative cost to tear down a resource of this
+    :ivar tearDownCost: The relative cost to tear down a resource of this
          type. One good approach is to set this to the number of seconds it
          normally takes to tear down the resource.
     """
@@ -144,12 +144,10 @@ class TestResource(object):
     setUpCost = 1
     tearDownCost = 1
 
-    @classmethod
-    def cleanResource(cls, resource):
+    def cleanResource(self, resource):
         """Override this to class method to hook into resource removal."""
 
-    @classmethod
-    def dirtied(cls, resource):
+    def dirtied(self, resource):
         """Mark the resource as having been 'dirtied'.
 
         A resource is dirty when it is no longer suitable for use by other
@@ -157,10 +155,9 @@ class TestResource(object):
 
         e.g. a shared database that has had rows changed.
         """
-        cls._dirty = True
+        self._dirty = True
 
-    @classmethod
-    def finishedWith(cls, resource):
+    def finishedWith(self, resource):
         """Indicate that 'resource' has one less user.
 
         If there are no more registered users of 'resource' then we trigger
@@ -169,16 +166,15 @@ class TestResource(object):
 
         :param resource: A resource returned by `TestResource.getResource`.
         """
-        cls._uses -= 1
-        if cls._uses == 0:
-            cls.cleanResource(resource)
-            cls._currentResource = None
-        elif cls._dirty:
-            cls.cleanResource(resource)
-            cls._setResource()
+        self._uses -= 1
+        if self._uses == 0:
+            self.cleanResource(resource)
+            self._currentResource = None
+        elif self._dirty:
+            self.cleanResource(resource)
+            self._setResource()
 
-    @classmethod
-    def getResource(cls):
+    def getResource(self):
         """Get the resource for this class and record that it's being used.
 
         The resource is constructed using the `makeResource` hook.
@@ -186,27 +182,25 @@ class TestResource(object):
         Once done with the resource, pass it to `finishedWith` to indicated
         that it is no longer needed.
         """
-        uses = getattr(cls, '_uses', None)
+        uses = getattr(self, '_uses', None)
         if uses is None:
-            cls._currentResource = None
-            cls._dirty = False
-            cls._uses = 0
-        if cls._uses == 0:
-            cls._setResource()
-        cls._uses += 1
-        return cls._currentResource
+            self._currentResource = None
+            self._dirty = False
+            self._uses = 0
+        if self._uses == 0:
+            self._setResource()
+        self._uses += 1
+        return self._currentResource
 
-    @classmethod
-    def makeResource(cls):
+    def makeResource(self):
         """Override this to construct resources."""
         raise NotImplementedError(
             "Override makeResource to construct resources.")
 
-    @classmethod
-    def _setResource(cls):
+    def _setResource(self):
         """Set the current resource to a new value."""
-        cls._currentResource = cls.makeResource()
-        cls._dirty = False
+        self._currentResource = self.makeResource()
+        self._dirty = False
 
 
 class ResourcedTestCase(unittest.TestCase):

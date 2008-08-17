@@ -33,48 +33,51 @@ class TestResourcedTestCase(pyunit3k.TestCase):
 
     def testSingleResource(self):
         case = testresources.ResourcedTestCase("run")
-        case.resources = [("_default", SampleTestResource)]
+        sample_resource = SampleTestResource()
+        case.resources = [("_default", sample_resource)]
         case.setUpResources()
         self.assertEqual(
             case._default, "You need to implement your own getResource.")
-        self.assertEqual(SampleTestResource._uses, 1)
+        self.assertEqual(sample_resource._uses, 1)
         case.tearDownResources()
         self.failIf(hasattr(case, "_default"))
-        self.assertEqual(SampleTestResource._uses, 0)
+        self.assertEqual(sample_resource._uses, 0)
 
     def testSingleWithSetup(self):
         case = testresources.ResourcedTestCase("run")
-        case.resources = [("_default", SampleTestResource)]
+        sample_resource = SampleTestResource()
+        case.resources = [("_default", sample_resource)]
         case.setUp()
         self.assertEqual(
             case._default, "You need to implement your own getResource.")
-        self.assertEqual(SampleTestResource._uses, 1)
+        self.assertEqual(sample_resource._uses, 1)
         case.tearDown()
         self.failIf(hasattr(case, "_default"))
-        self.assertEqual(SampleTestResource._uses, 0)
+        self.assertEqual(sample_resource._uses, 0)
 
     def testMultipleResources(self):
 
         class MockResource(testresources.TestResource):
 
-            @classmethod
             def makeResource(self):
                 return "Boo!"
 
+        sample_resource = SampleTestResource()
+        mock_resource = MockResource()
         case = testresources.ResourcedTestCase("run")
         case.resources = [
-            ("_default", SampleTestResource), ("_mock", MockResource)]
+            ("_default", sample_resource), ("_mock", mock_resource)]
         case.setUpResources()
         self.assertEqual(
             case._default, "You need to implement your own getResource.")
         self.assertEqual(case._mock, "Boo!")
-        self.assertEqual(SampleTestResource._uses, 1)
-        self.assertEqual(MockResource._uses, 1)
+        self.assertEqual(sample_resource._uses, 1)
+        self.assertEqual(mock_resource._uses, 1)
         case.tearDownResources()
         self.failIf(hasattr(case, "_default"))
-        self.assertEqual(SampleTestResource._uses, 0)
+        self.assertEqual(sample_resource._uses, 0)
         self.failIf(hasattr(case, "_mock"))
-        self.assertEqual(MockResource._uses, 0)
+        self.assertEqual(mock_resource._uses, 0)
 
 
 def test_suite():

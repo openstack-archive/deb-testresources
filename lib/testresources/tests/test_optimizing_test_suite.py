@@ -24,6 +24,22 @@ from testresources.tests import SampleTestResource
 import unittest
 
 
+class MakeCounter(testresources.TestResource):
+    """Test resource that counts makes and cleans."""
+
+    def __init__(self):
+        testresources.TestResource.__init__(self)
+        self.cleans = 0
+        self.makes = 0
+
+    def cleanResource(self, resource):
+        self.cleans += 1
+
+    def makeResource(self):
+        self.makes += 1
+        return "boo"
+
+
 class TestOptimizingTestSuite(pyunit3k.TestCase):
 
     def testAdsorbSuiteWithCase(self):
@@ -33,10 +49,11 @@ class TestOptimizingTestSuite(pyunit3k.TestCase):
         self.assertEqual(suite._tests, [case])
 
     def testSingleCaseResourceAcquisition(self):
+        sample_resource = SampleTestResource()
         class ResourceChecker(testresources.ResourcedTestCase):
-            resources = [("_default", SampleTestResource)]
+            resources = [("_default", sample_resource)]
             def getResourceCount(self):
-                self.assertEqual(SampleTestResource._uses, 2)
+                self.assertEqual(sample_resource._uses, 2)
 
         suite = testresources.OptimizingTestSuite()
         case = ResourceChecker("getResourceCount")
@@ -46,26 +63,14 @@ class TestOptimizingTestSuite(pyunit3k.TestCase):
         self.assertEqual(result.testsRun, 1)
         self.assertEqual(result.errors, [])
         self.assertEqual(result.failures, [])
-        self.assertEqual(SampleTestResource._uses, 0)
+        self.assertEqual(sample_resource._uses, 0)
 
     def testResourceReuse(self):
-
-        class MakeCounter(testresources.TestResource):
-
-            cleans = 0
-            makes = 0
-            @classmethod
-            def cleanResource(cls, resource):
-                cls.cleans += 1
-            @classmethod
-            def makeResource(cls):
-                cls.makes += 1
-                return "boo"
-
+        make_counter = MakeCounter()
         class ResourceChecker(testresources.ResourcedTestCase):
-            resources = [("_default", MakeCounter)]
+            resources = [("_default", make_counter)]
             def getResourceCount(self):
-                self.assertEqual(MakeCounter._uses, 2)
+                self.assertEqual(make_counter._uses, 2)
 
         suite = testresources.OptimizingTestSuite()
         case = ResourceChecker("getResourceCount")
@@ -77,9 +82,9 @@ class TestOptimizingTestSuite(pyunit3k.TestCase):
         self.assertEqual(result.testsRun, 2)
         self.assertEqual(result.errors, [])
         self.assertEqual(result.failures, [])
-        self.assertEqual(MakeCounter._uses, 0)
-        self.assertEqual(MakeCounter.makes, 1)
-        self.assertEqual(MakeCounter.cleans, 1)
+        self.assertEqual(make_counter._uses, 0)
+        self.assertEqual(make_counter.makes, 1)
+        self.assertEqual(make_counter.cleans, 1)
 
     def testOptimisedRunNonResourcedTestCase(self):
         class MockTest(unittest.TestCase):
