@@ -9,6 +9,15 @@ provide test optimisation where expensive common resources are needed for test
 cases - for example sample working trees for VCS systems, reference databases
 for enterprise applications, or web servers ... let imagination run wild.
 
+Dependencies:
+=============
+
+* Python 2.4+
+* pyunit3k
+
+Note that pyunit3k is required for *running* the tests for testresources. You
+can use testresources in your own app without using pyunit3k.
+
 How testresources works:
 ========================
 There are three main components to make testresources work:
