@@ -38,21 +38,6 @@ class TestTestResource(unittest.TestCase):
         delattr(testresources.TestResource, "_uses")
         delattr(testresources.TestResource, "_dirty")
 
-    def testSampleResource(self):
-        resource = SampleTestResource.getResource()
-        self.assertEqual(resource, "You need to implement your own "
-                                   "getResource.")
-        self.assertEqual(id(resource),
-                         id(SampleTestResource._currentResource))
-        self.assertEqual(SampleTestResource.setUpCost, 2)
-        self.assertEqual(SampleTestResource.tearDownCost, 2)
-        self.failIf(hasattr(testresources.TestResource, "_currentResource"))
-        self.failIf(hasattr(testresources.TestResource, "_uses"))
-        self.failIf(hasattr(testresources.TestResource, "_dirty"))
-        SampleTestResource.finishedWith(resource)
-        self.assertEqual(SampleTestResource._currentResource, None)
-        self.assertEqual(SampleTestResource._uses, 0)
-
     def testNestedGetAndFinish(self):
         self.doTestNestedGetAndFinish(
             SampleTestResource, "You need to implement your own getResource.")
@@ -129,6 +114,24 @@ class TestTestResource(unittest.TestCase):
         MockResource.finishedWith(resource2)
         SampleTestResource.finishedWith(resource)
         self.assertEqual(MockResource._uses, 0)
+        self.assertEqual(SampleTestResource._uses, 0)
+
+
+class TestSampleResource(unittest.TestCase):
+
+    def testSampleResource(self):
+        resource = SampleTestResource.getResource()
+        self.assertEqual(resource, "You need to implement your own "
+                                   "getResource.")
+        self.assertEqual(id(resource),
+                         id(SampleTestResource._currentResource))
+        self.assertEqual(SampleTestResource.setUpCost, 2)
+        self.assertEqual(SampleTestResource.tearDownCost, 2)
+        self.failIf(hasattr(testresources.TestResource, "_currentResource"))
+        self.failIf(hasattr(testresources.TestResource, "_uses"))
+        self.failIf(hasattr(testresources.TestResource, "_dirty"))
+        SampleTestResource.finishedWith(resource)
+        self.assertEqual(SampleTestResource._currentResource, None)
         self.assertEqual(SampleTestResource._uses, 0)
 
 
