@@ -25,16 +25,18 @@ from testresources.tests import SampleTestResource
 
 
 class MockResource(testresources.TestResource):
-    """Mock resource that logs the number of cleanResource calls."""
+    """Mock resource that logs the number of make and clean calls."""
 
     def __init__(self):
         testresources.TestResource.__init__(self)
+        self.makes = 0
         self.cleans = 0
 
     def cleanResource(self, resource):
         self.cleans += 1
 
     def makeResource(self):
+        self.makes += 1
         return "Boo!"
 
 
@@ -85,51 +87,84 @@ class TestTestResource(pyunit3k.TestCase):
         resource = resource_manager.getResource()
         self.assertIs(resource_manager._currentResource, resource)
 
-    def testNestedGetAndFinish(self):
-        self.doTestNestedGetAndFinish(
-            SampleTestResource(),
-            "You need to implement your own getResource.")
-
-    def doTestNestedGetAndFinish(self, resource_manager, resourcevalue,
-                                 markDirty=False):
-        resource = resource_manager.getResource()
+    def testGetResourceTwiceReturnsIdenticalResource(self):
+        resource_manager = MockResource()
+        resource1 = resource_manager.getResource()
         resource2 = resource_manager.getResource()
-        self.assertEqual(resource2, resourcevalue)
-        self.assertIs(resource, resource2)
-        self.assertIs(resource2, resource_manager._currentResource)
-        if markDirty:
-            resource_manager.dirtied(resource2)
-        resource_manager.finishedWith(resource2)
-        self.assertIs(resource, resource_manager._currentResource)
+        self.assertIs(resource1, resource2)
+
+    def testGetResourceCallsMakeResource(self):
+        resource_manager = MockResource()
+        resource_manager.getResource()
+        self.assertEqual(1, resource_manager.makes)
+
+    def testRepeatedGetResourceCallsMakeResourceOnceOnly(self):
+        resource_manager = MockResource()
+        resource_manager.getResource()
+        resource_manager.getResource()
+        self.assertEqual(1, resource_manager.makes)
+
+    def testFinishedWithDecrementsUses(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        resource = resource_manager.getResource()
+        self.assertEqual(2, resource_manager._uses)
         resource_manager.finishedWith(resource)
-        self.assertEqual(resource_manager._currentResource, None)
-        self.assertEqual(resource_manager._uses, 0)
+        self.assertEqual(1, resource_manager._uses)
+        resource_manager.finishedWith(resource)
+        self.assertEqual(0, resource_manager._uses)
 
-    def testOverridingMakeResource(self):
-        self.doTestNestedGetAndFinish(MockResource(), "Boo!")
+    def testFinishedWithResetsCurrentResource(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        resource_manager.finishedWith(resource)
+        self.assertIs(None, resource_manager._currentResource)
 
-    def testOverridingCleanResource(self):
-        mock_resource = MockResource()
-        self.doTestNestedGetAndFinish(mock_resource, "Boo!")
-        self.assertEqual(mock_resource.cleans, 1)
+    def testFinishedWithCallsCleanResource(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        resource_manager.finishedWith(resource)
+        self.assertEqual(1, resource_manager.cleans)
 
-    def testDirtied(self):
-        mock_resource = MockResource()
-        self.doTestNestedGetAndFinish(mock_resource, "Boo!", True)
-        self.assertEqual(mock_resource.cleans, 2)
+    def testFinishedWithCallsCleanResourceOnceOnly(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        resource = resource_manager.getResource()
+        resource_manager.finishedWith(resource)
+        self.assertEqual(0, resource_manager.cleans)
+        resource_manager.finishedWith(resource)
+        self.assertEqual(1, resource_manager.cleans)
 
-    def testTwoResources(self):
-        sample_resource_manager = SampleTestResource()
-        mock_resource_manager = MockResource()
-        resource = sample_resource_manager.getResource()
-        resource2 = mock_resource_manager.getResource()
-        self.assertEqual(mock_resource_manager._uses, 1)
-        self.assertEqual(sample_resource_manager._uses, 1)
-        self.assertIsNot(resource, resource2)
-        mock_resource_manager.finishedWith(resource2)
-        sample_resource_manager.finishedWith(resource)
-        self.assertEqual(mock_resource_manager._uses, 0)
-        self.assertEqual(sample_resource_manager._uses, 0)
+    def testFinishedWithMarksNonDirty(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        resource_manager.dirtied(resource)
+        resource_manager.finishedWith(resource)
+        self.assertEqual(False, resource_manager._dirty)
+
+    def testResourceAvailableBetweenFinishedWithCalls(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        resource = resource_manager.getResource()
+        resource_manager.finishedWith(resource)
+        self.assertIs(resource, resource_manager._currentResource)
+
+    def testDirtiedSetsDirty(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        self.assertEqual(False, resource_manager._dirty)
+        resource_manager.dirtied(resource)
+        self.assertEqual(True, resource_manager._dirty)
+
+    def testDirtyingResourceTriggersClean(self):
+        resource_manager = MockResource()
+        resource1 = resource_manager.getResource()
+        resource2 = resource_manager.getResource()
+        resource_manager.dirtied(resource2)
+        resource_manager.finishedWith(resource2)
+        self.assertEqual(1, resource_manager.cleans)
+        resource_manager.finishedWith(resource1)
+        self.assertEqual(2, resource_manager.cleans)
 
 
 class TestSampleResource(pyunit3k.TestCase):

@@ -175,6 +175,7 @@ class TestResource(object):
         if self._uses == 0:
             self.cleanResource(resource)
             self._currentResource = None
+            self._dirty = False
         elif self._dirty:
             self.cleanResource(resource)
             self._setResource()
