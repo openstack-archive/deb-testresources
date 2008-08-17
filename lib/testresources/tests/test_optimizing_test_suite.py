@@ -22,7 +22,6 @@ import random
 import pyunit3k
 import testresources
 from testresources import cost_of_switching, split_by_resources
-from testresources.tests import SampleTestResource
 import unittest
 
 
@@ -89,7 +88,7 @@ class TestOptimizingTestSuite(pyunit3k.TestCase):
         self.assertEqual([case1, case2, case3], self.optimizing_suite._tests)
 
     def testSingleCaseResourceAcquisition(self):
-        sample_resource = SampleTestResource()
+        sample_resource = MakeCounter()
         def getResourceCount():
             self.assertEqual(sample_resource._uses, 2)
         case = self.makeResourcedTestCase(sample_resource, getResourceCount)
@@ -97,8 +96,7 @@ class TestOptimizingTestSuite(pyunit3k.TestCase):
         result = unittest.TestResult()
         self.optimizing_suite.run(result)
         self.assertEqual(result.testsRun, 1)
-        self.assertEqual(result.errors, [])
-        self.assertEqual(result.failures, [])
+        self.assertEqual(result.wasSuccessful(), True)
         self.assertEqual(sample_resource._uses, 0)
 
     def testResourceReuse(self):
@@ -112,8 +110,7 @@ class TestOptimizingTestSuite(pyunit3k.TestCase):
         result = unittest.TestResult()
         self.optimizing_suite.run(result)
         self.assertEqual(result.testsRun, 2)
-        self.assertEqual(result.errors, [])
-        self.assertEqual(result.failures, [])
+        self.assertEqual(result.wasSuccessful(), True)
         self.assertEqual(make_counter._uses, 0)
         self.assertEqual(make_counter.makes, 1)
         self.assertEqual(make_counter.cleans, 1)
@@ -124,8 +121,7 @@ class TestOptimizingTestSuite(pyunit3k.TestCase):
         result = unittest.TestResult()
         self.optimizing_suite.run(result)
         self.assertEqual(result.testsRun, 1)
-        self.assertEqual(result.errors, [])
-        self.assertEqual(result.failures, [])
+        self.assertEqual(result.wasSuccessful(), True)
 
     def testSortTestsCalled(self):
         class MockOptimizingTestSuite(testresources.OptimizingTestSuite):
@@ -313,13 +309,6 @@ class TestGraphStuff(pyunit3k.TestCase):
             self.suite._tests, [
                 [self.case1, self.case2, self.case3, self.case4],
                 [self.case3, self.case2, self.case1, self.case4]])
-
-    def testGetGraph(self):
-        graph = self.suite._getGraph([self.case1, self.case2, self.case3])
-        self.assertEqual(
-            graph, {self.case1: {self.case2: 2, self.case3: 3},
-                    self.case2: {self.case1: 2, self.case3: 1},
-                    self.case3: {self.case1: 3, self.case2: 1}})
 
 
 def test_suite():

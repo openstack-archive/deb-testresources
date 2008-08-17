@@ -21,7 +21,6 @@
 import pyunit3k
 
 import testresources
-from testresources.tests import SampleTestResource
 
 
 class MockResource(testresources.TestResource):
@@ -193,24 +192,6 @@ class TestTestResource(pyunit3k.TestCase):
         self.assertEqual(1, resource_manager.makes)
         resource = resource_manager.getResource()
         self.assertEqual(2, resource_manager.makes)
-
-
-class TestSampleResource(pyunit3k.TestCase):
-
-    def testSampleResource(self):
-        resource_manager = SampleTestResource()
-        resource = resource_manager.getResource()
-        self.assertEqual(
-            resource, "You need to implement your own getResource.")
-        self.assertIs(resource, resource_manager._currentResource)
-        self.assertEqual(resource_manager.setUpCost, 2)
-        self.assertEqual(resource_manager.tearDownCost, 2)
-        self.failIf(hasattr(testresources.TestResource, "_currentResource"))
-        self.failIf(hasattr(testresources.TestResource, "_uses"))
-        self.failIf(hasattr(testresources.TestResource, "_dirty"))
-        resource_manager.finishedWith(resource)
-        self.assertEqual(resource_manager._currentResource, None)
-        self.assertEqual(resource_manager._uses, 0)
 
 
 def test_suite():

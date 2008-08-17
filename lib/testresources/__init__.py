@@ -252,3 +252,4 @@ class ResourcedTestCase(unittest.TestCase):
 # XXX: How to combine resources?
 # XXX: Introduce timing hooks for setUpCost and tearDownCost.
 # XXX: setUpCost and tearDownCost are not used.
+# XXX: Why does finishedWith take a parameter?
