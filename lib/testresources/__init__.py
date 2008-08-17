@@ -105,7 +105,8 @@ class OptimizingTestSuite(unittest.TestSuite):
         from testresources.dijkstra import Dijkstra
         if len(graph.keys()) > 0:
             # XXX: Arbitrarily select the start node. This can result in
-            # sub-optimal sortings.
+            # sub-optimal sortings. We actually want to include the cost of
+            # establishing the start node in the calculation of the distance.
             start_node = graph.keys()[0]
             distances, predecessors = Dijkstra(graph, start_node)
             # and sort by distance

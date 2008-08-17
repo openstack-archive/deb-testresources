@@ -229,6 +229,42 @@ class TestCostOfSwitching(pyunit3k.TestCase):
         self.assertEqual(2, cost_of_switching(set([a, c]), set([b, c])))
 
 
+class TestCostGraph(pyunit3k.TestCase):
+    """Tests for calculating the cost graph of resourced test cases."""
+
+    def getGraph(self, tests_with_resources):
+        suite = testresources.OptimizingTestSuite()
+        return suite._getGraph(tests_with_resources)
+
+    def makeResource(self, setUpCost=1, tearDownCost=1):
+        resource = testresources.TestResource()
+        resource.setUpCost = setUpCost
+        resource.tearDownCost = tearDownCost
+        return resource
+
+    def makeTestWithResources(self, resources):
+        case = testresources.ResourcedTestCase('run')
+        case.resources = [
+            (self.getUniqueString(), resource) for resource in resources]
+        return case
+
+    def testEmptyGraph(self):
+        self.assertEqual({}, self.getGraph([]))
+
+    def testSingletonGraph(self):
+        case = self.makeTestWithResources([self.makeResource()])
+        self.assertEqual({case: {}}, self.getGraph([case]))
+
+    def testTwoCasesInGraph(self):
+        a = self.makeTestWithResources(
+            [self.makeResource(), self.makeResource()])
+        b = self.makeTestWithResources([self.makeResource()])
+        self.assertEqual(
+            {a: {b: cost_of_switching(set(a.resources), set(b.resources))},
+             b: {a: cost_of_switching(set(a.resources), set(b.resources))}},
+            self.getGraph([a, b]))
+
+
 class TestGraphStuff(pyunit3k.TestCase):
 
     def setUp(self):
