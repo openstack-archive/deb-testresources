@@ -40,14 +40,38 @@ class MockResource(testresources.TestResource):
 
 class TestTestResource(pyunit3k.TestCase):
 
-    def testDefaultResource(self):
+    def testUnimplementedGetResource(self):
+        # By default, TestResource raises NotImplementedError on getResource.
         resource_manager = testresources.TestResource()
         self.assertRaises(NotImplementedError, resource_manager.getResource)
-        self.failUnless(hasattr(resource_manager, "_currentResource"))
-        self.failUnless(hasattr(resource_manager, "_uses"))
-        self.failUnless(hasattr(resource_manager, "_dirty"))
+
+    def testDefaultCosts(self):
+        # The base TestResource costs 1 to set up and to tear down.
+        resource_manager = testresources.TestResource()
         self.assertEqual(resource_manager.setUpCost, 1)
         self.assertEqual(resource_manager.tearDownCost, 1)
+
+    def testGetResourceReturnsMakeResource(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        self.assertEqual(resource_manager.makeResource(), resource)
+
+    def testGetResourceIncrementsUses(self):
+        resource_manager = MockResource()
+        resource_manager.getResource()
+        self.assertEqual(1, resource_manager._uses)
+        resource_manager.getResource()
+        self.assertEqual(2, resource_manager._uses)
+
+    def testGetResourceDoesntDirty(self):
+        resource_manager = MockResource()
+        resource_manager.getResource()
+        self.assertEqual(resource_manager._dirty, False)
+
+    def testGetResourceSetsCurrentResource(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        self.assertIs(resource_manager._currentResource, resource)
 
     def testNestedGetAndFinish(self):
         self.doTestNestedGetAndFinish(

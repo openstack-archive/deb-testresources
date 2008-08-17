@@ -238,4 +238,3 @@ class ResourcedTestCase(unittest.TestCase):
 # - alternatively, resource that is never torn down.
 # XXX: How to combine resources?
 # XXX: Introduce timing hooks for setUpCost and tearDownCost.
-# XXX: Get rid of class-level shenanigans with TestResource.
