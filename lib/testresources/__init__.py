@@ -95,7 +95,8 @@ class OptimizingTestSuite(unittest.TestSuite):
         """
         # quick hack on the plane. Need to lookup graph textbook.
         sorted = []
-        graph, legacy = self._getGraph()
+        legacy, tests_with_resources = split_by_resources(self._tests)
+        graph = self._getGraph(tests_with_resources)
         # now we have a graph, we can do lovely things like travelling
         # salesman on it. Blech. So we just take the dijkstra for this. I
         # think this will usually generate reasonable behaviour - its just
@@ -114,22 +115,21 @@ class OptimizingTestSuite(unittest.TestSuite):
                 sorted.append(test)
         self._tests = sorted + legacy
 
-    def _getGraph(self):
-        """Build a graph of the resource using nodes."""
+    def _getGraph(self, tests_with_resources):
+        """Build a graph of the resource-using nodes."""
         # build a mesh graph where a node is a test, and and the number of
         # resources to change to another test is the cost to travel straight
         # to that node.
-        legacy, pending = split_by_resources(self._tests)
-        graph = dict((test, dict()) for test in pending)
-        while pending:
-            test = pending.pop()
+        graph = dict((test, dict()) for test in tests_with_resources)
+        while tests_with_resources:
+            test = tests_with_resources.pop()
             test_resources = set(test.resources)
-            for othertest in pending:
+            for othertest in tests_with_resources:
                 othertest_resources = set(othertest.resources)
                 cost = cost_of_switching(test_resources, othertest_resources)
                 graph[test][othertest] = cost
                 graph[othertest][test] = cost
-        return graph, legacy
+        return graph
 
 
 class TestLoader(unittest.TestLoader):

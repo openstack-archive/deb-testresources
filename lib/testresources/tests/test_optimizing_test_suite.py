@@ -279,18 +279,11 @@ class TestGraphStuff(pyunit3k.TestCase):
                 [self.case3, self.case2, self.case1, self.case4]])
 
     def testGetGraph(self):
-        graph, legacy = self.suite._getGraph()
-        case1vertex = {self.case2: 2, self.case3: 3}
-        case2vertex = {self.case1: 2, self.case3: 1}
-        case3vertex = {self.case1: 3, self.case2: 1}
-        self.assertEqual(legacy, [self.case4])
-        self.assertEqual(graph[self.case1], case1vertex)
-        self.assertEqual(graph[self.case2], case2vertex)
-        self.assertEqual(graph[self.case3], case3vertex)
+        graph = self.suite._getGraph([self.case1, self.case2, self.case3])
         self.assertEqual(
-            graph, {self.case1: case1vertex,
-                    self.case2: case2vertex,
-                    self.case3: case3vertex})
+            graph, {self.case1: {self.case2: 2, self.case3: 3},
+                    self.case2: {self.case1: 2, self.case3: 1},
+                    self.case3: {self.case1: 3, self.case2: 1}})
 
 
 def test_suite():
