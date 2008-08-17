@@ -126,6 +126,15 @@ class TestTestResource(pyunit3k.TestCase):
         resource_manager.finishedWith(resource)
         self.assertEqual(1, resource_manager.cleans)
 
+    def testUsingTwiceMakesAndCleansTwice(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        resource_manager.finishedWith(resource)
+        resource = resource_manager.getResource()
+        resource_manager.finishedWith(resource)
+        self.assertEqual(2, resource_manager.makes)
+        self.assertEqual(2, resource_manager.cleans)
+
     def testFinishedWithCallsCleanResourceOnceOnly(self):
         resource_manager = MockResource()
         resource = resource_manager.getResource()
@@ -165,6 +174,25 @@ class TestTestResource(pyunit3k.TestCase):
         self.assertEqual(1, resource_manager.cleans)
         resource_manager.finishedWith(resource1)
         self.assertEqual(2, resource_manager.cleans)
+
+    def testDirtyingResourceTriggersRemake(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        self.assertEqual(1, resource_manager.makes)
+        resource_manager.dirtied(resource)
+        resource_manager.getResource()
+        self.assertEqual(1, resource_manager.cleans)
+        self.assertEqual(2, resource_manager.makes)
+        self.assertEqual(False, resource_manager._dirty)
+
+    def testDirtyingWhenUnused(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        resource_manager.finishedWith(resource)
+        resource_manager.dirtied(resource)
+        self.assertEqual(1, resource_manager.makes)
+        resource = resource_manager.getResource()
+        self.assertEqual(2, resource_manager.makes)
 
 
 class TestSampleResource(pyunit3k.TestCase):

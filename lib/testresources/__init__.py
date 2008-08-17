@@ -190,6 +190,9 @@ class TestResource(object):
         """
         if self._uses == 0:
             self._setResource()
+        elif self._dirty:
+            self.cleanResource(self._currentResource)
+            self._setResource()
         self._uses += 1
         return self._currentResource
 
