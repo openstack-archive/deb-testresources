@@ -5,4 +5,7 @@ all:
 check:
 	PYTHONPATH=$(PYTHONPATH) python ./test_all.py $(TESTRULE)
 
-.PHONY: all
+clean:
+	find . -name '*.pyc' -print0 | xargs -0 rm -f
+
+.PHONY: all check clean
