@@ -42,21 +42,31 @@ class MakeCounter(testresources.TestResource):
 
 class TestOptimizingTestSuite(pyunit3k.TestCase):
 
+    def makeTestCase(self):
+        """Make a normal TestCase."""
+        return unittest.TestCase('run')
+
+    def makeResourcedTestCase(self, resource_manager, test_running_hook):
+        """Make a ResourcedTestCase."""
+        class ResourcedTestCaseForTesting(testresources.ResourcedTestCase):
+            def runTest(self):
+                test_running_hook()
+        test_case = ResourcedTestCaseForTesting('runTest')
+        test_case.resources = [('_default', resource_manager)]
+        return test_case
+
     def testAdsorbSuiteWithCase(self):
         suite = testresources.OptimizingTestSuite()
-        case = unittest.TestCase("run")
+        case = self.makeTestCase()
         suite.adsorbSuite(case)
         self.assertEqual(suite._tests, [case])
 
     def testSingleCaseResourceAcquisition(self):
-        sample_resource = SampleTestResource()
-        class ResourceChecker(testresources.ResourcedTestCase):
-            resources = [("_default", sample_resource)]
-            def getResourceCount(self):
-                self.assertEqual(sample_resource._uses, 2)
-
         suite = testresources.OptimizingTestSuite()
-        case = ResourceChecker("getResourceCount")
+        sample_resource = SampleTestResource()
+        def getResourceCount(self):
+            self.assertEqual(sample_resource._uses, 2)
+        case = self.makeResourcedTestCase(sample_resource, getResourceCount)
         suite.addTest(case)
         result = unittest.TestResult()
         suite.run(result)
@@ -66,15 +76,12 @@ class TestOptimizingTestSuite(pyunit3k.TestCase):
         self.assertEqual(sample_resource._uses, 0)
 
     def testResourceReuse(self):
-        make_counter = MakeCounter()
-        class ResourceChecker(testresources.ResourcedTestCase):
-            resources = [("_default", make_counter)]
-            def getResourceCount(self):
-                self.assertEqual(make_counter._uses, 2)
-
         suite = testresources.OptimizingTestSuite()
-        case = ResourceChecker("getResourceCount")
-        case2 = ResourceChecker("getResourceCount")
+        make_counter = MakeCounter()
+        def getResourceCount(self):
+            self.assertEqual(make_counter._uses, 2)
+        case = self.makeResourcedTestCase(make_counter, getResourceCount)
+        case2 = self.makeResourcedTestCase(make_counter, getResourceCount)
         suite.addTest(case)
         suite.addTest(case2)
         result = unittest.TestResult()
@@ -87,11 +94,8 @@ class TestOptimizingTestSuite(pyunit3k.TestCase):
         self.assertEqual(make_counter.cleans, 1)
 
     def testOptimisedRunNonResourcedTestCase(self):
-        class MockTest(unittest.TestCase):
-            def test_nothing(self):
-                pass
         suite = testresources.OptimizingTestSuite()
-        case = MockTest("test_nothing")
+        case = self.makeTestCase()
         suite.addTest(case)
         result = unittest.TestResult()
         suite.run(result)
