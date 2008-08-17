@@ -48,9 +48,6 @@ class TestTestResource(pyunit3k.TestCase):
         self.failUnless(hasattr(resource_manager, "_dirty"))
         self.assertEqual(resource_manager.setUpCost, 1)
         self.assertEqual(resource_manager.tearDownCost, 1)
-        delattr(resource_manager, "_currentResource")
-        delattr(resource_manager, "_uses")
-        delattr(resource_manager, "_dirty")
 
     def testNestedGetAndFinish(self):
         self.doTestNestedGetAndFinish(
