@@ -144,10 +144,10 @@ class TestGraphStuff(pyunit3k.TestCase):
 
     def testBasicSortTests(self):
         self.suite.sortTests()
-        self.failUnless(self.suite._tests == [self.case1, self.case2,
-                                              self.case3, self.case4] or
-                        self.suite._tests == [self.case3, self.case2,
-                                              self.case1, self.case4])
+        self.assertIn(
+            self.suite._tests, [
+                [self.case1, self.case2, self.case3, self.case4],
+                [self.case3, self.case2, self.case1, self.case4]])
 
     def testGetGraph(self):
         graph, legacy = self.suite._getGraph()
