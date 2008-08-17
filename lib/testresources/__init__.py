@@ -41,14 +41,14 @@ def iterate_tests(test_suite_or_case):
 class OptimizingTestSuite(unittest.TestSuite):
     """A resource creation optimising TestSuite."""
 
-    def adsorbSuite(self, suite):
-        """adsorb all the tests in suite recursively.
+    def flatAddTest(self, test_case_or_suite):
+        """Add `test_case_or_suite`, unwrapping any suites we find.
 
-        This allows full optimisation of the tests, but will remove any
-        containing TestSuites, which might be extending unittest around those
-        tests.
+        This means that any containing TestSuites will be removed. These
+        suites might have their own unittest extensions, so be careful with
+        this.
         """
-        for test in iterate_tests(suite):
+        for test in iterate_tests(test_case_or_suite):
             self.addTest(test)
 
     def run(self, result):
@@ -88,7 +88,10 @@ class OptimizingTestSuite(unittest.TestSuite):
         # make things less than optimal.
         from testresources.dijkstra import Dijkstra
         if len(graph.keys()) > 0:
-            distances, predecessors = Dijkstra(graph, graph.keys()[0])
+            # XXX: Arbitrarily select the start node. This can result in
+            # sub-optimal sortings.
+            start_node = graph.keys()[0]
+            distances, predecessors = Dijkstra(graph, start_node)
             # and sort by distance
             nodes = distances.items()
             nodes.sort(key=lambda x:x[1])
@@ -243,3 +246,4 @@ class ResourcedTestCase(unittest.TestCase):
 # - alternatively, resource that is never torn down.
 # XXX: How to combine resources?
 # XXX: Introduce timing hooks for setUpCost and tearDownCost.
+# XXX: setUpCost and tearDownCost are not used.
