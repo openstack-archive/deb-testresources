@@ -45,6 +45,18 @@ class TestTestResource(pyunit3k.TestCase):
         resource_manager = testresources.TestResource()
         self.assertRaises(NotImplementedError, resource_manager.getResource)
 
+    def testInitiallyNotDirty(self):
+        resource_manager = testresources.TestResource()
+        self.assertEqual(False, resource_manager._dirty)
+
+    def testInitiallyUnused(self):
+        resource_manager = testresources.TestResource()
+        self.assertEqual(0, resource_manager._uses)
+
+    def testInitiallyNoCurrentResource(self):
+        resource_manager = testresources.TestResource()
+        self.assertEqual(None, resource_manager._currentResource)
+
     def testDefaultCosts(self):
         # The base TestResource costs 1 to set up and to tear down.
         resource_manager = testresources.TestResource()

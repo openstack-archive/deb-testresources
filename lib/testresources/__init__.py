@@ -144,6 +144,11 @@ class TestResource(object):
     setUpCost = 1
     tearDownCost = 1
 
+    def __init__(self):
+        self._dirty = False
+        self._uses = 0
+        self._currentResource = None
+
     def cleanResource(self, resource):
         """Override this to class method to hook into resource removal."""
 
@@ -182,11 +187,6 @@ class TestResource(object):
         Once done with the resource, pass it to `finishedWith` to indicated
         that it is no longer needed.
         """
-        uses = getattr(self, '_uses', None)
-        if uses is None:
-            self._currentResource = None
-            self._dirty = False
-            self._uses = 0
         if self._uses == 0:
             self._setResource()
         self._uses += 1
