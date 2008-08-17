@@ -47,12 +47,12 @@ class TestTestResource(pyunit3k.TestCase):
         resource = cls.getResource()
         resource2 = cls.getResource()
         self.assertEqual(resource2, resourcevalue)
-        self.assertEqual(id(resource), id(resource2))
-        self.assertEqual(id(resource2), id(cls._currentResource))
+        self.assertIs(resource, resource2)
+        self.assertIs(resource2, cls._currentResource)
         if markDirty:
             cls.dirtied(resource2)
         cls.finishedWith(resource2)
-        self.assertEqual(id(resource), id(cls._currentResource))
+        self.assertIs(resource, cls._currentResource)
         cls.finishedWith(resource)
         self.assertEqual(cls._currentResource, None)
         self.assertEqual(cls._uses, 0)
@@ -111,7 +111,7 @@ class TestTestResource(pyunit3k.TestCase):
         resource2 = MockResource.getResource()
         self.assertEqual(MockResource._uses, 1)
         self.assertEqual(SampleTestResource._uses, 1)
-        self.assertNotEqual(id(resource), id(resource2))
+        self.assertIsNot(resource, resource2)
         MockResource.finishedWith(resource2)
         SampleTestResource.finishedWith(resource)
         self.assertEqual(MockResource._uses, 0)
@@ -122,10 +122,9 @@ class TestSampleResource(pyunit3k.TestCase):
 
     def testSampleResource(self):
         resource = SampleTestResource.getResource()
-        self.assertEqual(resource, "You need to implement your own "
-                                   "getResource.")
-        self.assertEqual(id(resource),
-                         id(SampleTestResource._currentResource))
+        self.assertEqual(
+            resource, "You need to implement your own getResource.")
+        self.assertIs(resource, SampleTestResource._currentResource)
         self.assertEqual(SampleTestResource.setUpCost, 2)
         self.assertEqual(SampleTestResource.tearDownCost, 2)
         self.failIf(hasattr(testresources.TestResource, "_currentResource"))

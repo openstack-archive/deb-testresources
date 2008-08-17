@@ -30,8 +30,7 @@ class TestOptimizingTestSuite(pyunit3k.TestCase):
         suite = testresources.OptimizingTestSuite()
         case = unittest.TestCase("run")
         suite.adsorbSuite(case)
-        self.assertEqual(len(suite._tests), 1)
-        self.assertEqual(suite._tests[0], case)
+        self.assertEqual(suite._tests, [case])
 
     def testSingleCaseResourceAcquisition(self):
         class ResourceChecker(testresources.ResourcedTestCase):

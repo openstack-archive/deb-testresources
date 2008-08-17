@@ -30,7 +30,7 @@ class TestTestLoader(pyunit3k.TestCase):
         # OptimizingTestSuite.
         loader = TestLoader()
         suite = loader.loadTestsFromName(__name__)
-        self.failUnless(isinstance(suite, OptimizingTestSuite))
+        self.assertIsInstance(suite, OptimizingTestSuite)
 
 
 def test_suite():

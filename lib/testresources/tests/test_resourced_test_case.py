@@ -35,9 +35,8 @@ class TestResourcedTestCase(pyunit3k.TestCase):
         case = testresources.ResourcedTestCase("run")
         case.resources = [("_default", SampleTestResource)]
         case.setUpResources()
-        self.assertEqual(case._default,
-                         "You need to implement your own "
-                         "getResource.")
+        self.assertEqual(
+            case._default, "You need to implement your own getResource.")
         self.assertEqual(SampleTestResource._uses, 1)
         case.tearDownResources()
         self.failIf(hasattr(case, "_default"))
@@ -47,9 +46,8 @@ class TestResourcedTestCase(pyunit3k.TestCase):
         case = testresources.ResourcedTestCase("run")
         case.resources = [("_default", SampleTestResource)]
         case.setUp()
-        self.assertEqual(case._default,
-                         "You need to implement your own "
-                         "getResource.")
+        self.assertEqual(
+            case._default, "You need to implement your own getResource.")
         self.assertEqual(SampleTestResource._uses, 1)
         case.tearDown()
         self.failIf(hasattr(case, "_default"))
@@ -64,12 +62,11 @@ class TestResourcedTestCase(pyunit3k.TestCase):
                 return "Boo!"
 
         case = testresources.ResourcedTestCase("run")
-        case.resources = [("_default", SampleTestResource),
-                          ("_mock", MockResource)]
+        case.resources = [
+            ("_default", SampleTestResource), ("_mock", MockResource)]
         case.setUpResources()
-        self.assertEqual(case._default,
-                         "You need to implement your own "
-                         "getResource.")
+        self.assertEqual(
+            case._default, "You need to implement your own getResource.")
         self.assertEqual(case._mock, "Boo!")
         self.assertEqual(SampleTestResource._uses, 1)
         self.assertEqual(MockResource._uses, 1)
