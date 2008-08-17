@@ -44,16 +44,43 @@ class TestResourcedTestCase(pyunit3k.TestCase):
     def testDefaults(self):
         self.assertEqual(self.resourced_case.resources, [])
 
-    def testSingleResource(self):
+    def testSetUpResourcesSingle(self):
+        # setUpResources installs the resources listed in ResourcedTestCase.
         self.resourced_case.resources = [("foo", self.resource_manager)]
         self.resourced_case.setUpResources()
-        self.assertEqual(self.resourced_case.foo, self.resource)
+        self.assertEqual(self.resource, self.resourced_case.foo)
+
+    def testSetUpResourcesMultiple(self):
+        # setUpResources installs the resources listed in ResourcedTestCase.
+        self.resourced_case.resources = [
+            ('foo', self.resource_manager),
+            ('bar', MockResource('bar_resource'))]
+        self.resourced_case.setUpResources()
+        self.assertEqual(self.resource, self.resourced_case.foo)
+        self.assertEqual('bar_resource', self.resourced_case.bar)
+
+    def testSetUpUsesResource(self):
+        # setUpResources records a use of each declared resource.
+        self.resourced_case.resources = [("foo", self.resource_manager)]
+        self.resourced_case.setUpResources()
         self.assertEqual(self.resource_manager._uses, 1)
+
+    def testTearDownResourcesDeletesResourceAttributes(self):
+        self.resourced_case.resources = [("foo", self.resource_manager)]
+        self.resourced_case.setUpResources()
         self.resourced_case.tearDownResources()
         self.failIf(hasattr(self.resourced_case, "foo"))
+
+    def testTearDownResourcesStopsUsingResource(self):
+        # tearDownResources records that there is one less use of each
+        # declared resource.
+        self.resourced_case.resources = [("foo", self.resource_manager)]
+        self.resourced_case.setUpResources()
+        self.resourced_case.tearDownResources()
         self.assertEqual(self.resource_manager._uses, 0)
 
     def testSingleWithSetup(self):
+        # setUp and tearDown invoke setUpResources and tearDownResources.
         self.resourced_case.resources = [("foo", self.resource_manager)]
         self.resourced_case.setUp()
         self.assertEqual(self.resourced_case.foo, self.resource)
@@ -61,21 +88,6 @@ class TestResourcedTestCase(pyunit3k.TestCase):
         self.resourced_case.tearDown()
         self.failIf(hasattr(self.resourced_case, "foo"))
         self.assertEqual(self.resource_manager._uses, 0)
-
-    def testMultipleResources(self):
-        mock_resource = MockResource('Boo!')
-        self.resourced_case.resources = [
-            ("foo", self.resource_manager), ("bar", mock_resource)]
-        self.resourced_case.setUpResources()
-        self.assertEqual(self.resourced_case.foo, self.resource)
-        self.assertEqual(self.resourced_case.bar, "Boo!")
-        self.assertEqual(self.resource_manager._uses, 1)
-        self.assertEqual(mock_resource._uses, 1)
-        self.resourced_case.tearDownResources()
-        self.failIf(hasattr(self.resourced_case, "foo"))
-        self.assertEqual(self.resource_manager._uses, 0)
-        self.failIf(hasattr(self.resourced_case, "bar"))
-        self.assertEqual(mock_resource._uses, 0)
 
 
 def test_suite():
