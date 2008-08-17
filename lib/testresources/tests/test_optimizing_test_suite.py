@@ -18,8 +18,10 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import random
 import pyunit3k
 import testresources
+from testresources import split_by_resources
 from testresources.tests import SampleTestResource
 import unittest
 
@@ -134,6 +136,52 @@ class TestOptimizingTestSuite(pyunit3k.TestCase):
         suite.sorted = False
         suite.run(None)
         self.assertEqual(suite.sorted, True)
+
+
+class TestSplitByResources(pyunit3k.TestCase):
+    """Tests for split_by_resources."""
+
+    def makeTestCase(self):
+        return unittest.TestCase('run')
+
+    def makeResourcedTestCase(self, has_resource=True):
+        case = testresources.ResourcedTestCase('run')
+        if has_resource:
+            case.resources = ['resource', testresources.TestResource()]
+        return case
+
+    def testNoTests(self):
+        self.assertEqual(([], []), split_by_resources([]))
+
+    def testJustNormalCases(self):
+        normal_case = self.makeTestCase()
+        have_nots, haves = split_by_resources([normal_case])
+        self.assertEqual([normal_case], have_nots)
+        self.assertEqual([], haves)
+
+    def testJustResourcedCases(self):
+        resourced_case = self.makeResourcedTestCase()
+        have_nots, haves = split_by_resources([resourced_case])
+        self.assertEqual([], have_nots)
+        self.assertEqual([resourced_case], haves)
+
+    def testResourcedCaseWithNoResources(self):
+        resourced_case = self.makeResourcedTestCase(has_resource=False)
+        have_nots, haves = split_by_resources([resourced_case])
+        self.assertEqual([resourced_case], have_nots)
+        self.assertEqual([], haves)
+
+    def testMixThemUp(self):
+        normal_cases = [self.makeTestCase() for i in range(3)]
+        normal_cases.extend([
+            self.makeResourcedTestCase(has_resource=False) for i in range(3)])
+        resourced_cases = [self.makeResourcedTestCase() for i in range(3)]
+        all_cases = normal_cases + resourced_cases
+        # XXX: Maybe I shouldn't be using random here.
+        random.shuffle(all_cases)
+        have_nots, haves = split_by_resources(all_cases)
+        self.assertEqual(set(normal_cases), set(have_nots))
+        self.assertEqual(set(resourced_cases), set(haves))
 
 
 class TestGraphStuff(pyunit3k.TestCase):
