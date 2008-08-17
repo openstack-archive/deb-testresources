@@ -25,9 +25,6 @@ import unittest
 
 class TestTestResource(unittest.TestCase):
 
-    def testImports(self):
-        from testresources import TestResource
-
     def testDefaultResource(self):
         self.assertRaises(NotImplementedError,
                           testresources.TestResource.getResource)

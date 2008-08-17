@@ -25,9 +25,6 @@ import unittest
 
 class TestResourcedTestCase(unittest.TestCase):
 
-    def testImports(self):
-        from testresources import ResourcedTestCase
-
     def testDefaults(self):
         case = testresources.ResourcedTestCase("run")
         case.setUpResources()

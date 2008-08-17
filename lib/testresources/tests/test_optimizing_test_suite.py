@@ -25,9 +25,6 @@ import unittest
 
 class TestOptimizingTestSuite(unittest.TestCase):
 
-    def testImports(self):
-        from testresources import OptimizingTestSuite
-
     def testAdsorbSuiteWithCase(self):
         suite = testresources.OptimizingTestSuite()
         case = unittest.TestCase("run")
