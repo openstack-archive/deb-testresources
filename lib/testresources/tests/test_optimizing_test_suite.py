@@ -130,23 +130,19 @@ class TestGraphStuff(pyunit3k.TestCase):
             def test_four(self):
                 pass
 
-        class ResourceOne(testresources.TestResource):
-            pass
-
-        class ResourceTwo(testresources.TestResource):
-            pass
-
-        class ResourceThree(testresources.TestResource):
-            pass
+        resource_one = testresources.TestResource()
+        resource_two = testresources.TestResource()
+        resource_three = testresources.TestResource()
 
         self.suite = testresources.OptimizingTestSuite()
         self.case1 = MockTest("test_one")
-        self.case1.resources = [("_one", ResourceOne), ("_two", ResourceTwo)]
+        self.case1.resources = [
+            ("_one", resource_one), ("_two", resource_two)]
         self.case2 = MockTest("test_two")
         self.case2.resources = [
-            ("_two", ResourceTwo), ("_three", ResourceThree)]
+            ("_two", resource_two), ("_three", resource_three)]
         self.case3 = MockTest("test_three")
-        self.case3.resources = [("_three", ResourceThree)]
+        self.case3.resources = [("_three", resource_three)]
         self.case4 = MockTest("test_four")
         self.suite.addTests([self.case3, self.case1, self.case4, self.case2])
         # acceptable sorted orders are:
