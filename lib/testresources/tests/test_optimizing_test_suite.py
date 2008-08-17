@@ -55,37 +55,38 @@ class TestOptimizingTestSuite(pyunit3k.TestCase):
         test_case.resources = [('_default', resource_manager)]
         return test_case
 
+    def setUp(self):
+        pyunit3k.TestCase.setUp(self)
+        self.optimizing_suite = testresources.OptimizingTestSuite()
+
     def testAdsorbSuiteWithCase(self):
-        suite = testresources.OptimizingTestSuite()
         case = self.makeTestCase()
-        suite.adsorbSuite(case)
-        self.assertEqual(suite._tests, [case])
+        self.optimizing_suite.adsorbSuite(case)
+        self.assertEqual(self.optimizing_suite._tests, [case])
 
     def testSingleCaseResourceAcquisition(self):
-        suite = testresources.OptimizingTestSuite()
         sample_resource = SampleTestResource()
-        def getResourceCount(self):
+        def getResourceCount():
             self.assertEqual(sample_resource._uses, 2)
         case = self.makeResourcedTestCase(sample_resource, getResourceCount)
-        suite.addTest(case)
+        self.optimizing_suite.addTest(case)
         result = unittest.TestResult()
-        suite.run(result)
+        self.optimizing_suite.run(result)
         self.assertEqual(result.testsRun, 1)
         self.assertEqual(result.errors, [])
         self.assertEqual(result.failures, [])
         self.assertEqual(sample_resource._uses, 0)
 
     def testResourceReuse(self):
-        suite = testresources.OptimizingTestSuite()
         make_counter = MakeCounter()
-        def getResourceCount(self):
+        def getResourceCount():
             self.assertEqual(make_counter._uses, 2)
         case = self.makeResourcedTestCase(make_counter, getResourceCount)
         case2 = self.makeResourcedTestCase(make_counter, getResourceCount)
-        suite.addTest(case)
-        suite.addTest(case2)
+        self.optimizing_suite.addTest(case)
+        self.optimizing_suite.addTest(case2)
         result = unittest.TestResult()
-        suite.run(result)
+        self.optimizing_suite.run(result)
         self.assertEqual(result.testsRun, 2)
         self.assertEqual(result.errors, [])
         self.assertEqual(result.failures, [])
@@ -94,11 +95,10 @@ class TestOptimizingTestSuite(pyunit3k.TestCase):
         self.assertEqual(make_counter.cleans, 1)
 
     def testOptimisedRunNonResourcedTestCase(self):
-        suite = testresources.OptimizingTestSuite()
         case = self.makeTestCase()
-        suite.addTest(case)
+        self.optimizing_suite.addTest(case)
         result = unittest.TestResult()
-        suite.run(result)
+        self.optimizing_suite.run(result)
         self.assertEqual(result.testsRun, 1)
         self.assertEqual(result.errors, [])
         self.assertEqual(result.failures, [])
