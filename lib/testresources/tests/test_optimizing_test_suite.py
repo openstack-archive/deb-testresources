@@ -18,12 +18,13 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import pyunit3k
 import testresources
 from testresources.tests import SampleTestResource
 import unittest
 
 
-class TestOptimizingTestSuite(unittest.TestCase):
+class TestOptimizingTestSuite(pyunit3k.TestCase):
 
     def testAdsorbSuiteWithCase(self):
         suite = testresources.OptimizingTestSuite()
@@ -105,7 +106,7 @@ class TestOptimizingTestSuite(unittest.TestCase):
         self.assertEqual(suite.sorted, True)
 
 
-class TestGraphStuff(unittest.TestCase):
+class TestGraphStuff(pyunit3k.TestCase):
 
     def setUp(self):
 

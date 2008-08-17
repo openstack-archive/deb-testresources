@@ -18,12 +18,13 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import pyunit3k
+
 import testresources
 from testresources.tests import SampleTestResource
-import unittest
 
 
-class TestTestResource(unittest.TestCase):
+class TestTestResource(pyunit3k.TestCase):
 
     def testDefaultResource(self):
         self.assertRaises(NotImplementedError,
@@ -117,7 +118,7 @@ class TestTestResource(unittest.TestCase):
         self.assertEqual(SampleTestResource._uses, 0)
 
 
-class TestSampleResource(unittest.TestCase):
+class TestSampleResource(pyunit3k.TestCase):
 
     def testSampleResource(self):
         resource = SampleTestResource.getResource()

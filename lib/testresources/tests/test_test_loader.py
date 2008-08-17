@@ -18,12 +18,12 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import unittest
+import pyunit3k
 from testresources import TestLoader, OptimizingTestSuite
 from testresources.tests import TestUtil
 
 
-class TestTestLoader(unittest.TestCase):
+class TestTestLoader(pyunit3k.TestCase):
 
     def testSuiteType(self):
         # The testresources TestLoader loads tests into an

@@ -18,12 +18,12 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import pyunit3k
 import testresources
 from testresources.tests import SampleTestResource
-import unittest
 
 
-class TestResourcedTestCase(unittest.TestCase):
+class TestResourcedTestCase(pyunit3k.TestCase):
 
     def testDefaults(self):
         case = testresources.ResourcedTestCase("run")
