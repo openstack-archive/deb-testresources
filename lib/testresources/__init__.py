@@ -26,6 +26,15 @@ def test_suite():
     return testresources.tests.test_suite()
 
 
+def cost_of_switching(old_resource_set, new_resource_set):
+    """The cost of switching from 'old_resource_set' to 'new_resource_set'.
+
+    This is calculated by adding the cost of tearing down unnecessary
+    resources to the cost of setting up the newly-needed resources.
+    """
+    return len(old_resource_set ^ new_resource_set)
+
+
 def split_by_resources(tests):
     """Split a list of tests by whether or not they use test resources.
 
@@ -117,8 +126,7 @@ class OptimizingTestSuite(unittest.TestSuite):
             test_resources = set(test.resources)
             for othertest in pending:
                 othertest_resources = set(othertest.resources)
-                cost = len(
-                    test_resources.symmetric_difference(othertest_resources))
+                cost = cost_of_switching(test_resources, othertest_resources)
                 graph[test][othertest] = cost
                 graph[othertest][test] = cost
         return graph, legacy

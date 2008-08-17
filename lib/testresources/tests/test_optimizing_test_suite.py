@@ -21,7 +21,7 @@
 import random
 import pyunit3k
 import testresources
-from testresources import split_by_resources
+from testresources import cost_of_switching, split_by_resources
 from testresources.tests import SampleTestResource
 import unittest
 
@@ -182,6 +182,51 @@ class TestSplitByResources(pyunit3k.TestCase):
         have_nots, haves = split_by_resources(all_cases)
         self.assertEqual(set(normal_cases), set(have_nots))
         self.assertEqual(set(resourced_cases), set(haves))
+
+
+class TestCostOfSwitching(pyunit3k.TestCase):
+    """Tests for cost_of_switching."""
+
+    def makeResource(self, setUpCost=1, tearDownCost=1):
+        resource = testresources.TestResource()
+        resource.setUpCost = setUpCost
+        resource.tearDownCost = tearDownCost
+        return resource
+
+    def testNoResources(self):
+        # The cost of switching from no resources to no resources is 0.
+        self.assertEqual(0, cost_of_switching(set(), set()))
+
+    def testSameResources(self):
+        # The cost of switching to the same set of resources is also 0.
+        a = self.makeResource()
+        b = self.makeResource()
+        self.assertEqual(0, cost_of_switching(set([a]), set([a])))
+        self.assertEqual(0, cost_of_switching(set([a, b]), set([a, b])))
+
+    # XXX: The next few tests demonstrate the current behaviour of the system.
+    # We'll change them later.
+
+    def testNewResources(self):
+        a = self.makeResource()
+        b = self.makeResource()
+        self.assertEqual(1, cost_of_switching(set(), set([a])))
+        self.assertEqual(1, cost_of_switching(set([a]), set([a, b])))
+        self.assertEqual(2, cost_of_switching(set(), set([a, b])))
+
+    def testOldResources(self):
+        a = self.makeResource()
+        b = self.makeResource()
+        self.assertEqual(1, cost_of_switching(set([a]), set()))
+        self.assertEqual(1, cost_of_switching(set([a, b]), set([a])))
+        self.assertEqual(2, cost_of_switching(set([a, b]), set()))
+
+    def testCombo(self):
+        a = self.makeResource()
+        b = self.makeResource()
+        c = self.makeResource()
+        self.assertEqual(2, cost_of_switching(set([a]), set([b])))
+        self.assertEqual(2, cost_of_switching(set([a, c]), set([b, c])))
 
 
 class TestGraphStuff(pyunit3k.TestCase):
