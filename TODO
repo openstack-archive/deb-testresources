@@ -76,3 +76,8 @@ Ideas
   the resulting suites have identical resource requirements and allowing
   optimisation to still occur.
   XXX: Clarify with Robert.
+
+* 'TestResource' isn't a very good name. Since the switch to instance-based
+  resources, it's even worse, since the objects are more like resource
+  factories or resource managers. Other possible names involve 'asset',
+  'liability' or 'fixture'.
