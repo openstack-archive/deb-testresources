@@ -110,6 +110,12 @@ class TestGraphStuff(pyunit3k.TestCase):
     def setUp(self):
 
         class MockTest(unittest.TestCase):
+            def __repr__(self):
+                """The representation is the tests name.
+
+                This makes it easier to debug sorting failures.
+                """
+                return self.id().split('.')[-1]
             def test_one(self):
                 pass
             def test_two(self):
