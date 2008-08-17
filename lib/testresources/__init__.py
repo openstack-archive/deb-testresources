@@ -252,15 +252,3 @@ class ResourcedTestCase(unittest.TestCase):
         for resource in self.resources:
             resource[1].finishedWith(getattr(self, resource[0]))
             delattr(self, resource[0])
-
-# XXX: Needs to be fun to use even if you don't care about optimization.
-# XXX:
-# - To replace layers, need a resource that runs test in subprocess.
-# - alternatively, resource that is never torn down.
-# XXX: How to combine resources?
-# XXX: Introduce timing hooks for setUpCost and tearDownCost.
-# XXX: setUpCost and tearDownCost are not used.
-# XXX: Why does finishedWith take a parameter?
-# XXX: sortTests is basically untested.
-# XXX: IDEA: Have a dumb equivalent of OptimizingTestSuite that doesn't do any
-# sorting. Rely on others to do the sorting.

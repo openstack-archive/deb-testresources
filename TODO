@@ -1,0 +1,78 @@
+
+Tasks
+=====
+
+* Test OptimizingTestSuite.sortTests
+
+* Test switch
+
+* Use setUpCost and tearDownCost in cost calculation
+
+* Sort out naming & coding convention and write up in tree.
+
+* Confirm license and copyright of dijkstra and priodict.
+
+* Discuss copyright of Jonathan's contributions with Robert.
+
+* Test exceptions being raised from makeResource and cleanResource
+
+* Talk to bzrtools upstream (abentley) about the significant
+  backwards-compatibility-breaking changes.
+
+
+Questions
+=========
+
+* Why does finishedWith take a parameter? Why not use
+  TestResource._currentResource?
+
+* How should resources be composed?
+
+* How can testresources be used with layers?
+
+* How can testresources be used to *replace* layers?
+
+* resource dirty markers on non current resources - ignore? keep a history?
+  XXX: Clarify with Robert.
+
+
+Bugs
+====
+
+* Current traversal cost doesn't count the cost of setting up the initial set
+  of resources. Perhaps this could be worked around by including a transition
+  from 'no resources' in OptimizingTestSuite._getGraph?
+
+  From old todos in README:
+   * during graph calculation, create a fake root with cost-of-resource paths
+     to all resources, better than choosing an arbitrary node.
+
+* Related: TestGraphStuff.testBasicSortTests is disabled due to intermittent
+  failure.
+
+
+Ideas
+=====
+
+* Have a dumb equivalent of OptimizingTestSuite that doesn't do any sorting.
+  Rely on others to do the sorting first.
+
+* Introduce timing hooks for better estimation of setUpCost and tearDownCost.
+
+* Store timing information so that cost estimations can improve over time.
+
+* Change the interface of TestResource so that makeResource and cleanResource
+  are methods on some *other* object, rather than methods to be overridden.
+  This object could well have the interface .setUp() and .tearDown()!
+
+* Move ResourcedTestCase.setUpResources and tearDownResources to be methods.
+
+* Change ResourcedTestCase.resources to a dict (currently a list of 2-tuples).
+
+* There are now many simple test helpers. These can probably be consolidated.
+
+* It should be possible to make copies of TestSuites in adsorbSuite, keeping
+  the containing TestSuites but at a chosen granularity, so that all tests in
+  the resulting suites have identical resource requirements and allowing
+  optimisation to still occur.
+  XXX: Clarify with Robert.

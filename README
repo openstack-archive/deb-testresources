@@ -68,15 +68,3 @@ There are three main components to make UnitResources work:
 
 4) testresources.TestLoader
    This is a trivial TestLoader that creates OptimisingTestSuites by default.
-
-TODO:
- * write everything.
- * resource dirty markers on non current resources - ignore? keep a history ?
- * test exceptions being raised from _makeResource and _cleanResource
- * It should be possible to make copies of TestSuites in adsorbSuite, keeping
-   the containing TestSuites but at a chosen granularity, so that all tests in
-   the resulting suites have identical resource requirements and allowing
-   optimisation to still occur.
- * add a setUpCost field to TestResources
- * during graph calculation, create a fake root with cost-of-resource paths to 
-   all resources, better than choosing an arbitrary node.
