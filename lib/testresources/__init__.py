@@ -35,6 +35,21 @@ def cost_of_switching(old_resource_set, new_resource_set):
     return len(old_resource_set ^ new_resource_set)
 
 
+def switch(old_resource_set, new_resource_set):
+    """Switch from 'old_resource_set' to 'new_resource_set'.
+
+    Tear down resources in old_resource_set that aren't in new_resource_set
+    and set up resources that are in new_resource_set but not in
+    old_resource_set.
+    """
+    new_resources = new_resource_set - old_resource_set
+    old_resources = old_resource_set - new_resource_set
+    for resource in old_resources:
+        resource.finishedWith(resource._currentResource)
+    for resource in new_resources:
+        resource.getResource()
+
+
 def split_by_resources(tests):
     """Split a list of tests by whether or not they use test resources.
 
@@ -68,24 +83,17 @@ class OptimizingTestSuite(unittest.TestSuite):
 
     def run(self, result):
         self.sortTests()
-        current_resources = {}
+        current_resources = set()
         for test in self._tests:
             if result.shouldStop:
                 break
             resources = getattr(test, 'resources', None)
             if resources is not None:
-                new_resources = {}
-                for attribute, resource in resources:
-                    if not resource in current_resources.keys():
-                        current_resources[resource] = resource.getResource()
-                    new_resources[resource] = current_resources[resource]
-                for resource in current_resources.keys():
-                    if not resource in new_resources:
-                        resource.finishedWith(current_resources[resource])
+                new_resources = set(resource for name, resource in resources)
+                switch(current_resources, new_resources)
                 current_resources = new_resources
             test(result)
-        for resource, value in current_resources.items():
-            resource.finishedWith(value)
+        switch(current_resources, set())
         return result
 
     def sortTests(self):
@@ -253,3 +261,6 @@ class ResourcedTestCase(unittest.TestCase):
 # XXX: Introduce timing hooks for setUpCost and tearDownCost.
 # XXX: setUpCost and tearDownCost are not used.
 # XXX: Why does finishedWith take a parameter?
+# XXX: sortTests is basically untested.
+# XXX: IDEA: Have a dumb equivalent of OptimizingTestSuite that doesn't do any
+# sorting. Rely on others to do the sorting.

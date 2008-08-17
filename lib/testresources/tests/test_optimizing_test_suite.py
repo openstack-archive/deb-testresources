@@ -123,16 +123,6 @@ class TestOptimizingTestSuite(pyunit3k.TestCase):
         self.assertEqual(result.testsRun, 1)
         self.assertEqual(result.wasSuccessful(), True)
 
-    def testSortTestsCalled(self):
-        class MockOptimizingTestSuite(testresources.OptimizingTestSuite):
-            def sortTests(self):
-                self.sorted = True
-
-        suite = MockOptimizingTestSuite()
-        suite.sorted = False
-        suite.run(None)
-        self.assertEqual(suite.sorted, True)
-
 
 class TestSplitByResources(pyunit3k.TestCase):
     """Tests for split_by_resources."""
