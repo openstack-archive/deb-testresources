@@ -174,11 +174,9 @@ class TestResource(object):
         self._uses -= 1
         if self._uses == 0:
             self.cleanResource(resource)
-            self._currentResource = None
-            self._dirty = False
+            self._setResource(None)
         elif self._dirty:
-            self.cleanResource(resource)
-            self._setResource()
+            self._resetResource(resource)
 
     def getResource(self):
         """Get the resource for this class and record that it's being used.
@@ -189,10 +187,9 @@ class TestResource(object):
         that it is no longer needed.
         """
         if self._uses == 0:
-            self._setResource()
+            self._setResource(self.makeResource())
         elif self._dirty:
-            self.cleanResource(self._currentResource)
-            self._setResource()
+            self._resetResource(self._currentResource)
         self._uses += 1
         return self._currentResource
 
@@ -201,9 +198,13 @@ class TestResource(object):
         raise NotImplementedError(
             "Override makeResource to construct resources.")
 
-    def _setResource(self):
+    def _resetResource(self, old_resource):
+        self.cleanResource(old_resource)
+        self._setResource(self.makeResource())
+
+    def _setResource(self, new_resource):
         """Set the current resource to a new value."""
-        self._currentResource = self.makeResource()
+        self._currentResource = new_resource
         self._dirty = False
 
 
