@@ -36,47 +36,45 @@ class MockResource(testresources.TestResource):
 class TestResourcedTestCase(pyunit3k.TestCase):
 
     def setUp(self):
+        pyunit3k.TestCase.setUp(self)
         self.resourced_case = testresources.ResourcedTestCase('run')
+        self.resource = self.getUniqueString()
+        self.resource_manager = MockResource(self.resource)
 
     def testDefaults(self):
-        self.resourced_case.setUpResources()
-        self.resourced_case.tearDownResources()
         self.assertEqual(self.resourced_case.resources, [])
 
     def testSingleResource(self):
-        sample_resource = MockResource('sample')
-        self.resourced_case.resources = [("_default", sample_resource)]
+        self.resourced_case.resources = [("foo", self.resource_manager)]
         self.resourced_case.setUpResources()
-        self.assertEqual(self.resourced_case._default, 'sample')
-        self.assertEqual(sample_resource._uses, 1)
+        self.assertEqual(self.resourced_case.foo, self.resource)
+        self.assertEqual(self.resource_manager._uses, 1)
         self.resourced_case.tearDownResources()
-        self.failIf(hasattr(self.resourced_case, "_default"))
-        self.assertEqual(sample_resource._uses, 0)
+        self.failIf(hasattr(self.resourced_case, "foo"))
+        self.assertEqual(self.resource_manager._uses, 0)
 
     def testSingleWithSetup(self):
-        sample_resource = MockResource('sample')
-        self.resourced_case.resources = [("_default", sample_resource)]
+        self.resourced_case.resources = [("foo", self.resource_manager)]
         self.resourced_case.setUp()
-        self.assertEqual(self.resourced_case._default, 'sample')
-        self.assertEqual(sample_resource._uses, 1)
+        self.assertEqual(self.resourced_case.foo, self.resource)
+        self.assertEqual(self.resource_manager._uses, 1)
         self.resourced_case.tearDown()
-        self.failIf(hasattr(self.resourced_case, "_default"))
-        self.assertEqual(sample_resource._uses, 0)
+        self.failIf(hasattr(self.resourced_case, "foo"))
+        self.assertEqual(self.resource_manager._uses, 0)
 
     def testMultipleResources(self):
-        sample_resource = MockResource('sample')
         mock_resource = MockResource('Boo!')
         self.resourced_case.resources = [
-            ("_default", sample_resource), ("_mock", mock_resource)]
+            ("foo", self.resource_manager), ("bar", mock_resource)]
         self.resourced_case.setUpResources()
-        self.assertEqual(self.resourced_case._default, 'sample')
-        self.assertEqual(self.resourced_case._mock, "Boo!")
-        self.assertEqual(sample_resource._uses, 1)
+        self.assertEqual(self.resourced_case.foo, self.resource)
+        self.assertEqual(self.resourced_case.bar, "Boo!")
+        self.assertEqual(self.resource_manager._uses, 1)
         self.assertEqual(mock_resource._uses, 1)
         self.resourced_case.tearDownResources()
-        self.failIf(hasattr(self.resourced_case, "_default"))
-        self.assertEqual(sample_resource._uses, 0)
-        self.failIf(hasattr(self.resourced_case, "_mock"))
+        self.failIf(hasattr(self.resourced_case, "foo"))
+        self.assertEqual(self.resource_manager._uses, 0)
+        self.failIf(hasattr(self.resourced_case, "bar"))
         self.assertEqual(mock_resource._uses, 0)
 
 
