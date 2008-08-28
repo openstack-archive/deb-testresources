@@ -17,7 +17,7 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-from copy import copy
+from pyunit3k import iterate_tests
 import unittest
 
 
@@ -26,16 +26,22 @@ def test_suite():
     return testresources.tests.test_suite()
 
 
-def iterate_tests(test_suite_or_case):
-    """Iterate through all of the test cases in `test_suite_or_case`."""
-    try:
-        suite = iter(test_suite_or_case)
-    except TypeError:
-        yield test_suite_or_case
-    else:
-        for test in suite:
-            for subtest in iterate_tests(test):
-                yield subtest
+def split_by_resources(tests):
+    """Split a list of tests by whether or not they use test resources.
+
+    :return: ([tests_that_dont], [tests_that_do])
+    """
+    # XXX: We could probably use itertools.groupby for this. Or set
+    # difference.
+    resource_users = []
+    legacy = []
+    for test in tests:
+        resources = getattr(test, 'resources', None)
+        if resources:
+            resource_users.append(test)
+        else:
+            legacy.append(test)
+    return legacy, resource_users
 
 
 class OptimizingTestSuite(unittest.TestSuite):
@@ -104,25 +110,15 @@ class OptimizingTestSuite(unittest.TestSuite):
         # build a mesh graph where a node is a test, and and the number of
         # resources to change to another test is the cost to travel straight
         # to that node.
-        legacy = []
-        graph = {}
-        pending = []
-        temp_pending = copy(self._tests)
-        if len(temp_pending) == 0:
-            return {}, []
-        for test in temp_pending:
-            if getattr(test, 'resources', None) is None:
-                legacy.append(test)
-                continue
-            pending.append(test)
-            graph[test] = {}
-        while len(pending):
+        legacy, pending = split_by_resources(self._tests)
+        graph = dict((test, dict()) for test in pending)
+        while pending:
             test = pending.pop()
             test_resources = set(test.resources)
             for othertest in pending:
                 othertest_resources = set(othertest.resources)
-                cost = len(test_resources.symmetric_difference(
-                                othertest_resources))
+                cost = len(
+                    test_resources.symmetric_difference(othertest_resources))
                 graph[test][othertest] = cost
                 graph[othertest][test] = cost
         return graph, legacy
