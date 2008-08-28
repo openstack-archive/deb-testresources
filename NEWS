@@ -12,7 +12,7 @@ IN DEVELOPMENT
       without using pyunit3k directly. (Jonathan Lange)
 
     * Calling finishedWith on a dirty resource now cleans that resource.
-    (Jonathan Lange)
+      (Jonathan Lange)
 
   IMPROVEMENTS:
 
@@ -29,7 +29,7 @@ IN DEVELOPMENT
     * OptimisingTestSuite has been renamed to OptimizingTestSuite.
       (Jonathan Lange)
 
-    * OptimizingTestSuite.adsorbSuite has been renamed to flatAddTest.
+    * OptimizingTestSuite.adsorbSuite has been renamed to addTestFlat.
       (Jonathan Lange)
 
     * ResourcedTestCase.setUpResources and tearDownResources are now instance
