@@ -55,3 +55,7 @@ IN DEVELOPMENT
 
     * A lot of the tests have been split up into smaller tests. Others have
       been refactored. (Jonathan Lange)
+
+    * OptimizingTestSuite has been refactored internally so that the way we
+      switch active resources and determine the cost of switching is more
+      obvious. (Jonathan Lange)
