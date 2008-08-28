@@ -26,30 +26,6 @@ def test_suite():
     return testresources.tests.test_suite()
 
 
-def cost_of_switching(old_resource_set, new_resource_set):
-    """The cost of switching from 'old_resource_set' to 'new_resource_set'.
-
-    This is calculated by adding the cost of tearing down unnecessary
-    resources to the cost of setting up the newly-needed resources.
-    """
-    return len(old_resource_set ^ new_resource_set)
-
-
-def switch(old_resource_set, new_resource_set):
-    """Switch from 'old_resource_set' to 'new_resource_set'.
-
-    Tear down resources in old_resource_set that aren't in new_resource_set
-    and set up resources that are in new_resource_set but not in
-    old_resource_set.
-    """
-    new_resources = new_resource_set - old_resource_set
-    old_resources = old_resource_set - new_resource_set
-    for resource in old_resources:
-        resource.finishedWith(resource._currentResource)
-    for resource in new_resources:
-        resource.getResource()
-
-
 def split_by_resources(tests):
     """Split a list of tests by whether or not they use test resources.
 
@@ -81,6 +57,30 @@ class OptimizingTestSuite(unittest.TestSuite):
         for test in iterate_tests(test_case_or_suite):
             self.addTest(test)
 
+    def cost_of_switching(self, old_resource_set, new_resource_set):
+        """Cost of switching from 'old_resource_set' to 'new_resource_set'.
+
+        This is calculated by adding the cost of tearing down unnecessary
+        resources to the cost of setting up the newly-needed resources.
+        """
+        return len(old_resource_set ^ new_resource_set)
+
+
+    def switch(self, old_resource_set, new_resource_set):
+        """Switch from 'old_resource_set' to 'new_resource_set'.
+
+        Tear down resources in old_resource_set that aren't in
+        new_resource_set and set up resources that are in new_resource_set but
+        not in old_resource_set.
+        """
+        new_resources = new_resource_set - old_resource_set
+        old_resources = old_resource_set - new_resource_set
+        for resource in old_resources:
+            resource.finishedWith(resource._currentResource)
+        for resource in new_resources:
+            resource.getResource()
+
+
     def run(self, result):
         self.sortTests()
         current_resources = set()
@@ -90,10 +90,10 @@ class OptimizingTestSuite(unittest.TestSuite):
             resources = getattr(test, 'resources', None)
             if resources is not None:
                 new_resources = set(resource for name, resource in resources)
-                switch(current_resources, new_resources)
+                self.switch(current_resources, new_resources)
                 current_resources = new_resources
             test(result)
-        switch(current_resources, set())
+        self.switch(current_resources, set())
         return result
 
     def sortTests(self):
@@ -135,7 +135,8 @@ class OptimizingTestSuite(unittest.TestSuite):
             test_resources = set(test.resources)
             for othertest in tests_with_resources:
                 othertest_resources = set(othertest.resources)
-                cost = cost_of_switching(test_resources, othertest_resources)
+                cost = self.cost_of_switching(
+                    test_resources, othertest_resources)
                 graph[test][othertest] = cost
                 graph[othertest][test] = cost
         return graph

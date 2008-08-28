@@ -21,7 +21,7 @@
 import random
 import pyunit3k
 import testresources
-from testresources import cost_of_switching, split_by_resources
+from testresources import split_by_resources
 import unittest
 
 
@@ -173,6 +173,10 @@ class TestSplitByResources(pyunit3k.TestCase):
 class TestCostOfSwitching(pyunit3k.TestCase):
     """Tests for cost_of_switching."""
 
+    def setUp(self):
+        pyunit3k.TestCase.setUp(self)
+        self.suite = testresources.OptimizingTestSuite()
+
     def makeResource(self, setUpCost=1, tearDownCost=1):
         resource = testresources.TestResource()
         resource.setUpCost = setUpCost
@@ -181,14 +185,14 @@ class TestCostOfSwitching(pyunit3k.TestCase):
 
     def testNoResources(self):
         # The cost of switching from no resources to no resources is 0.
-        self.assertEqual(0, cost_of_switching(set(), set()))
+        self.assertEqual(0, self.suite.cost_of_switching(set(), set()))
 
     def testSameResources(self):
         # The cost of switching to the same set of resources is also 0.
         a = self.makeResource()
         b = self.makeResource()
-        self.assertEqual(0, cost_of_switching(set([a]), set([a])))
-        self.assertEqual(0, cost_of_switching(set([a, b]), set([a, b])))
+        self.assertEqual(0, self.suite.cost_of_switching(set([a]), set([a])))
+        self.assertEqual(0, self.suite.cost_of_switching(set([a, b]), set([a, b])))
 
     # XXX: The next few tests demonstrate the current behaviour of the system.
     # We'll change them later.
@@ -196,31 +200,27 @@ class TestCostOfSwitching(pyunit3k.TestCase):
     def testNewResources(self):
         a = self.makeResource()
         b = self.makeResource()
-        self.assertEqual(1, cost_of_switching(set(), set([a])))
-        self.assertEqual(1, cost_of_switching(set([a]), set([a, b])))
-        self.assertEqual(2, cost_of_switching(set(), set([a, b])))
+        self.assertEqual(1, self.suite.cost_of_switching(set(), set([a])))
+        self.assertEqual(1, self.suite.cost_of_switching(set([a]), set([a, b])))
+        self.assertEqual(2, self.suite.cost_of_switching(set(), set([a, b])))
 
     def testOldResources(self):
         a = self.makeResource()
         b = self.makeResource()
-        self.assertEqual(1, cost_of_switching(set([a]), set()))
-        self.assertEqual(1, cost_of_switching(set([a, b]), set([a])))
-        self.assertEqual(2, cost_of_switching(set([a, b]), set()))
+        self.assertEqual(1, self.suite.cost_of_switching(set([a]), set()))
+        self.assertEqual(1, self.suite.cost_of_switching(set([a, b]), set([a])))
+        self.assertEqual(2, self.suite.cost_of_switching(set([a, b]), set()))
 
     def testCombo(self):
         a = self.makeResource()
         b = self.makeResource()
         c = self.makeResource()
-        self.assertEqual(2, cost_of_switching(set([a]), set([b])))
-        self.assertEqual(2, cost_of_switching(set([a, c]), set([b, c])))
+        self.assertEqual(2, self.suite.cost_of_switching(set([a]), set([b])))
+        self.assertEqual(2, self.suite.cost_of_switching(set([a, c]), set([b, c])))
 
 
 class TestCostGraph(pyunit3k.TestCase):
     """Tests for calculating the cost graph of resourced test cases."""
-
-    def getGraph(self, tests_with_resources):
-        suite = testresources.OptimizingTestSuite()
-        return suite._getGraph(tests_with_resources)
 
     def makeResource(self, setUpCost=1, tearDownCost=1):
         resource = testresources.TestResource()
@@ -235,20 +235,27 @@ class TestCostGraph(pyunit3k.TestCase):
         return case
 
     def testEmptyGraph(self):
-        self.assertEqual({}, self.getGraph([]))
+        suite = testresources.OptimizingTestSuite()
+        graph = suite._getGraph([])
+        self.assertEqual({}, graph)
 
     def testSingletonGraph(self):
         case = self.makeTestWithResources([self.makeResource()])
-        self.assertEqual({case: {}}, self.getGraph([case]))
+        suite = testresources.OptimizingTestSuite()
+        graph = suite._getGraph([case])
+        self.assertEqual({case: {}}, graph)
 
     def testTwoCasesInGraph(self):
         a = self.makeTestWithResources(
             [self.makeResource(), self.makeResource()])
         b = self.makeTestWithResources([self.makeResource()])
+        suite = testresources.OptimizingTestSuite()
+        graph = suite._getGraph([a, b])
         self.assertEqual(
-            {a: {b: cost_of_switching(set(a.resources), set(b.resources))},
-             b: {a: cost_of_switching(set(a.resources), set(b.resources))}},
-            self.getGraph([a, b]))
+            {a: {b: suite.cost_of_switching(
+                        set(a.resources), set(b.resources))},
+             b: {a: suite.cost_of_switching(
+                        set(a.resources), set(b.resources))}}, graph)
 
 
 class TestGraphStuff(pyunit3k.TestCase):
