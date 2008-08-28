@@ -1,0 +1,57 @@
+---------------------------
+testresources release notes
+---------------------------
+
+
+IN DEVELOPMENT
+--------------
+
+  CHANGES:
+
+    * testresources now depends on pyunit3k. You can still use testresources
+      without using pyunit3k directly. (Jonathan Lange)
+
+    * Calling finishedWith on a dirty resource now cleans that resource.
+    (Jonathan Lange)
+
+  IMPROVEMENTS:
+
+    * Many more docstrings. (Jonathan Lange)
+
+    * Expanded README. (Jonathan Lange)
+
+    * Expanded TODO. (Jonathan Lange)
+
+    * Started keeping a NEWS file! (Jonathan Lange)
+
+  API CHANGES:
+
+    * OptimisingTestSuite has been renamed to OptimizingTestSuite.
+      (Jonathan Lange)
+
+    * OptimizingTestSuite.adsorbSuite has been renamed to flatAddTest.
+      (Jonathan Lange)
+
+    * ResourcedTestCase.setUpResources and tearDownResources are now instance
+      methods, not static methods. (Jonathan Lange)
+
+    * All methods on TestResource are now instance methods, and thus tests
+      should use instances of TestResource subclasses, not the classes
+      themselves. (Jonathan Lange)
+
+    * TestResource.setResource has been renamed to _setResource.
+      (Jonathan Lange)
+
+    * SampleTestResource has been removed. (Jonathan Lange)
+
+    * ResourcedTestCase will now look for resources in the 'resources'
+      attribute, rather than the '_resources' attribute. (Jonathan Lange)
+
+    * TestResource subclasses should override makeResource and cleanResource
+      where they previously overrode _makeResource and _cleanResource.
+      (Jonathan Lange)
+
+  INTERNALS:
+
+    * A lot of the tests have been split up into smaller tests. Others have
+      been refactored. (Jonathan Lange)
