@@ -44,7 +44,7 @@ def split_by_resources(tests):
     return legacy, resource_users
 
 
-class OptimizingTestSuite(unittest.TestSuite):
+class OptimisingTestSuite(unittest.TestSuite):
     """A resource creation optimising TestSuite."""
 
     def addTestFlat(self, test_case_or_suite):
@@ -144,7 +144,7 @@ class OptimizingTestSuite(unittest.TestSuite):
 
 class TestLoader(unittest.TestLoader):
     """Custom TestLoader to set the right TestSuite class."""
-    suiteClass = OptimizingTestSuite
+    suiteClass = OptimisingTestSuite
 
 
 class TestResource(object):

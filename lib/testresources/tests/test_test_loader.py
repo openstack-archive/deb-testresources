@@ -19,7 +19,7 @@
 #
 
 import pyunit3k
-from testresources import TestLoader, OptimizingTestSuite
+from testresources import TestLoader, OptimisingTestSuite
 from testresources.tests import TestUtil
 
 
@@ -27,10 +27,10 @@ class TestTestLoader(pyunit3k.TestCase):
 
     def testSuiteType(self):
         # The testresources TestLoader loads tests into an
-        # OptimizingTestSuite.
+        # OptimisingTestSuite.
         loader = TestLoader()
         suite = loader.loadTestsFromName(__name__)
-        self.assertIsInstance(suite, OptimizingTestSuite)
+        self.assertIsInstance(suite, OptimisingTestSuite)
 
 
 def test_suite():

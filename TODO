@@ -2,7 +2,7 @@
 Tasks
 =====
 
-* Test OptimizingTestSuite.sortTests
+* Test OptimisingTestSuite.sortTests
 
 * Test switch
 
@@ -41,7 +41,7 @@ Bugs
 
 * Current traversal cost doesn't count the cost of setting up the initial set
   of resources. Perhaps this could be worked around by including a transition
-  from 'no resources' in OptimizingTestSuite._getGraph?
+  from 'no resources' in OptimisingTestSuite._getGraph?
 
   From old todos in README:
    * during graph calculation, create a fake root with cost-of-resource paths
@@ -54,7 +54,7 @@ Bugs
 Ideas
 =====
 
-* Have a dumb equivalent of OptimizingTestSuite that doesn't do any sorting.
+* Have a dumb equivalent of OptimisingTestSuite that doesn't do any sorting.
   Rely on others to do the sorting first.
 
 * Introduce timing hooks for better estimation of setUpCost and tearDownCost.

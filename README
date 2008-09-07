@@ -57,7 +57,7 @@ for now the behaviour will to silently continue.
 See pydoc testresources.TestResource for details.
 
 
-2) testresources.OptimizingTestSuite
+2) testresources.OptimisingTestSuite
 
 This TestSuite will introspect all the test cases it holds directly and if
 they declare needed resources, will run the tests in an order that attempts to
@@ -78,7 +78,7 @@ you wish.
 
 ResourceTestCase can be used as a base class for tests, and when that is done
 tests will have their resources attribute automatically checked for resources
-by both OptimizingTestSuite and their own setUp() and tearDown() methods.
+by both OptimisingTestSuite and their own setUp() and tearDown() methods.
 (This allows tests to remain functional without needing this specific
 TestSuite as a container). Alternatively, you can call
 ResourceTestCase.setUpResources(self) and
@@ -93,4 +93,4 @@ during tearDown().
 
 4) testresources.TestLoader
 
-This is a trivial TestLoader that creates OptimizingTestSuites by default.
+This is a trivial TestLoader that creates OptimisingTestSuites by default.

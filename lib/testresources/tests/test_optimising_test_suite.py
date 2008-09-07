@@ -41,7 +41,7 @@ class MakeCounter(testresources.TestResource):
         return "boo"
 
 
-class TestOptimizingTestSuite(pyunit3k.TestCase):
+class TestOptimisingTestSuite(pyunit3k.TestCase):
 
     def makeTestCase(self):
         """Make a normal TestCase."""
@@ -58,22 +58,22 @@ class TestOptimizingTestSuite(pyunit3k.TestCase):
 
     def setUp(self):
         pyunit3k.TestCase.setUp(self)
-        self.optimizing_suite = testresources.OptimizingTestSuite()
+        self.optimising_suite = testresources.OptimisingTestSuite()
 
     def testFlatAddTest(self):
         # Flat-adding a single test case is the same as adding one using
         # addTest.
         case = self.makeTestCase()
-        self.optimizing_suite.addTestFlat(case)
-        self.assertEqual([case], self.optimizing_suite._tests)
+        self.optimising_suite.addTestFlat(case)
+        self.assertEqual([case], self.optimising_suite._tests)
 
     def testFlatAddTestSuite(self):
         # Flat-adding a test suite will is the same as adding all the tests in
         # that suite.
         case = self.makeTestCase()
         suite = unittest.TestSuite([case])
-        self.optimizing_suite.addTestFlat(suite)
-        self.assertEqual([case], self.optimizing_suite._tests)
+        self.optimising_suite.addTestFlat(suite)
+        self.assertEqual([case], self.optimising_suite._tests)
 
     def testFlatAddFlattensAllSuiteStructure(self):
         # addTestFlat will get rid of all suite structure when adding a test,
@@ -84,17 +84,17 @@ class TestOptimizingTestSuite(pyunit3k.TestCase):
         suite = unittest.TestSuite(
             [unittest.TestSuite([case1, unittest.TestSuite([case2])]),
              case3])
-        self.optimizing_suite.addTestFlat(suite)
-        self.assertEqual([case1, case2, case3], self.optimizing_suite._tests)
+        self.optimising_suite.addTestFlat(suite)
+        self.assertEqual([case1, case2, case3], self.optimising_suite._tests)
 
     def testSingleCaseResourceAcquisition(self):
         sample_resource = MakeCounter()
         def getResourceCount():
             self.assertEqual(sample_resource._uses, 2)
         case = self.makeResourcedTestCase(sample_resource, getResourceCount)
-        self.optimizing_suite.addTest(case)
+        self.optimising_suite.addTest(case)
         result = unittest.TestResult()
-        self.optimizing_suite.run(result)
+        self.optimising_suite.run(result)
         self.assertEqual(result.testsRun, 1)
         self.assertEqual(result.wasSuccessful(), True)
         self.assertEqual(sample_resource._uses, 0)
@@ -105,10 +105,10 @@ class TestOptimizingTestSuite(pyunit3k.TestCase):
             self.assertEqual(make_counter._uses, 2)
         case = self.makeResourcedTestCase(make_counter, getResourceCount)
         case2 = self.makeResourcedTestCase(make_counter, getResourceCount)
-        self.optimizing_suite.addTest(case)
-        self.optimizing_suite.addTest(case2)
+        self.optimising_suite.addTest(case)
+        self.optimising_suite.addTest(case2)
         result = unittest.TestResult()
-        self.optimizing_suite.run(result)
+        self.optimising_suite.run(result)
         self.assertEqual(result.testsRun, 2)
         self.assertEqual(result.wasSuccessful(), True)
         self.assertEqual(make_counter._uses, 0)
@@ -117,9 +117,9 @@ class TestOptimizingTestSuite(pyunit3k.TestCase):
 
     def testOptimisedRunNonResourcedTestCase(self):
         case = self.makeTestCase()
-        self.optimizing_suite.addTest(case)
+        self.optimising_suite.addTest(case)
         result = unittest.TestResult()
-        self.optimizing_suite.run(result)
+        self.optimising_suite.run(result)
         self.assertEqual(result.testsRun, 1)
         self.assertEqual(result.wasSuccessful(), True)
 
@@ -175,7 +175,7 @@ class TestCostOfSwitching(pyunit3k.TestCase):
 
     def setUp(self):
         pyunit3k.TestCase.setUp(self)
-        self.suite = testresources.OptimizingTestSuite()
+        self.suite = testresources.OptimisingTestSuite()
 
     def makeResource(self, setUpCost=1, tearDownCost=1):
         resource = testresources.TestResource()
@@ -235,13 +235,13 @@ class TestCostGraph(pyunit3k.TestCase):
         return case
 
     def testEmptyGraph(self):
-        suite = testresources.OptimizingTestSuite()
+        suite = testresources.OptimisingTestSuite()
         graph = suite._getGraph([])
         self.assertEqual({}, graph)
 
     def testSingletonGraph(self):
         case = self.makeTestWithResources([self.makeResource()])
-        suite = testresources.OptimizingTestSuite()
+        suite = testresources.OptimisingTestSuite()
         graph = suite._getGraph([case])
         self.assertEqual({case: {}}, graph)
 
@@ -249,7 +249,7 @@ class TestCostGraph(pyunit3k.TestCase):
         a = self.makeTestWithResources(
             [self.makeResource(), self.makeResource()])
         b = self.makeTestWithResources([self.makeResource()])
-        suite = testresources.OptimizingTestSuite()
+        suite = testresources.OptimisingTestSuite()
         graph = suite._getGraph([a, b])
         self.assertEqual(
             {a: {b: suite.cost_of_switching(
@@ -282,7 +282,7 @@ class TestGraphStuff(pyunit3k.TestCase):
         resource_two = testresources.TestResource()
         resource_three = testresources.TestResource()
 
-        self.suite = testresources.OptimizingTestSuite()
+        self.suite = testresources.OptimisingTestSuite()
         self.case1 = MockTest("test_one")
         self.case1.resources = [
             ("_one", resource_one), ("_two", resource_two)]
