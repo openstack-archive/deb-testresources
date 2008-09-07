@@ -65,7 +65,6 @@ class OptimisingTestSuite(unittest.TestSuite):
         """
         return len(old_resource_set ^ new_resource_set)
 
-
     def switch(self, old_resource_set, new_resource_set):
         """Switch from 'old_resource_set' to 'new_resource_set'.
 
@@ -79,7 +78,6 @@ class OptimisingTestSuite(unittest.TestSuite):
             resource.finishedWith(resource._currentResource)
         for resource in new_resources:
             resource.getResource()
-
 
     def run(self, result):
         self.sortTests()

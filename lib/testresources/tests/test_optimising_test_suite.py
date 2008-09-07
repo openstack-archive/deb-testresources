@@ -18,8 +18,8 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import random
 import pyunit3k
+import random
 import testresources
 from testresources import split_by_resources
 import unittest
