@@ -192,7 +192,8 @@ class TestCostOfSwitching(pyunit3k.TestCase):
         a = self.makeResource()
         b = self.makeResource()
         self.assertEqual(0, self.suite.cost_of_switching(set([a]), set([a])))
-        self.assertEqual(0, self.suite.cost_of_switching(set([a, b]), set([a, b])))
+        self.assertEqual(
+            0, self.suite.cost_of_switching(set([a, b]), set([a, b])))
 
     # XXX: The next few tests demonstrate the current behaviour of the system.
     # We'll change them later.
@@ -201,14 +202,16 @@ class TestCostOfSwitching(pyunit3k.TestCase):
         a = self.makeResource()
         b = self.makeResource()
         self.assertEqual(1, self.suite.cost_of_switching(set(), set([a])))
-        self.assertEqual(1, self.suite.cost_of_switching(set([a]), set([a, b])))
+        self.assertEqual(
+            1, self.suite.cost_of_switching(set([a]), set([a, b])))
         self.assertEqual(2, self.suite.cost_of_switching(set(), set([a, b])))
 
     def testOldResources(self):
         a = self.makeResource()
         b = self.makeResource()
         self.assertEqual(1, self.suite.cost_of_switching(set([a]), set()))
-        self.assertEqual(1, self.suite.cost_of_switching(set([a, b]), set([a])))
+        self.assertEqual(
+            1, self.suite.cost_of_switching(set([a, b]), set([a])))
         self.assertEqual(2, self.suite.cost_of_switching(set([a, b]), set()))
 
     def testCombo(self):
@@ -216,7 +219,8 @@ class TestCostOfSwitching(pyunit3k.TestCase):
         b = self.makeResource()
         c = self.makeResource()
         self.assertEqual(2, self.suite.cost_of_switching(set([a]), set([b])))
-        self.assertEqual(2, self.suite.cost_of_switching(set([a, c]), set([b, c])))
+        self.assertEqual(
+            2, self.suite.cost_of_switching(set([a, c]), set([b, c])))
 
 
 class TestCostGraph(pyunit3k.TestCase):
