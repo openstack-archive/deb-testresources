@@ -71,11 +71,26 @@ Ideas
 
 * There are now many simple test helpers. These can probably be consolidated.
 
-* It should be possible to make copies of TestSuites in adsorbSuite, keeping
-  the containing TestSuites but at a chosen granularity, so that all tests in
-  the resulting suites have identical resource requirements and allowing
-  optimisation to still occur.
-  XXX: Clarify with Robert.
+* We want to support adding other "special" test suites to
+  OptimisingTestSuite. In particular, if we add a test suite that provides
+  services to its tests to an OptimisingTestSuite, adsorbSuite / addTestFlat
+  should not totally flatten the suite, but instead keep the suite, even if it
+  changes the structure of the tests.
+
+  e.g. addTest maintains the structure:
+    >>> OptimisingTestSuite().addTest(SpecialSuite([a, b]))._tests
+    [SpecialSuite([a, b])]
+
+  Currently, addTestFlat destroys all suite structure:
+    >>> OptimisingTestSuite().addTestFlat(SpecialSuite([a, b]))._tests
+    [a, b]
+
+  Instead, it should preserve the suite while changing the structure:
+    >>> OptimisingTestSuite().addTestFlat(SpecialSuite([a, b]))._tests
+    [SpecialSuite(a), SpecialSuite(b)]
+
+  All of the tests in each of the resulting new SpecialSuites should have
+  identical resource requirements so we can still optimise.
 
 * 'TestResource' isn't a very good name. Since the switch to instance-based
   resources, it's even worse, since the objects are more like resource
