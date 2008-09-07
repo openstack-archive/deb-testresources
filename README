@@ -66,12 +66,14 @@ this by callling getResource() and finishedWith() around the sequence of tests
 that use a specific resource.
 
 OptimisingTestSuite has a new method over normal TestSuites:
-flatAddTest(test_case_or_suite), which scans another test suite and
-incorporates all of its tests directly into the OptimisingTestSuite. This
-allows for you to optimise across as broad or small a collection of tests as
-you wish.
+addTestFlat(test_case_or_suite), which scans another test suite and
+incorporates all of its tests directly into the OptimisingTestSuite.
 
-    XXX - that last sentence needs some unpacking, I think. -- jml
+Because the test suite does the optimisation, you can control the amount of
+optimising that takes place by adding more or fewer tests to a single
+OptimisingTestSuite. You could add everything to a single OptimisingTestSuite,
+getting global optimisation or you could use several smaller
+OptimisingTestSuites.
 
 
 3) testresources.ResourcedTestCase
