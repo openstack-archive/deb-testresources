@@ -8,8 +8,8 @@ IN DEVELOPMENT
 
   CHANGES:
 
-    * testresources now depends on pyunit3k. You can still use testresources
-      without using pyunit3k directly. (Jonathan Lange)
+    * testresources needs pyunit3k to run the testresources test suite. You
+      can still use testresources without using pyunit3k. (Jonathan Lange)
 
     * Calling finishedWith on a dirty resource now cleans that resource.
       (Jonathan Lange)
@@ -23,6 +23,11 @@ IN DEVELOPMENT
     * Expanded TODO. (Jonathan Lange)
 
     * Started keeping a NEWS file! (Jonathan Lange)
+
+  BUG FIXES:
+
+    * Calling getResource on a dirty resource now triggers a clean and re-make
+      of that resource. (Jonathan Lange)
 
   API CHANGES:
 
@@ -55,6 +60,10 @@ IN DEVELOPMENT
 
     * A lot of the tests have been split up into smaller tests. Others have
       been refactored. (Jonathan Lange)
+
+    * If calling finishedWith on a TestResource reduces its usage count to
+      zero, then the TestResource considers itself clean, i.e. _dirty is set
+      to True. (Jonathan Lange)
 
     * OptimizingTestSuite has been refactored internally so that the way we
       switch active resources and determine the cost of switching is more
