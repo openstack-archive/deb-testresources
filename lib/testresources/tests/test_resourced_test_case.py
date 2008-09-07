@@ -29,7 +29,7 @@ class MockResource(testresources.TestResource):
         testresources.TestResource.__init__(self)
         self._resource = resource
 
-    def makeResource(self):
+    def make(self):
         return self._resource
 
 

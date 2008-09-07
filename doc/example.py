@@ -27,5 +27,5 @@ class SampleTestResource(TestResource):
     setUpCost = 2
     tearDownCost = 2
 
-    def makeResource(self):
+    def make(self):
         return "You need to implement your own getResource."

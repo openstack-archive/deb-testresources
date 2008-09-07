@@ -31,10 +31,10 @@ class MockResource(testresources.TestResource):
         self.makes = 0
         self.cleans = 0
 
-    def cleanResource(self, resource):
+    def clean(self, resource):
         self.cleans += 1
 
-    def makeResource(self):
+    def make(self):
         self.makes += 1
         return "Boo!"
 
@@ -67,7 +67,7 @@ class TestTestResource(pyunit3k.TestCase):
     def testGetResourceReturnsMakeResource(self):
         resource_manager = MockResource()
         resource = resource_manager.getResource()
-        self.assertEqual(resource_manager.makeResource(), resource)
+        self.assertEqual(resource_manager.make(), resource)
 
     def testGetResourceIncrementsUses(self):
         resource_manager = MockResource()

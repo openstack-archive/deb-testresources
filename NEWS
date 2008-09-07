@@ -49,8 +49,8 @@ IN DEVELOPMENT
     * ResourcedTestCase will now look for resources in the 'resources'
       attribute, rather than the '_resources' attribute. (Jonathan Lange)
 
-    * TestResource subclasses should override makeResource and cleanResource
-      where they previously overrode _makeResource and _cleanResource.
+    * TestResource subclasses should override 'make' and 'clean' where they
+      previously overrode '_makeResource' and '_cleanResource'.
       (Jonathan Lange)
 
   INTERNALS:

@@ -166,7 +166,7 @@ class TestResource(object):
         self._uses = 0
         self._currentResource = None
 
-    def cleanResource(self, resource):
+    def clean(self, resource):
         """Override this to class method to hook into resource removal."""
 
     def dirtied(self, resource):
@@ -183,14 +183,14 @@ class TestResource(object):
         """Indicate that 'resource' has one less user.
 
         If there are no more registered users of 'resource' then we trigger
-        the `cleanResource` hook, which should do any resource-specific
+        the `clean` hook, which should do any resource-specific
         cleanup.
 
         :param resource: A resource returned by `TestResource.getResource`.
         """
         self._uses -= 1
         if self._uses == 0:
-            self.cleanResource(resource)
+            self.clean(resource)
             self._setResource(None)
         elif self._dirty:
             self._resetResource(resource)
@@ -198,26 +198,26 @@ class TestResource(object):
     def getResource(self):
         """Get the resource for this class and record that it's being used.
 
-        The resource is constructed using the `makeResource` hook.
+        The resource is constructed using the `make` hook.
 
         Once done with the resource, pass it to `finishedWith` to indicated
         that it is no longer needed.
         """
         if self._uses == 0:
-            self._setResource(self.makeResource())
+            self._setResource(self.make())
         elif self._dirty:
             self._resetResource(self._currentResource)
         self._uses += 1
         return self._currentResource
 
-    def makeResource(self):
+    def make(self):
         """Override this to construct resources."""
         raise NotImplementedError(
-            "Override makeResource to construct resources.")
+            "Override make to construct resources.")
 
     def _resetResource(self, old_resource):
-        self.cleanResource(old_resource)
-        self._setResource(self.makeResource())
+        self.clean(old_resource)
+        self._setResource(self.make())
 
     def _setResource(self, new_resource):
         """Set the current resource to a new value."""

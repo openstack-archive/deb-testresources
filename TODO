@@ -14,7 +14,7 @@ Tasks
 
 * Discuss copyright of Jonathan's contributions with Robert.
 
-* Test exceptions being raised from makeResource and cleanResource
+* Test exceptions being raised from make and clean
 
 * Talk to bzrtools upstream (abentley) about the significant
   backwards-compatibility-breaking changes.
@@ -61,9 +61,9 @@ Ideas
 
 * Store timing information so that cost estimations can improve over time.
 
-* Change the interface of TestResource so that makeResource and cleanResource
-  are methods on some *other* object, rather than methods to be overridden.
-  This object could well have the interface .setUp() and .tearDown()!
+* Change the interface of TestResource so that make and clean are methods on
+  some *other* object, rather than methods to be overridden. This object could
+  well have the interface .setUp() and .tearDown()!
 
 * Move ResourcedTestCase.setUpResources and tearDownResources to be methods.
 
