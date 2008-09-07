@@ -54,6 +54,8 @@ finishedWith call in the middle, should return the same object.
 The goals for TestResources that cannot finish properly are not yet clear, so
 for now the behaviour will to silently continue.
 
+A sample TestResource can be found in the doc/ folder.
+
 See pydoc testresources.TestResource for details.
 
 
