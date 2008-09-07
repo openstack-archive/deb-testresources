@@ -23,6 +23,12 @@ import pyunit3k
 import testresources
 
 
+def test_suite():
+    loader = testresources.tests.TestUtil.TestLoader()
+    result = loader.loadTestsFromName(__name__)
+    return result
+
+
 class MockResource(testresources.TestResource):
     """Mock resource that logs the number of make and clean calls."""
 
@@ -192,9 +198,3 @@ class TestTestResource(pyunit3k.TestCase):
         self.assertEqual(1, resource_manager.makes)
         resource = resource_manager.getResource()
         self.assertEqual(2, resource_manager.makes)
-
-
-def test_suite():
-    loader = testresources.tests.TestUtil.TestLoader()
-    result = loader.loadTestsFromName(__name__)
-    return result

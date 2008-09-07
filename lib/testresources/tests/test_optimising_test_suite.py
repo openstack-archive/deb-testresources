@@ -25,6 +25,13 @@ from testresources import split_by_resources
 import unittest
 
 
+def test_suite():
+    from testresources.tests import TestUtil
+    loader = TestUtil.TestLoader()
+    result = loader.loadTestsFromName(__name__)
+    return result
+
+
 class MakeCounter(testresources.TestResource):
     """Test resource that counts makes and cleans."""
 
@@ -321,10 +328,3 @@ class TestGraphStuff(pyunit3k.TestCase):
             self.suite._tests, [
                 [self.case1, self.case2, self.case3, self.case4],
                 [self.case3, self.case2, self.case1, self.case4]])
-
-
-def test_suite():
-    from testresources.tests import TestUtil
-    loader = TestUtil.TestLoader()
-    result = loader.loadTestsFromName(__name__)
-    return result

@@ -23,6 +23,12 @@ from testresources import TestLoader, OptimisingTestSuite
 from testresources.tests import TestUtil
 
 
+def test_suite():
+    loader = TestUtil.TestLoader()
+    result = loader.loadTestsFromName(__name__)
+    return result
+
+
 class TestTestLoader(pyunit3k.TestCase):
 
     def testSuiteType(self):
@@ -31,9 +37,3 @@ class TestTestLoader(pyunit3k.TestCase):
         loader = TestLoader()
         suite = loader.loadTestsFromName(__name__)
         self.assertIsInstance(suite, OptimisingTestSuite)
-
-
-def test_suite():
-    loader = TestUtil.TestLoader()
-    result = loader.loadTestsFromName(__name__)
-    return result

@@ -22,6 +22,12 @@ import pyunit3k
 import testresources
 
 
+def test_suite():
+    loader = testresources.tests.TestUtil.TestLoader()
+    result = loader.loadTestsFromName(__name__)
+    return result
+
+
 class MockResource(testresources.TestResource):
     """Resource used for testing ResourcedTestCase."""
 
@@ -88,9 +94,3 @@ class TestResourcedTestCase(pyunit3k.TestCase):
         self.resourced_case.tearDown()
         self.failIf(hasattr(self.resourced_case, "foo"))
         self.assertEqual(self.resource_manager._uses, 0)
-
-
-def test_suite():
-    loader = testresources.tests.TestUtil.TestLoader()
-    result = loader.loadTestsFromName(__name__)
-    return result
