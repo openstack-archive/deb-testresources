@@ -32,6 +32,16 @@ def test_suite():
     return result
 
 
+class CustomSuite(unittest.TestSuite):
+    """Custom TestSuite that's comparable using == and !=."""
+
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__
+                and self._tests == other._tests)
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
 class MakeCounter(testresources.TestResource):
     """Test resource that counts makes and cleans."""
 
@@ -94,15 +104,9 @@ class TestOptimisingTestSuite(pyunit3k.TestCase):
         self.optimising_suite.addTest(suite)
         self.assertEqual([case1, case2, case3], self.optimising_suite._tests)
 
-    def testAdsorbDistributesNonStandardSuiteStructure(self):
+    def testAddDistributesNonStandardSuiteStructure(self):
         # addTest distributes all non-standard TestSuites across their
         # members.
-        class CustomSuite(unittest.TestSuite):
-            def __eq__(self, other):
-                return (self.__class__ == other.__class__
-                        and self._tests == other._tests)
-            def __ne__(self, other):
-                return not self.__eq__(other)
         case1 = self.makeTestCase()
         case2 = self.makeTestCase()
         inner_suite = unittest.TestSuite([case2])
@@ -110,6 +114,19 @@ class TestOptimisingTestSuite(pyunit3k.TestCase):
         self.optimising_suite.addTest(suite)
         self.assertEqual(
             [CustomSuite([case1]), CustomSuite([inner_suite])],
+            self.optimising_suite._tests)
+
+    def testAddPullsNonStandardSuitesUp(self):
+        # addTest flattens standard TestSuites, even those that contain custom
+        # suites. When it reaches the custom suites, it distributes them
+        # across their members.
+        case1 = self.makeTestCase()
+        case2 = self.makeTestCase()
+        inner_suite = CustomSuite([case1, case2])
+        self.optimising_suite.addTest(
+            unittest.TestSuite([unittest.TestSuite([inner_suite])]))
+        self.assertEqual(
+            [CustomSuite([case1]), CustomSuite([case2])],
             self.optimising_suite._tests)
 
     def testSingleCaseResourceAcquisition(self):
