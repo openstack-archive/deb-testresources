@@ -54,8 +54,17 @@ class OptimisingTestSuite(unittest.TestSuite):
         suites might have their own unittest extensions, so be careful with
         this.
         """
-        for test in iterate_tests(test_case_or_suite):
-            self.addTest(test)
+        try:
+            tests = iter(test_case_or_suite)
+        except TypeError:
+            self._tests.append(test_case_or_suite)
+            return
+        if unittest.TestSuite == test_case_or_suite.__class__:
+            for test in tests:
+                self.adsorbSuite(test)
+        else:
+            for test in tests:
+                self._tests.append(test_case_or_suite.__class__([test]))
 
     def cost_of_switching(self, old_resource_set, new_resource_set):
         """Cost of switching from 'old_resource_set' to 'new_resource_set'.

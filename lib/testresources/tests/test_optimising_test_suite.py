@@ -82,9 +82,9 @@ class TestOptimisingTestSuite(pyunit3k.TestCase):
         self.optimising_suite.adsorbSuite(suite)
         self.assertEqual([case], self.optimising_suite._tests)
 
-    def testAdsorbFlattensAllSuiteStructure(self):
-        # adsorbSuite will get rid of all suite structure when adding a test,
-        # no matter how much nesting is going on.
+    def testAdsorbFlattensStandardSuiteStructure(self):
+        # adsorbSuite will get rid of all unittest.TestSuite structure when
+        # adding a test, no matter how much nesting is going on.
         case1 = self.makeTestCase()
         case2 = self.makeTestCase()
         case3 = self.makeTestCase()
@@ -93,6 +93,24 @@ class TestOptimisingTestSuite(pyunit3k.TestCase):
              case3])
         self.optimising_suite.adsorbSuite(suite)
         self.assertEqual([case1, case2, case3], self.optimising_suite._tests)
+
+    def testAdsorbDistributesNonStandardSuiteStructure(self):
+        # adsorbSuite distributes all non-standard TestSuites across its
+        # inputs.
+        class CustomSuite(unittest.TestSuite):
+            def __eq__(self, other):
+                return (self.__class__ == other.__class__
+                        and self._tests == other._tests)
+            def __ne__(self, other):
+                return not self.__eq__(other)
+        case1 = self.makeTestCase()
+        case2 = self.makeTestCase()
+        inner_suite = unittest.TestSuite([case2])
+        suite = CustomSuite([case1, inner_suite])
+        self.optimising_suite.adsorbSuite(suite)
+        self.assertEqual(
+            [CustomSuite([case1]), CustomSuite([inner_suite])],
+            self.optimising_suite._tests)
 
     def testSingleCaseResourceAcquisition(self):
         sample_resource = MakeCounter()
