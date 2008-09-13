@@ -48,11 +48,16 @@ class OptimisingTestSuite(unittest.TestSuite):
     """A resource creation optimising TestSuite."""
 
     def adsorbSuite(self, test_case_or_suite):
-        """Add `test_case_or_suite`, unwrapping any suites we find.
+        """Deprecated. Use addTest instead."""
+        self.addTest(test_case_or_suite)
 
-        This means that any containing TestSuites will be removed. These
-        suites might have their own unittest extensions, so be careful with
-        this.
+    def addTest(self, test_case_or_suite):
+        """Add `test_case_or_suite`, unwrapping standard TestSuites.
+
+        This means that any containing unittest.TestSuites will be removed,
+        while any custom test suites will be 'distributed' across their
+        members. Thus addTest(CustomSuite([a, b])) will result in
+        CustomSuite([a]) and CustomSuite([b]) being added to this suite.
         """
         try:
             tests = iter(test_case_or_suite)
