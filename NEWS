@@ -28,9 +28,6 @@ IN DEVELOPMENT
 
   API CHANGES:
 
-    * OptimisingTestSuite.adsorbSuite has been renamed to addTestFlat.
-      (Jonathan Lange)
-
     * ResourcedTestCase.setUpResources and tearDownResources are now instance
       methods, not static methods. (Jonathan Lange)
 

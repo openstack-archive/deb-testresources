@@ -47,7 +47,7 @@ def split_by_resources(tests):
 class OptimisingTestSuite(unittest.TestSuite):
     """A resource creation optimising TestSuite."""
 
-    def addTestFlat(self, test_case_or_suite):
+    def adsorbSuite(self, test_case_or_suite):
         """Add `test_case_or_suite`, unwrapping any suites we find.
 
         This means that any containing TestSuites will be removed. These

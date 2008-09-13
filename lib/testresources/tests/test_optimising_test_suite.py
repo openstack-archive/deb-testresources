@@ -67,23 +67,23 @@ class TestOptimisingTestSuite(pyunit3k.TestCase):
         pyunit3k.TestCase.setUp(self)
         self.optimising_suite = testresources.OptimisingTestSuite()
 
-    def testFlatAddTest(self):
-        # Flat-adding a single test case is the same as adding one using
+    def testAdsorbTest(self):
+        # Adsorbing a single test case is the same as adding one using
         # addTest.
         case = self.makeTestCase()
-        self.optimising_suite.addTestFlat(case)
+        self.optimising_suite.adsorbSuite(case)
         self.assertEqual([case], self.optimising_suite._tests)
 
-    def testFlatAddTestSuite(self):
-        # Flat-adding a test suite will is the same as adding all the tests in
+    def testAdsorbTestSuite(self):
+        # Adsorbing a test suite will is the same as adding all the tests in
         # that suite.
         case = self.makeTestCase()
         suite = unittest.TestSuite([case])
-        self.optimising_suite.addTestFlat(suite)
+        self.optimising_suite.adsorbSuite(suite)
         self.assertEqual([case], self.optimising_suite._tests)
 
-    def testFlatAddFlattensAllSuiteStructure(self):
-        # addTestFlat will get rid of all suite structure when adding a test,
+    def testAdsorbFlattensAllSuiteStructure(self):
+        # adsorbSuite will get rid of all suite structure when adding a test,
         # no matter how much nesting is going on.
         case1 = self.makeTestCase()
         case2 = self.makeTestCase()
@@ -91,7 +91,7 @@ class TestOptimisingTestSuite(pyunit3k.TestCase):
         suite = unittest.TestSuite(
             [unittest.TestSuite([case1, unittest.TestSuite([case2])]),
              case3])
-        self.optimising_suite.addTestFlat(suite)
+        self.optimising_suite.adsorbSuite(suite)
         self.assertEqual([case1, case2, case3], self.optimising_suite._tests)
 
     def testSingleCaseResourceAcquisition(self):
