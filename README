@@ -67,9 +67,11 @@ minimise the number of setup and tear downs required. It attempts to achieve
 this by callling getResource() and finishedWith() around the sequence of tests
 that use a specific resource.
 
-OptimisingTestSuite has a new method over normal TestSuites:
-adsorbSuite(test_case_or_suite), which scans another test suite and
-incorporates all of its tests directly into the OptimisingTestSuite.
+Tests are added to an OptimisingTestSuite as normal. Any standard library
+TestSuite objects will be flattened, while any custom TestSuite subclasses
+will be distributed across their member tests. This means that any custom
+logic in test suites should be preserved, at the price of some level of
+optimisation.
 
 Because the test suite does the optimisation, you can control the amount of
 optimising that takes place by adding more or fewer tests to a single
