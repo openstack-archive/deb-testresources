@@ -32,9 +32,6 @@ Questions
 
 * How can testresources be used to *replace* layers?
 
-* resource dirty markers on non current resources - ignore? keep a history?
-  XXX: Clarify with Robert.
-
 
 Bugs
 ====
