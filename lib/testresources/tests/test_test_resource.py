@@ -18,123 +18,183 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import pyunit3k
+
 import testresources
-import testresources.tests
-import unittest
+
 
 def test_suite():
     loader = testresources.tests.TestUtil.TestLoader()
     result = loader.loadTestsFromName(__name__)
     return result
-    
 
-class TestTestResource(unittest.TestCase):
 
-    def testImports(self):
-        from testresources import TestResource
+class MockResource(testresources.TestResource):
+    """Mock resource that logs the number of make and clean calls."""
 
-    def testDefaultResource(self):
-        self.assertRaises(NotImplementedError,
-                          testresources.TestResource.getResource)
-        self.failUnless(hasattr(testresources.TestResource, "_currentResource"))
-        self.failUnless(hasattr(testresources.TestResource, "_uses"))
-        self.failUnless(hasattr(testresources.TestResource, "_dirty"))
-        self.assertEqual(testresources.TestResource.setUpCost, 1)
-        self.assertEqual(testresources.TestResource.tearDownCost, 1)
-        delattr(testresources.TestResource, "_currentResource")
-        delattr(testresources.TestResource, "_uses")
-        delattr(testresources.TestResource, "_dirty")
+    def __init__(self):
+        testresources.TestResource.__init__(self)
+        self.makes = 0
+        self.cleans = 0
 
-    def testSampleResource(self):
-        resource = testresources.SampleTestResource.getResource()
-        self.assertEqual(resource, "You need to implement your own "
-                                   "getResource.")
-        self.assertEqual(id(resource), 
-                         id(testresources.SampleTestResource._currentResource))
-        self.assertEqual(testresources.SampleTestResource.setUpCost, 2)
-        self.assertEqual(testresources.SampleTestResource.tearDownCost, 2)
-        self.failIf(hasattr(testresources.TestResource, "_currentResource"))
-        self.failIf(hasattr(testresources.TestResource, "_uses"))
-        self.failIf(hasattr(testresources.TestResource, "_dirty"))
-        testresources.SampleTestResource.finishedWith(resource)
-        self.assertEqual(testresources.SampleTestResource._currentResource,
-                         None)
-        self.assertEqual(testresources.SampleTestResource._uses, 0)
+    def clean(self, resource):
+        self.cleans += 1
 
-    def testNestedGetAndFinish(self):
-        self.doTestNestedGetAndFinish(testresources.SampleTestResource,
-                                      "You need to implement your own "
-                                      "getResource.")                              
-    def doTestNestedGetAndFinish(self, cls, resourcevalue, markDirty=False):
-        resource = cls.getResource()
-        resource2 = cls.getResource()
-        self.assertEqual(resource2, resourcevalue)
-        self.assertEqual(id(resource), id(resource2))
-        self.assertEqual(id(resource2), id(cls._currentResource))
-        if markDirty:
-            cls.dirtied(resource2)
-        cls.finishedWith(resource2)
-        self.assertEqual(id(resource), id(cls._currentResource))
-        cls.finishedWith(resource)
-        self.assertEqual(cls._currentResource, None)
-        self.assertEqual(cls._uses, 0)
+    def make(self):
+        self.makes += 1
+        return "Boo!"
 
-    def testOverriding_makeResource(self):
-       
-        class MockResource(testresources.TestResource):
 
-            def _makeResource(self):
-                return "Boo!"
-            _makeResource = classmethod(_makeResource)
+class TestTestResource(pyunit3k.TestCase):
 
-        self.doTestNestedGetAndFinish(MockResource, "Boo!")
+    def testUnimplementedGetResource(self):
+        # By default, TestResource raises NotImplementedError on getResource.
+        resource_manager = testresources.TestResource()
+        self.assertRaises(NotImplementedError, resource_manager.getResource)
 
-    def testOverriding_cleanResource(self):
+    def testInitiallyNotDirty(self):
+        resource_manager = testresources.TestResource()
+        self.assertEqual(False, resource_manager._dirty)
 
-        class MockResource(testresources.TestResource):
+    def testInitiallyUnused(self):
+        resource_manager = testresources.TestResource()
+        self.assertEqual(0, resource_manager._uses)
 
-            cleans = 0
-            def _cleanResource(self, resource):
-                self.cleans += 1
-            _cleanResource = classmethod(_cleanResource)
+    def testInitiallyNoCurrentResource(self):
+        resource_manager = testresources.TestResource()
+        self.assertEqual(None, resource_manager._currentResource)
 
-            @classmethod
-            def _makeResource(self):
-                return "Boo!"
+    def testDefaultCosts(self):
+        # The base TestResource costs 1 to set up and to tear down.
+        resource_manager = testresources.TestResource()
+        self.assertEqual(resource_manager.setUpCost, 1)
+        self.assertEqual(resource_manager.tearDownCost, 1)
 
-        self.doTestNestedGetAndFinish(MockResource, "Boo!")
-        self.assertEqual(MockResource.cleans, 1)
+    def testGetResourceReturnsMakeResource(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        self.assertEqual(resource_manager.make(), resource)
 
-    def testDirtied(self):
-        class MockResource(testresources.TestResource):
+    def testGetResourceIncrementsUses(self):
+        resource_manager = MockResource()
+        resource_manager.getResource()
+        self.assertEqual(1, resource_manager._uses)
+        resource_manager.getResource()
+        self.assertEqual(2, resource_manager._uses)
 
-            cleans = 0
+    def testGetResourceDoesntDirty(self):
+        resource_manager = MockResource()
+        resource_manager.getResource()
+        self.assertEqual(resource_manager._dirty, False)
 
-            @classmethod
-            def _cleanResource(self, resource):
-                self.cleans += 1
+    def testGetResourceSetsCurrentResource(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        self.assertIs(resource_manager._currentResource, resource)
 
-            @classmethod
-            def _makeResource(self):
-                return "Boo!"
+    def testGetResourceTwiceReturnsIdenticalResource(self):
+        resource_manager = MockResource()
+        resource1 = resource_manager.getResource()
+        resource2 = resource_manager.getResource()
+        self.assertIs(resource1, resource2)
 
-        self.doTestNestedGetAndFinish(MockResource, "Boo!", True)
-        self.assertEqual(MockResource.cleans, 2)
+    def testGetResourceCallsMakeResource(self):
+        resource_manager = MockResource()
+        resource_manager.getResource()
+        self.assertEqual(1, resource_manager.makes)
 
-    def testTwoResources(self):
+    def testRepeatedGetResourceCallsMakeResourceOnceOnly(self):
+        resource_manager = MockResource()
+        resource_manager.getResource()
+        resource_manager.getResource()
+        self.assertEqual(1, resource_manager.makes)
 
-        class MockResource(testresources.TestResource):
+    def testFinishedWithDecrementsUses(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        resource = resource_manager.getResource()
+        self.assertEqual(2, resource_manager._uses)
+        resource_manager.finishedWith(resource)
+        self.assertEqual(1, resource_manager._uses)
+        resource_manager.finishedWith(resource)
+        self.assertEqual(0, resource_manager._uses)
 
-            def _makeResource(self):
-                return "Boo!"
-            _makeResource = classmethod(_makeResource)
+    def testFinishedWithResetsCurrentResource(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        resource_manager.finishedWith(resource)
+        self.assertIs(None, resource_manager._currentResource)
 
-        resource = testresources.SampleTestResource.getResource()
-        resource2 = MockResource.getResource()
-        self.assertEqual(MockResource._uses, 1)
-        self.assertEqual(testresources.SampleTestResource._uses, 1)
-        self.assertNotEqual(id(resource), id(resource2))
-        MockResource.finishedWith(resource2)
-        testresources.SampleTestResource.finishedWith(resource)
-        self.assertEqual(MockResource._uses, 0)
-        self.assertEqual(testresources.SampleTestResource._uses, 0)
+    def testFinishedWithCallsCleanResource(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        resource_manager.finishedWith(resource)
+        self.assertEqual(1, resource_manager.cleans)
+
+    def testUsingTwiceMakesAndCleansTwice(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        resource_manager.finishedWith(resource)
+        resource = resource_manager.getResource()
+        resource_manager.finishedWith(resource)
+        self.assertEqual(2, resource_manager.makes)
+        self.assertEqual(2, resource_manager.cleans)
+
+    def testFinishedWithCallsCleanResourceOnceOnly(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        resource = resource_manager.getResource()
+        resource_manager.finishedWith(resource)
+        self.assertEqual(0, resource_manager.cleans)
+        resource_manager.finishedWith(resource)
+        self.assertEqual(1, resource_manager.cleans)
+
+    def testFinishedWithMarksNonDirty(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        resource_manager.dirtied(resource)
+        resource_manager.finishedWith(resource)
+        self.assertEqual(False, resource_manager._dirty)
+
+    def testResourceAvailableBetweenFinishedWithCalls(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        resource = resource_manager.getResource()
+        resource_manager.finishedWith(resource)
+        self.assertIs(resource, resource_manager._currentResource)
+
+    def testDirtiedSetsDirty(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        self.assertEqual(False, resource_manager._dirty)
+        resource_manager.dirtied(resource)
+        self.assertEqual(True, resource_manager._dirty)
+
+    def testDirtyingResourceTriggersClean(self):
+        resource_manager = MockResource()
+        resource1 = resource_manager.getResource()
+        resource2 = resource_manager.getResource()
+        resource_manager.dirtied(resource2)
+        resource_manager.finishedWith(resource2)
+        self.assertEqual(1, resource_manager.cleans)
+        resource_manager.finishedWith(resource1)
+        self.assertEqual(2, resource_manager.cleans)
+
+    def testDirtyingResourceTriggersRemake(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        self.assertEqual(1, resource_manager.makes)
+        resource_manager.dirtied(resource)
+        resource_manager.getResource()
+        self.assertEqual(1, resource_manager.cleans)
+        self.assertEqual(2, resource_manager.makes)
+        self.assertEqual(False, resource_manager._dirty)
+
+    def testDirtyingWhenUnused(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        resource_manager.finishedWith(resource)
+        resource_manager.dirtied(resource)
+        self.assertEqual(1, resource_manager.makes)
+        resource = resource_manager.getResource()
+        self.assertEqual(2, resource_manager.makes)

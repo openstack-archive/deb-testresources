@@ -1,7 +1,6 @@
-#
 #  testresources: extensions to python unittest to allow declaritive use
 #  of resources by test cases.
-#  Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
+#  Copyright (C) 2005-2008  Robert Collins <robertc@robertcollins.net>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -18,18 +17,15 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import testresources
-from testresources.tests import TestUtil
+"""Example TestResource."""
 
-def test_suite():
-    import testresources.tests.test_optimising_test_suite
-    import testresources.tests.test_resourced_test_case
-    import testresources.tests.test_test_loader
-    import testresources.tests.test_test_resource
-    result = TestUtil.TestSuite()
-    result.addTest(testresources.tests.test_test_loader.test_suite())
-    result.addTest(testresources.tests.test_test_resource.test_suite())
-    result.addTest(testresources.tests.test_resourced_test_case.test_suite())
-    result.addTest(
-        testresources.tests.test_optimising_test_suite.test_suite())
-    return result
+from testresources import TestResource
+
+
+class SampleTestResource(TestResource):
+
+    setUpCost = 2
+    tearDownCost = 2
+
+    def make(self):
+        return "You need to implement your own getResource."

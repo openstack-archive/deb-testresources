@@ -1,4 +1,3 @@
-#
 #  testresources: extensions to python unittest to allow declaritive use
 #  of resources by test cases.
 #  Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
@@ -18,56 +17,81 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-from copy import copy
+from pyunit3k import iterate_tests
 import unittest
-import testresources.tests.TestUtil as TestUtil
+
 
 def test_suite():
     import testresources.tests
     return testresources.tests.test_suite()
 
 
-class TestAdder(TestUtil.TestVisitor):
+def split_by_resources(tests):
+    """Split a list of tests by whether or not they use test resources.
 
-    def __init__(self, suite):
-        self._suite = suite
-
-    def visitCase(self, case):
-        self._suite.addTest(case)
+    :return: ([tests_that_dont], [tests_that_do])
+    """
+    # XXX: We could probably use itertools.groupby for this. Or set
+    # difference.
+    resource_users = []
+    legacy = []
+    for test in tests:
+        resources = getattr(test, 'resources', None)
+        if resources:
+            resource_users.append(test)
+        else:
+            legacy.append(test)
+    return legacy, resource_users
 
 
 class OptimisingTestSuite(unittest.TestSuite):
     """A resource creation optimising TestSuite."""
 
-    def adsorbSuite(self, suite):
-        """adsorb all the tests in suite recursively.
+    def adsorbSuite(self, test_case_or_suite):
+        """Add `test_case_or_suite`, unwrapping any suites we find.
 
-        This allows full optimisation of the tests, but will remove
-        any containing TestSuites, which might be extending unittest
-        around those tests.
+        This means that any containing TestSuites will be removed. These
+        suites might have their own unittest extensions, so be careful with
+        this.
         """
-        testAdder = TestAdder(self)
-        TestUtil.visitTests(suite, testAdder)
-        
+        for test in iterate_tests(test_case_or_suite):
+            self.addTest(test)
+
+    def cost_of_switching(self, old_resource_set, new_resource_set):
+        """Cost of switching from 'old_resource_set' to 'new_resource_set'.
+
+        This is calculated by adding the cost of tearing down unnecessary
+        resources to the cost of setting up the newly-needed resources.
+        """
+        return len(old_resource_set ^ new_resource_set)
+
+    def switch(self, old_resource_set, new_resource_set):
+        """Switch from 'old_resource_set' to 'new_resource_set'.
+
+        Tear down resources in old_resource_set that aren't in
+        new_resource_set and set up resources that are in new_resource_set but
+        not in old_resource_set.
+        """
+        new_resources = new_resource_set - old_resource_set
+        old_resources = old_resource_set - new_resource_set
+        for resource in old_resources:
+            resource.finishedWith(resource._currentResource)
+        for resource in new_resources:
+            resource.getResource()
+
     def run(self, result):
         self.sortTests()
-        current_resources = {}
+        current_resources = set()
         for test in self._tests:
             if result.shouldStop:
                 break
-            if hasattr(test, "_resources"):
-                new_resources = {}
-                for attribute, resource in test._resources:
-                    if not resource in current_resources.keys():
-                        current_resources[resource] = resource.getResource()
-                    new_resources[resource] = current_resources[resource]
-                for resource in current_resources.keys():
-                    if not resource in new_resources:
-                        resource.finishedWith(current_resources[resource])
+            resources = getattr(test, 'resources', None)
+            if resources is not None:
+                new_resources = set(resource for name, resource in resources)
+                self.switch(current_resources, new_resources)
                 current_resources = new_resources
             test(result)
-        for resource, value in current_resources.items():
-            resource.finishedWith(value)
+        self.switch(current_resources, set())
         return result
 
     def sortTests(self):
@@ -77,51 +101,44 @@ class OptimisingTestSuite(unittest.TestSuite):
         """
         # quick hack on the plane. Need to lookup graph textbook.
         sorted = []
-        graph, legacy = self._getGraph()
-        # now we have a graph, we can do lovely things like 
-        # travelling salesman on it. Blech. So we just take the 
-        # dijkstra for this. I think this will usually generate reasonable
-        # behaviour - its just that the needed starting resources
-        # are quite arbitrary and can thus make things less than
-        # optimal.
+        legacy, tests_with_resources = split_by_resources(self._tests)
+        graph = self._getGraph(tests_with_resources)
+        # now we have a graph, we can do lovely things like travelling
+        # salesman on it. Blech. So we just take the dijkstra for this. I
+        # think this will usually generate reasonable behaviour - its just
+        # that the needed starting resources are quite arbitrary and can thus
+        # make things less than optimal.
         from testresources.dijkstra import Dijkstra
         if len(graph.keys()) > 0:
-            distances, predecessors = Dijkstra(graph, graph.keys()[0])
+            # XXX: Arbitrarily select the start node. This can result in
+            # sub-optimal sortings. We actually want to include the cost of
+            # establishing the start node in the calculation of the distance.
+            start_node = graph.keys()[0]
+            distances, predecessors = Dijkstra(graph, start_node)
             # and sort by distance
             nodes = distances.items()
             nodes.sort(key=lambda x:x[1])
             for test, distance in nodes:
                 sorted.append(test)
-        self._tests = sorted + legacy 
+        self._tests = sorted + legacy
 
-    def _getGraph(self):
-        """Build a graph of the resource using nodes."""
-        # build a mesh graph where a node is a test, and
-        # and the number of resources to change to another test
-        # is the cost to travel straight to that node.
-        legacy = []
-        graph = {}
-        pending = []
-        temp_pending = copy(self._tests)
-        if len(temp_pending) == 0:
-            return {}, []
-        for test in temp_pending:
-            if not hasattr(test, "_resources"):
-                legacy.append(test)
-                continue
-            pending.append(test)
-            graph[test] = {}
-        while len(pending):
-            test = pending.pop()
-            test_resources = set(test._resources)
-            for othertest in pending:
-                othertest_resources = set(othertest._resources)
-                cost = len(test_resources.symmetric_difference(
-                                othertest_resources))
+    def _getGraph(self, tests_with_resources):
+        """Build a graph of the resource-using nodes."""
+        # build a mesh graph where a node is a test, and and the number of
+        # resources to change to another test is the cost to travel straight
+        # to that node.
+        graph = dict((test, dict()) for test in tests_with_resources)
+        while tests_with_resources:
+            test = tests_with_resources.pop()
+            test_resources = set(test.resources)
+            for othertest in tests_with_resources:
+                othertest_resources = set(othertest.resources)
+                cost = self.cost_of_switching(
+                    test_resources, othertest_resources)
                 graph[test][othertest] = cost
                 graph[othertest][test] = cost
-        return graph, legacy
- 
+        return graph
+
 
 class TestLoader(unittest.TestLoader):
     """Custom TestLoader to set the right TestSuite class."""
@@ -129,86 +146,108 @@ class TestLoader(unittest.TestLoader):
 
 
 class TestResource(object):
-    """A TestResource for persistent resources needed across tests."""
+    """A resource that can be shared across tests.
+
+    :ivar setUpCost: The relative cost to construct a resource of this type.
+         One good approach is to set this to the number of seconds it normally
+         takes to set up the resource.
+    :ivar tearDownCost: The relative cost to tear down a resource of this
+         type. One good approach is to set this to the number of seconds it
+         normally takes to tear down the resource.
+    """
 
     setUpCost = 1
-    """The relative cost to construct a resource of this type."""
     tearDownCost = 1
-    """The relative cost to tear down a resource of this type."""
 
-    def _cleanResource(cls, resource):
+    def __init__(self):
+        self._dirty = False
+        self._uses = 0
+        self._currentResource = None
+
+    def clean(self, resource):
         """Override this to class method to hook into resource removal."""
-    _cleanResource = classmethod(_cleanResource)
 
-    def dirtied(cls, resource):
-        cls._dirty = True
-    dirtied = classmethod(dirtied)
+    def dirtied(self, resource):
+        """Mark the resource as having been 'dirtied'.
 
-    def finishedWith(cls, resource):
-        cls._uses -= 1
-        if cls._uses == 0:
-            cls._cleanResource(resource)
-            cls._currentResource = None
-        elif cls._dirty:
-            cls._cleanResource(resource)
-            cls.setResource()
-    finishedWith = classmethod(finishedWith)
+        A resource is dirty when it is no longer suitable for use by other
+        tests.
 
-    def getResource(cls):
-        if not hasattr(cls, "_uses"):
-            cls._currentResource = None
-            cls._dirty = False
-            cls._uses = 0
-        if cls._uses == 0:
-            cls.setResource()
-        cls._uses += 1
-        return cls._currentResource
-    getResource = classmethod(getResource)
+        e.g. a shared database that has had rows changed.
+        """
+        self._dirty = True
 
-    @classmethod
-    def _makeResource(cls):
+    def finishedWith(self, resource):
+        """Indicate that 'resource' has one less user.
+
+        If there are no more registered users of 'resource' then we trigger
+        the `clean` hook, which should do any resource-specific
+        cleanup.
+
+        :param resource: A resource returned by `TestResource.getResource`.
+        """
+        self._uses -= 1
+        if self._uses == 0:
+            self.clean(resource)
+            self._setResource(None)
+        elif self._dirty:
+            self._resetResource(resource)
+
+    def getResource(self):
+        """Get the resource for this class and record that it's being used.
+
+        The resource is constructed using the `make` hook.
+
+        Once done with the resource, pass it to `finishedWith` to indicated
+        that it is no longer needed.
+        """
+        if self._uses == 0:
+            self._setResource(self.make())
+        elif self._dirty:
+            self._resetResource(self._currentResource)
+        self._uses += 1
+        return self._currentResource
+
+    def make(self):
         """Override this to construct resources."""
-        raise NotImplementedError("Override _makeResource to construct "
-                                  "resources.")
+        raise NotImplementedError(
+            "Override make to construct resources.")
 
-    def setResource(cls):
+    def _resetResource(self, old_resource):
+        self.clean(old_resource)
+        self._setResource(self.make())
+
+    def _setResource(self, new_resource):
         """Set the current resource to a new value."""
-        cls._currentResource = cls._makeResource()
-        cls._dirty = False
-    setResource = classmethod(setResource)
-
-
-class SampleTestResource(TestResource):
-
-    setUpCost = 2
-    tearDownCost = 2
-
-    @classmethod
-    def _makeResource(cls):
-        return "You need to implement your own getResource."
+        self._currentResource = new_resource
+        self._dirty = False
 
 
 class ResourcedTestCase(unittest.TestCase):
-    """A TestCase parent or utility that enables cross-test resource usage."""
+    """A TestCase parent or utility that enables cross-test resource usage.
 
-    _resources = []
+    :ivar resources: A list of (name, resource) pairs, where 'resource' is a
+        subclass of `TestResource` and 'name' is the name of the attribute
+        that the resource should be stored on.
+    """
+
+    resources = []
 
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.setUpResources(self)
+        self.setUpResources()
 
-    @staticmethod
-    def setUpResources(case):
-        for resource in case._resources:
-            setattr(case, resource[0], resource[1].getResource())
+    def setUpResources(self):
+        """Set up any resources that this test needs."""
+        for resource in self.resources:
+            setattr(self, resource[0], resource[1].getResource())
 
     def tearDown(self):
-        self.tearDownResources(self)
+        self.tearDownResources()
         unittest.TestCase.tearDown(self)
 
-    @staticmethod
-    def tearDownResources(case):
-        for resource in case._resources:
-            resource[1].finishedWith(getattr(case, resource[0]))
-            delattr(case, resource[0])
-
+    def tearDownResources(self):
+        """Tear down any resources that this test declares."""
+        for resource in self.resources:
+            resource[1].finishedWith(getattr(self, resource[0]))
+            delattr(self, resource[0])

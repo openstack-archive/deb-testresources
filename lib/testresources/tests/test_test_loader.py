@@ -18,18 +18,22 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import unittest
-import testresources.tests
+import pyunit3k
+from testresources import TestLoader, OptimisingTestSuite
+from testresources.tests import TestUtil
+
 
 def test_suite():
-    loader = testresources.tests.TestUtil.TestLoader()
+    loader = TestUtil.TestLoader()
     result = loader.loadTestsFromName(__name__)
     return result
 
 
-class TestTestLoader(unittest.TestCase):
+class TestTestLoader(pyunit3k.TestCase):
 
     def testSuiteType(self):
-        loader = testresources.TestLoader()
+        # The testresources TestLoader loads tests into an
+        # OptimisingTestSuite.
+        loader = TestLoader()
         suite = loader.loadTestsFromName(__name__)
-        self.failUnless(isinstance(suite, testresources.OptimisingTestSuite))
+        self.assertIsInstance(suite, OptimisingTestSuite)

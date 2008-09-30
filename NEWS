@@ -1,0 +1,61 @@
+---------------------------
+testresources release notes
+---------------------------
+
+
+IN DEVELOPMENT
+--------------
+
+  CHANGES:
+
+    * testresources needs pyunit3k to run the testresources test suite. You
+      can still use testresources without using pyunit3k. (Jonathan Lange)
+
+  IMPROVEMENTS:
+
+    * Many more docstrings. (Jonathan Lange)
+
+    * Expanded README. (Jonathan Lange)
+
+    * Expanded TODO. (Jonathan Lange)
+
+    * Started keeping a NEWS file! (Jonathan Lange)
+
+  BUG FIXES:
+
+    * Calling getResource on a dirty resource now triggers a clean and re-make
+      of that resource. (Jonathan Lange)
+
+  API CHANGES:
+
+    * ResourcedTestCase.setUpResources and tearDownResources are now instance
+      methods, not static methods. (Jonathan Lange)
+
+    * All methods on TestResource are now instance methods, and thus tests
+      should use instances of TestResource subclasses, not the classes
+      themselves. (Jonathan Lange)
+
+    * TestResource.setResource has been renamed to _setResource.
+      (Jonathan Lange)
+
+    * SampleTestResource has been removed. (Jonathan Lange)
+
+    * ResourcedTestCase will now look for resources in the 'resources'
+      attribute, rather than the '_resources' attribute. (Jonathan Lange)
+
+    * TestResource subclasses should override 'make' and 'clean' where they
+      previously overrode '_makeResource' and '_cleanResource'.
+      (Jonathan Lange)
+
+  INTERNALS:
+
+    * A lot of the tests have been split up into smaller tests. Others have
+      been refactored. (Jonathan Lange)
+
+    * If calling finishedWith on a TestResource reduces its usage count to
+      zero, then the TestResource considers itself clean, i.e. _dirty is set
+      to True. (Jonathan Lange)
+
+    * OptimisingTestSuite has been refactored internally so that the way we
+      switch active resources and determine the cost of switching is more
+      obvious. (Jonathan Lange)
