@@ -8,8 +8,8 @@ IN DEVELOPMENT
 
   CHANGES:
 
-    * testresources needs pyunit3k to run the testresources test suite. You
-      can still use testresources without using pyunit3k. (Jonathan Lange)
+    * testresources needs testtools to run the testresources test suite. You
+      can still use testresources without using testtools. (Jonathan Lange)
 
   IMPROVEMENTS:
 
@@ -59,3 +59,5 @@ IN DEVELOPMENT
     * OptimisingTestSuite has been refactored internally so that the way we
       switch active resources and determine the cost of switching is more
       obvious. (Jonathan Lange)
+
+    * Now imports from testtools rather than pyunit3k. (Jonathan Lange)
