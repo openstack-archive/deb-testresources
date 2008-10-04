@@ -25,18 +25,6 @@ def test_suite():
     return testresources.tests.test_suite()
 
 
-def iterate_tests(test_suite_or_case):
-    """Iterate through all of the test cases in `test_suite_or_case`."""
-    try:
-        suite = iter(test_suite_or_case)
-    except TypeError:
-        yield test_suite_or_case
-    else:
-        for test in suite:
-            for subtest in iterate_tests(test):
-                yield subtest
-
-
 def split_by_resources(tests):
     """Split a list of tests by whether or not they use test resources.
 
