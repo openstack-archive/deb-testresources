@@ -18,7 +18,7 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import pyunit3k
+import testtools
 import testresources
 
 
@@ -39,10 +39,10 @@ class MockResource(testresources.TestResource):
         return self._resource
 
 
-class TestResourcedTestCase(pyunit3k.TestCase):
+class TestResourcedTestCase(testtools.TestCase):
 
     def setUp(self):
-        pyunit3k.TestCase.setUp(self)
+        testtools.TestCase.setUp(self)
         self.resourced_case = testresources.ResourcedTestCase('run')
         self.resource = self.getUniqueString()
         self.resource_manager = MockResource(self.resource)

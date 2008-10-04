@@ -17,7 +17,7 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-from pyunit3k import iterate_tests
+from testtools import iterate_tests
 import unittest
 
 
