@@ -27,10 +27,10 @@ Dependencies:
 =============
 
 * Python 2.4+
-* pyunit3k
+* testtools
 
-Note that pyunit3k is required for *running* the tests for testresources. You
-can use testresources in your own app without using pyunit3k.
+Note that testtools is required for *running* the tests for testresources. You
+can use testresources in your own app without using testtools.
 
 
 How testresources works:

@@ -18,7 +18,7 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import pyunit3k
+import testtools
 import random
 import testresources
 from testresources import split_by_resources
@@ -58,7 +58,7 @@ class MakeCounter(testresources.TestResource):
         return "boo"
 
 
-class TestOptimisingTestSuite(pyunit3k.TestCase):
+class TestOptimisingTestSuite(testtools.TestCase):
 
     def makeTestCase(self):
         """Make a normal TestCase."""
@@ -74,7 +74,7 @@ class TestOptimisingTestSuite(pyunit3k.TestCase):
         return test_case
 
     def setUp(self):
-        pyunit3k.TestCase.setUp(self)
+        testtools.TestCase.setUp(self)
         self.optimising_suite = testresources.OptimisingTestSuite()
 
     def testAddTest(self):
@@ -177,7 +177,7 @@ class TestOptimisingTestSuite(pyunit3k.TestCase):
         self.assertEqual(suite.sorted, True)
 
 
-class TestSplitByResources(pyunit3k.TestCase):
+class TestSplitByResources(testtools.TestCase):
     """Tests for split_by_resources."""
 
     def makeTestCase(self):
@@ -223,11 +223,11 @@ class TestSplitByResources(pyunit3k.TestCase):
         self.assertEqual(set(resourced_cases), set(haves))
 
 
-class TestCostOfSwitching(pyunit3k.TestCase):
+class TestCostOfSwitching(testtools.TestCase):
     """Tests for cost_of_switching."""
 
     def setUp(self):
-        pyunit3k.TestCase.setUp(self)
+        testtools.TestCase.setUp(self)
         self.suite = testresources.OptimisingTestSuite()
 
     def makeResource(self, setUpCost=1, tearDownCost=1):
@@ -276,7 +276,7 @@ class TestCostOfSwitching(pyunit3k.TestCase):
             2, self.suite.cost_of_switching(set([a, c]), set([b, c])))
 
 
-class TestCostGraph(pyunit3k.TestCase):
+class TestCostGraph(testtools.TestCase):
     """Tests for calculating the cost graph of resourced test cases."""
 
     def makeResource(self, setUpCost=1, tearDownCost=1):
@@ -315,7 +315,7 @@ class TestCostGraph(pyunit3k.TestCase):
                         set(a.resources), set(b.resources))}}, graph)
 
 
-class TestGraphStuff(pyunit3k.TestCase):
+class TestGraphStuff(testtools.TestCase):
 
     def setUp(self):
 

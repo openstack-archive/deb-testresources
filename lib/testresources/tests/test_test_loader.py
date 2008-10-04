@@ -18,7 +18,7 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import pyunit3k
+import testtools
 from testresources import TestLoader, OptimisingTestSuite
 from testresources.tests import TestUtil
 
@@ -29,7 +29,7 @@ def test_suite():
     return result
 
 
-class TestTestLoader(pyunit3k.TestCase):
+class TestTestLoader(testtools.TestCase):
 
     def testSuiteType(self):
         # The testresources TestLoader loads tests into an

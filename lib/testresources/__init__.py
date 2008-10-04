@@ -17,13 +17,24 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-from pyunit3k import iterate_tests
 import unittest
 
 
 def test_suite():
     import testresources.tests
     return testresources.tests.test_suite()
+
+
+def iterate_tests(test_suite_or_case):
+    """Iterate through all of the test cases in `test_suite_or_case`."""
+    try:
+        suite = iter(test_suite_or_case)
+    except TypeError:
+        yield test_suite_or_case
+    else:
+        for test in suite:
+            for subtest in iterate_tests(test):
+                yield subtest
 
 
 def split_by_resources(tests):
