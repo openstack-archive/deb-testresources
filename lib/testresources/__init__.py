@@ -25,18 +25,6 @@ def test_suite():
     return testresources.tests.test_suite()
 
 
-def iterate_tests(test_suite_or_case):
-    """Iterate through all of the test cases in `test_suite_or_case`."""
-    try:
-        suite = iter(test_suite_or_case)
-    except TypeError:
-        yield test_suite_or_case
-    else:
-        for test in suite:
-            for subtest in iterate_tests(test):
-                yield subtest
-
-
 def split_by_resources(tests):
     """Split a list of tests by whether or not they use test resources.
 
@@ -59,14 +47,29 @@ class OptimisingTestSuite(unittest.TestSuite):
     """A resource creation optimising TestSuite."""
 
     def adsorbSuite(self, test_case_or_suite):
-        """Add `test_case_or_suite`, unwrapping any suites we find.
+        """Deprecated. Use addTest instead."""
+        self.addTest(test_case_or_suite)
 
-        This means that any containing TestSuites will be removed. These
-        suites might have their own unittest extensions, so be careful with
-        this.
+    def addTest(self, test_case_or_suite):
+        """Add `test_case_or_suite`, unwrapping standard TestSuites.
+
+        This means that any containing unittest.TestSuites will be removed,
+        while any custom test suites will be 'distributed' across their
+        members. Thus addTest(CustomSuite([a, b])) will result in
+        CustomSuite([a]) and CustomSuite([b]) being added to this suite.
         """
-        for test in iterate_tests(test_case_or_suite):
-            self.addTest(test)
+        try:
+            tests = iter(test_case_or_suite)
+        except TypeError:
+            unittest.TestSuite.addTest(self, test_case_or_suite)
+            return
+        if unittest.TestSuite == test_case_or_suite.__class__:
+            for test in tests:
+                self.adsorbSuite(test)
+        else:
+            for test in tests:
+                unittest.TestSuite.addTest(
+                    self, test_case_or_suite.__class__([test]))
 
     def cost_of_switching(self, old_resource_set, new_resource_set):
         """Cost of switching from 'old_resource_set' to 'new_resource_set'.
