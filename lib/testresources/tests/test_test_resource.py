@@ -18,7 +18,7 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import pyunit3k
+import testtools
 
 import testresources
 
@@ -45,7 +45,7 @@ class MockResource(testresources.TestResource):
         return "Boo!"
 
 
-class TestTestResource(pyunit3k.TestCase):
+class TestTestResource(testtools.TestCase):
 
     def testUnimplementedGetResource(self):
         # By default, TestResource raises NotImplementedError on getResource.
