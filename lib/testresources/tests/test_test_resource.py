@@ -170,13 +170,16 @@ class TestTestResource(testtools.TestCase):
         resource_manager.dirtied(resource)
         self.assertEqual(True, resource_manager._dirty)
 
-    def testDirtyingResourceTriggersClean(self):
+    def testDirtyingResourceTriggersCleanOnGet(self):
         resource_manager = MockResource()
         resource1 = resource_manager.getResource()
         resource2 = resource_manager.getResource()
         resource_manager.dirtied(resource2)
         resource_manager.finishedWith(resource2)
+        self.assertEqual(0, resource_manager.cleans)
+        resource3 = resource_manager.getResource()
         self.assertEqual(1, resource_manager.cleans)
+        resource_manager.finishedWith(resource3)
         resource_manager.finishedWith(resource1)
         self.assertEqual(2, resource_manager.cleans)
 

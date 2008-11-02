@@ -204,8 +204,6 @@ class TestResource(object):
         if self._uses == 0:
             self.clean(resource)
             self._setResource(None)
-        elif self._dirty:
-            self._resetResource(resource)
 
     def getResource(self):
         """Get the resource for this class and record that it's being used.
