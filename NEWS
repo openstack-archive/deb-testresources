@@ -8,8 +8,8 @@ IN DEVELOPMENT
 
   CHANGES:
 
-    * testresources needs pyunit3k to run the testresources test suite. You
-      can still use testresources without using pyunit3k. (Jonathan Lange)
+    * testresources needs testtools to run the testresources test suite. You
+      can still use testresources without using testtools. (Jonathan Lange)
 
   IMPROVEMENTS:
 
@@ -28,23 +28,25 @@ IN DEVELOPMENT
 
   API CHANGES:
 
-    * ResourcedTestCase.setUpResources and tearDownResources are now instance
-      methods, not static methods. (Jonathan Lange)
-
     * All methods on TestResource are now instance methods, and thus tests
       should use instances of TestResource subclasses, not the classes
       themselves. (Jonathan Lange)
 
-    * TestResource.setResource has been renamed to _setResource.
-      (Jonathan Lange)
-
-    * SampleTestResource has been removed. (Jonathan Lange)
+    * Now imports from testtools rather than pyunit3k. (Jonathan Lange)
 
     * ResourcedTestCase will now look for resources in the 'resources'
       attribute, rather than the '_resources' attribute. (Jonathan Lange)
 
+    * ResourcedTestCase.setUpResources and tearDownResources are now instance
+      methods, not static methods. (Jonathan Lange)
+
+    * SampleTestResource has been removed. (Jonathan Lange)
+
     * TestResource subclasses should override 'make' and 'clean' where they
       previously overrode '_makeResource' and '_cleanResource'.
+      (Jonathan Lange)
+
+    * TestResource.setResource has been renamed to _setResource.
       (Jonathan Lange)
 
   INTERNALS:
