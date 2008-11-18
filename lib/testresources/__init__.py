@@ -156,7 +156,8 @@ class OptimisingTestSuite(unittest.TestSuite):
                 graph[test][othertest] = cost
                 graph[othertest][test] = cost
             # NB: a better cost metric is needed.
-            graph['start'][test] = len(test.resources)
+            graph['start'][test] = sum(resource.setUpCost for resource in
+                test.resources)
         return graph
 
 

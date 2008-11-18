@@ -2,8 +2,6 @@
 Tasks
 =====
 
-* Test OptimisingTestSuite.sortTests
-
 * Test switch
 
 * Use setUpCost and tearDownCost in cost calculation
@@ -15,9 +13,6 @@ Tasks
 * Discuss copyright of Jonathan's contributions with Robert.
 
 * Test exceptions being raised from make and clean
-
-* Talk to bzrtools upstream (abentley) about the significant
-  backwards-compatibility-breaking changes.
 
 
 Questions
@@ -36,16 +31,6 @@ Questions
 Bugs
 ====
 
-* Current traversal cost doesn't count the cost of setting up the initial set
-  of resources. Perhaps this could be worked around by including a transition
-  from 'no resources' in OptimisingTestSuite._getGraph?
-
-  From old todos in README:
-   * during graph calculation, create a fake root with cost-of-resource paths
-     to all resources, better than choosing an arbitrary node.
-
-* Related: TestGraphStuff.testBasicSortTests is disabled due to intermittent
-  failure.
 
 
 Ideas
