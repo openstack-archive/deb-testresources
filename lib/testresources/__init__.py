@@ -74,6 +74,8 @@ class OptimisingTestSuite(unittest.TestSuite):
         This is calculated by adding the cost of tearing down unnecessary
         resources to the cost of setting up the newly-needed resources.
         """
+        # NB: The current implementation assumes 1 for the cost of each
+        # resource.
         return len(old_resource_set ^ new_resource_set)
 
     def switch(self, old_resource_set, new_resource_set):
@@ -124,21 +126,26 @@ class OptimisingTestSuite(unittest.TestSuite):
             # XXX: Arbitrarily select the start node. This can result in
             # sub-optimal sortings. We actually want to include the cost of
             # establishing the start node in the calculation of the distance.
-            start_node = graph.keys()[0]
-            distances, predecessors = Dijkstra(graph, start_node)
+            distances, predecessors = Dijkstra(graph, 'start')
             # and sort by distance
             nodes = distances.items()
             nodes.sort(key=lambda x:x[1])
             for test, distance in nodes:
-                sorted.append(test)
+                if test != 'start':
+                    sorted.append(test)
         self._tests = sorted + legacy
 
     def _getGraph(self, tests_with_resources):
-        """Build a graph of the resource-using nodes."""
+        """Build a graph of the resource-using nodes.
+        
+        :return: A graph in the format the Dijkstra implementation requires,
+            with start node 'start' (not reachable by anything)
+        """
         # build a mesh graph where a node is a test, and and the number of
         # resources to change to another test is the cost to travel straight
         # to that node.
-        graph = dict((test, dict()) for test in tests_with_resources)
+        graph = dict((test, {}) for test in tests_with_resources)
+        graph['start'] = {}
         while tests_with_resources:
             test = tests_with_resources.pop()
             test_resources = set(test.resources)
@@ -148,6 +155,8 @@ class OptimisingTestSuite(unittest.TestSuite):
                     test_resources, othertest_resources)
                 graph[test][othertest] = cost
                 graph[othertest][test] = cost
+            # NB: a better cost metric is needed.
+            graph['start'][test] = len(test.resources)
         return graph
 
 

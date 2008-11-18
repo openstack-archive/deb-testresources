@@ -259,13 +259,13 @@ class TestCostGraph(testtools.TestCase):
     def testEmptyGraph(self):
         suite = testresources.OptimisingTestSuite()
         graph = suite._getGraph([])
-        self.assertEqual({}, graph)
+        self.assertEqual({'start':{}}, graph)
 
     def testSingletonGraph(self):
         case = self.makeTestWithResources([self.makeResource()])
         suite = testresources.OptimisingTestSuite()
         graph = suite._getGraph([case])
-        self.assertEqual({case: {}}, graph)
+        self.assertEqual({case: {}, 'start': {case: 1}}, graph)
 
     def testTwoCasesInGraph(self):
         a = self.makeTestWithResources(
@@ -277,7 +277,9 @@ class TestCostGraph(testtools.TestCase):
             {a: {b: suite.cost_of_switching(
                         set(a.resources), set(b.resources))},
              b: {a: suite.cost_of_switching(
-                        set(a.resources), set(b.resources))}}, graph)
+                        set(a.resources), set(b.resources))},
+             'start': {a: 2, b: 1},
+            }, graph)
 
 
 class TestGraphStuff(testtools.TestCase):
@@ -304,27 +306,59 @@ class TestGraphStuff(testtools.TestCase):
         resource_two = testresources.TestResource()
         resource_three = testresources.TestResource()
 
-        self.suite = testresources.OptimisingTestSuite()
+        self.cases = []
         self.case1 = MockTest("test_one")
         self.case1.resources = [
             ("_one", resource_one), ("_two", resource_two)]
+        self.cases.append(self.case1)
         self.case2 = MockTest("test_two")
         self.case2.resources = [
             ("_two", resource_two), ("_three", resource_three)]
+        self.cases.append(self.case2)
         self.case3 = MockTest("test_three")
         self.case3.resources = [("_three", resource_three)]
+        self.cases.append(self.case3)
         self.case4 = MockTest("test_four")
-        self.suite.addTests([self.case3, self.case1, self.case4, self.case2])
+        self.cases.append(self.case4)
         # acceptable sorted orders are:
         # 1, 2, 3, 4
         # 3, 2, 1, 4
 
     def testBasicSortTests(self):
-        # XXX: The outcome of this test depends on exactly how Python orders a
-        # dictionary. This makes it unreliable.
-        return
-        self.suite.sortTests()
-        self.assertIn(
-            self.suite._tests, [
-                [self.case1, self.case2, self.case3, self.case4],
+        # Test every permutation of inputs
+        permutations = []
+        permutations.append([self.case1, self.case2, self.case3, self.case4])
+        permutations.append([self.case1, self.case2, self.case4, self.case3])
+        permutations.append([self.case1, self.case3, self.case2, self.case4])
+        permutations.append([self.case1, self.case3, self.case4, self.case2])
+        permutations.append([self.case1, self.case4, self.case2, self.case3])
+        permutations.append([self.case1, self.case4, self.case3, self.case2])
+
+        permutations.append([self.case2, self.case1, self.case3, self.case4])
+        permutations.append([self.case2, self.case1, self.case4, self.case3])
+        permutations.append([self.case2, self.case3, self.case1, self.case4])
+        permutations.append([self.case2, self.case3, self.case4, self.case1])
+        permutations.append([self.case2, self.case4, self.case1, self.case3])
+        permutations.append([self.case2, self.case4, self.case3, self.case1])
+
+        permutations.append([self.case3, self.case2, self.case1, self.case4])
+        permutations.append([self.case3, self.case2, self.case4, self.case1])
+        permutations.append([self.case3, self.case1, self.case2, self.case4])
+        permutations.append([self.case3, self.case1, self.case4, self.case2])
+        permutations.append([self.case3, self.case4, self.case2, self.case1])
+        permutations.append([self.case3, self.case4, self.case1, self.case2])
+
+        permutations.append([self.case4, self.case2, self.case3, self.case1])
+        permutations.append([self.case4, self.case2, self.case1, self.case3])
+        permutations.append([self.case4, self.case3, self.case2, self.case1])
+        permutations.append([self.case4, self.case3, self.case1, self.case2])
+        permutations.append([self.case4, self.case1, self.case2, self.case3])
+        permutations.append([self.case4, self.case1, self.case3, self.case2])
+        for permutation in permutations:
+            suite = testresources.OptimisingTestSuite()
+            suite.addTests(permutation)
+            suite.sortTests()
+            self.assertIn(
+                suite._tests, [
+                    [self.case1, self.case2, self.case3, self.case4],
                 [self.case3, self.case2, self.case1, self.case4]])
