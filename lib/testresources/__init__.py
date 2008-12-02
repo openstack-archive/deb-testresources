@@ -73,10 +73,16 @@ class OptimisingTestSuite(unittest.TestSuite):
 
         This is calculated by adding the cost of tearing down unnecessary
         resources to the cost of setting up the newly-needed resources.
+
+        Note that resources which are always dirtied may skew the predicted
+        skew the cost of switching because they are considered common, even
+        when reusing them may actually be equivalent to a teardown+setup
+        operation.
         """
-        # NB: The current implementation assumes 1 for the cost of each
-        # resource.
-        return len(old_resource_set ^ new_resource_set)
+        new_resources = new_resource_set - old_resource_set
+        gone_resources = old_resource_set - new_resource_set
+        return (sum(resource.setUpCost for resource in new_resources) +
+            sum(resource.tearDownCost for resource in gone_resources))
 
     def switch(self, old_resource_set, new_resource_set):
         """Switch from 'old_resource_set' to 'new_resource_set'.
@@ -116,17 +122,26 @@ class OptimisingTestSuite(unittest.TestSuite):
         order = []
         legacy, tests_with_resources = split_by_resources(self._tests)
         if len(tests_with_resources) > 0:
-            remaining = set(tests_with_resources)
-            graph = self._getGraph(tests_with_resources)
-            # now we have a graph, we can do lovely things like
-            # travelling salesman on it.
-            prev_test = 'start'
-            while remaining:
-                cost, test = min(
-                    (graph[prev_test][test], test) for test in remaining)
-                order.append(test)
-                remaining.remove(test)
-                prev_test = test
+            # Recursive visit-all-nodes all-permutations.
+            def cost(from_resources, tests):
+                """Get the cost of resource traversal for tests.
+
+                :return: cost, order
+                """
+                if not tests:
+                    # tear down last resources
+                    return (sum(resource.tearDownCost for resource in
+                        from_resources), [])
+                costs = []
+                for test in tests:
+                    resources = frozenset([resource for _, resource in
+                        test.resources])
+                    child_cost, child_order = cost(resources, tests - set([test]))
+                    costs.append(
+                        (self.cost_of_switching(from_resources, resources) +
+                         child_cost, [test] + child_order))
+                return min(costs)
+            _, order = cost(frozenset(), set(tests_with_resources))
         self._tests = order + legacy
 
     def _getGraph(self, tests_with_resources):

@@ -302,59 +302,65 @@ class TestGraphStuff(testtools.TestCase):
             def test_four(self):
                 pass
 
+        self.case1 = MockTest("test_one")
+        self.case2 = MockTest("test_two")
+        self.case3 = MockTest("test_three")
+        self.case4 = MockTest("test_four")
+        self.cases = []
+        self.cases.append(self.case1)
+        self.cases.append(self.case2)
+        self.cases.append(self.case3)
+        self.cases.append(self.case4)
+
+    def _permute_four(self, cases):
+        case1, case2, case3, case4 = cases
+        permutations = []
+        permutations.append([case1, case2, case3, case4])
+        permutations.append([case1, case2, case4, case3])
+        permutations.append([case1, case3, case2, case4])
+        permutations.append([case1, case3, case4, case2])
+        permutations.append([case1, case4, case2, case3])
+        permutations.append([case1, case4, case3, case2])
+
+        permutations.append([case2, case1, case3, case4])
+        permutations.append([case2, case1, case4, case3])
+        permutations.append([case2, case3, case1, case4])
+        permutations.append([case2, case3, case4, case1])
+        permutations.append([case2, case4, case1, case3])
+        permutations.append([case2, case4, case3, case1])
+
+        permutations.append([case3, case2, case1, case4])
+        permutations.append([case3, case2, case4, case1])
+        permutations.append([case3, case1, case2, case4])
+        permutations.append([case3, case1, case4, case2])
+        permutations.append([case3, case4, case2, case1])
+        permutations.append([case3, case4, case1, case2])
+
+        permutations.append([case4, case2, case3, case1])
+        permutations.append([case4, case2, case1, case3])
+        permutations.append([case4, case3, case2, case1])
+        permutations.append([case4, case3, case1, case2])
+        permutations.append([case4, case1, case2, case3])
+        permutations.append([case4, case1, case3, case2])
+        return permutations
+    
+    def testBasicSortTests(self):
+        # Test every permutation of inputs, with equal cost resources and
+        # legacy tests.
         resource_one = testresources.TestResource()
         resource_two = testresources.TestResource()
         resource_three = testresources.TestResource()
 
-        self.cases = []
-        self.case1 = MockTest("test_one")
         self.case1.resources = [
             ("_one", resource_one), ("_two", resource_two)]
-        self.cases.append(self.case1)
-        self.case2 = MockTest("test_two")
         self.case2.resources = [
             ("_two", resource_two), ("_three", resource_three)]
-        self.cases.append(self.case2)
-        self.case3 = MockTest("test_three")
         self.case3.resources = [("_three", resource_three)]
-        self.cases.append(self.case3)
-        self.case4 = MockTest("test_four")
-        self.cases.append(self.case4)
         # acceptable sorted orders are:
         # 1, 2, 3, 4
         # 3, 2, 1, 4
 
-    def testBasicSortTests(self):
-        # Test every permutation of inputs
-        permutations = []
-        permutations.append([self.case1, self.case2, self.case3, self.case4])
-        permutations.append([self.case1, self.case2, self.case4, self.case3])
-        permutations.append([self.case1, self.case3, self.case2, self.case4])
-        permutations.append([self.case1, self.case3, self.case4, self.case2])
-        permutations.append([self.case1, self.case4, self.case2, self.case3])
-        permutations.append([self.case1, self.case4, self.case3, self.case2])
-
-        permutations.append([self.case2, self.case1, self.case3, self.case4])
-        permutations.append([self.case2, self.case1, self.case4, self.case3])
-        permutations.append([self.case2, self.case3, self.case1, self.case4])
-        permutations.append([self.case2, self.case3, self.case4, self.case1])
-        permutations.append([self.case2, self.case4, self.case1, self.case3])
-        permutations.append([self.case2, self.case4, self.case3, self.case1])
-
-        permutations.append([self.case3, self.case2, self.case1, self.case4])
-        permutations.append([self.case3, self.case2, self.case4, self.case1])
-        permutations.append([self.case3, self.case1, self.case2, self.case4])
-        permutations.append([self.case3, self.case1, self.case4, self.case2])
-        permutations.append([self.case3, self.case4, self.case2, self.case1])
-        permutations.append([self.case3, self.case4, self.case1, self.case2])
-
-        permutations.append([self.case4, self.case2, self.case3, self.case1])
-        permutations.append([self.case4, self.case2, self.case1, self.case3])
-        permutations.append([self.case4, self.case3, self.case2, self.case1])
-        permutations.append([self.case4, self.case3, self.case1, self.case2])
-        permutations.append([self.case4, self.case1, self.case2, self.case3])
-        permutations.append([self.case4, self.case1, self.case3, self.case2])
-        for permutation in permutations:
+        for permutation in self._permute_four(self.cases):
             suite = testresources.OptimisingTestSuite()
             suite.addTests(permutation)
             suite.sortTests()
@@ -362,3 +368,61 @@ class TestGraphStuff(testtools.TestCase):
                 suite._tests, [
                     [self.case1, self.case2, self.case3, self.case4],
                 [self.case3, self.case2, self.case1, self.case4]])
+
+    def testGlobalMinimum(self):
+        # When a local minimum leads to a global non-minum, the global
+        # non-minimum is still reached. We construct this by having a resource
+        # that appears very cheap (it has a low setup cost) but is very
+        # expensive to tear down. Then we have it be used twice: the global
+        # minimum depends on only tearing it down once. To prevent it 
+        # accidentally being chosen twice, we make one use of it be
+        # on its own, and another with a resource to boost its cost,
+        # finally we put a resource which is more expensive to setup
+        # than the expensive teardown is to teardown, but less expensive
+        # than it + the small booster to setup.
+        # valid results are - the expensive setup, then both expensive
+        # teardowns, and the legacy fourth, or
+        # both expensive teardowns and then the expensive setup (and the legacy
+        # fourth)
+        # case1 has expensive setup (one)
+        # case2 has expensive teardown (two)
+        # case3 has expensive teardown + boost (three)
+        resource_one = testresources.TestResource()
+        resource_one.setUpCost = 20
+        resource_two = testresources.TestResource()
+        resource_two.tearDownCost = 50
+        resource_three = testresources.TestResource()
+        resource_three.setUpCost = 72
+        # node costs:
+        #  ->1 = r1.up                    = 20
+        #  ->2 = r2.up                    = 1
+        #  ->3 = r2.up + r3.up            = 122
+        # 1->2 = r1.down + r2.up          = 2
+        # 1->3 = r1.down + r2.up + r3.up  = 93
+        # 2->1 = r2.down + r1.up          = 70
+        # 2->3 = r3.up                    = 72
+        # 3->1 = r1.up + r2.down + r3.down= 71
+        # 3->2 = r3.down                  = 1
+        # 1->  = r1.down                  = 1
+        # 2->  = r2.down                  = 50
+        # 3->  = r3.down + r3.down        = 51
+        # naive path = 2, 1, 3 = 1 + 70 + 93 + 51 = 215
+        # better    = 2, 3, 1 = 1 + 72 + 71 + 1 = 145
+        acceptable_orders = [
+            [self.case1, self.case2, self.case3, self.case4],
+            [self.case1, self.case3, self.case2, self.case4],
+            [self.case2, self.case3, self.case1, self.case4],
+            [self.case3, self.case2, self.case1, self.case4],
+            ]
+
+        self.case1.resources = [
+            ("_one", resource_one)]
+        self.case2.resources = [
+            ("_two", resource_two)]
+        self.case3.resources = [("_two", resource_two),
+            ("_three", resource_three)]
+        for permutation in self._permute_four(self.cases):
+            suite = testresources.OptimisingTestSuite()
+            suite.addTests(permutation)
+            suite.sortTests()
+            self.assertIn( suite._tests, acceptable_orders)
