@@ -115,24 +115,19 @@ class OptimisingTestSuite(unittest.TestSuite):
         # quick hack on the plane. Need to lookup graph textbook.
         sorted = []
         legacy, tests_with_resources = split_by_resources(self._tests)
-        graph = self._getGraph(tests_with_resources)
-        # now we have a graph, we can do lovely things like travelling
-        # salesman on it. Blech. So we just take the dijkstra for this. I
-        # think this will usually generate reasonable behaviour - its just
-        # that the needed starting resources are quite arbitrary and can thus
-        # make things less than optimal.
-        from testresources.dijkstra import Dijkstra
-        if len(graph.keys()) > 0:
-            # XXX: Arbitrarily select the start node. This can result in
-            # sub-optimal sortings. We actually want to include the cost of
-            # establishing the start node in the calculation of the distance.
-            distances, predecessors = Dijkstra(graph, 'start')
-            # and sort by distance
-            nodes = distances.items()
-            nodes.sort(key=lambda x:x[1])
-            for test, distance in nodes:
-                if test != 'start':
-                    sorted.append(test)
+        if len(tests_with_resources) > 0:
+            remaining = set(tests_with_resources)
+            graph = self._getGraph(tests_with_resources)
+            # now we have a graph, we can do lovely things like
+            # travelling salesman on it. Blech. So we just follow the
+            # least cost edges of the graph to visit every test.
+            prev_test = 'start'
+            while remaining:
+                cost, test = min(
+                    (graph[prev_test][test], test) for test in remaining)
+                sorted.append(test)
+                remaining.remove(test)
+                prev_test = test
         self._tests = sorted + legacy
 
     def _getGraph(self, tests_with_resources):
