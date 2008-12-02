@@ -312,6 +312,12 @@ class TestGraphStuff(testtools.TestCase):
         self.cases.append(self.case3)
         self.cases.append(self.case4)
 
+    def sortTests(self, tests):
+        suite = testresources.OptimisingTestSuite()
+        suite.addTests(tests)
+        suite.sortTests()
+        return suite._tests
+
     def _permute_four(self, cases):
         case1, case2, case3, case4 = cases
         permutations = []
@@ -343,7 +349,7 @@ class TestGraphStuff(testtools.TestCase):
         permutations.append([case4, case1, case2, case3])
         permutations.append([case4, case1, case3, case2])
         return permutations
-    
+
     def testBasicSortTests(self):
         # Test every permutation of inputs, with equal cost resources and
         # legacy tests.
@@ -361,11 +367,8 @@ class TestGraphStuff(testtools.TestCase):
         # 3, 2, 1, 4
 
         for permutation in self._permute_four(self.cases):
-            suite = testresources.OptimisingTestSuite()
-            suite.addTests(permutation)
-            suite.sortTests()
             self.assertIn(
-                suite._tests, [
+                self.sortTests(permutation), [
                     [self.case1, self.case2, self.case3, self.case4],
                 [self.case3, self.case2, self.case1, self.case4]])
 
@@ -422,7 +425,26 @@ class TestGraphStuff(testtools.TestCase):
         self.case3.resources = [("_two", resource_two),
             ("_three", resource_three)]
         for permutation in self._permute_four(self.cases):
-            suite = testresources.OptimisingTestSuite()
-            suite.addTests(permutation)
-            suite.sortTests()
-            self.assertIn( suite._tests, acceptable_orders)
+            self.assertIn(self.sortTests(permutation), acceptable_orders)
+
+    def testSortIsStableWithinGroups(self):
+        """Tests with the same resources maintain their relative order."""
+        resource_one = testresources.TestResource()
+        resource_two = testresources.TestResource()
+
+        self.case1.resources = [("_one", resource_one)]
+        self.case2.resources = [("_one", resource_one)]
+        self.case3.resources = [("_one", resource_one), ("_two", resource_two)]
+        self.case4.resources = [("_one", resource_one), ("_two", resource_two)]
+
+        tests = self.sortTests([self.case1, self.case2, self.case3, self.case4])
+        self.assertTrue(tests.index(self.case1) < tests.index(self.case2))
+        self.assertTrue(tests.index(self.case3) < tests.index(self.case4))
+
+        tests = self.sortTests([self.case2, self.case1, self.case3, self.case4])
+        self.assertTrue(tests.index(self.case2) < tests.index(self.case1))
+        self.assertTrue(tests.index(self.case3) < tests.index(self.case4))
+
+        tests = self.sortTests([self.case4, self.case3, self.case2, self.case1])
+        self.assertTrue(tests.index(self.case2) < tests.index(self.case1))
+        self.assertTrue(tests.index(self.case4) < tests.index(self.case3))

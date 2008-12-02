@@ -118,31 +118,38 @@ class OptimisingTestSuite(unittest.TestSuite):
 
         Feel free to override to improve the sort behaviour.
         """
-        # quick hack on the plane. Need to lookup graph textbook.
-        order = []
-        legacy, tests_with_resources = split_by_resources(self._tests)
-        if len(tests_with_resources) > 0:
-            # Recursive visit-all-nodes all-permutations.
-            def cost(from_resources, tests):
-                """Get the cost of resource traversal for tests.
+        # Build a map from sets of resources to the tests that require
+        # those resources.  There will usually be far fewer resource
+        # combinations than tests and there can never be more.
+        no_resources = frozenset()
+        resource_set_tests = {no_resources: []}
+        for test in self._tests:
+            resource_set = frozenset(
+                resource for name, resource in getattr(test, "resources", ()))
+            resource_set_tests.setdefault(resource_set, []).append(test)
 
-                :return: cost, order
-                """
-                if not tests:
-                    # tear down last resources
-                    return (sum(resource.tearDownCost for resource in
-                        from_resources), [])
-                costs = []
-                for test in tests:
-                    resources = frozenset([resource for _, resource in
-                        test.resources])
-                    child_cost, child_order = cost(resources, tests - set([test]))
-                    costs.append(
-                        (self.cost_of_switching(from_resources, resources) +
-                         child_cost, [test] + child_order))
-                return min(costs)
-            _, order = cost(frozenset(), set(tests_with_resources))
-        self._tests = order + legacy
+        # Recursive visit-all-nodes all-permutations.
+        def cost(from_set, resource_sets):
+            """Get the cost of resource traversal for resource sets.
+
+            :return: cost, order
+            """
+            if not resource_sets:
+                # tear down last resources
+                return self.cost_of_switching(from_set, no_resources), []
+            costs = []
+            for to_set in resource_sets:
+                child_cost, child_order = cost(
+                    to_set, resource_sets - set([to_set]))
+                costs.append(
+                    (self.cost_of_switching(from_set, to_set) + child_cost,
+                     [to_set] + child_order))
+            return min(costs)
+        _, order = cost(no_resources,
+                        set(resource_set_tests) - set([no_resources]))
+        order.append(no_resources)
+        self._tests = sum(
+            (resource_set_tests[resource_set] for resource_set in order), [])
 
     def _getGraph(self, tests_with_resources):
         """Build a graph of the resource-using nodes.
