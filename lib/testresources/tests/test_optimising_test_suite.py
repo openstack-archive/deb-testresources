@@ -437,14 +437,11 @@ class TestGraphStuff(testtools.TestCase):
         self.case3.resources = [("_one", resource_one), ("_two", resource_two)]
         self.case4.resources = [("_one", resource_one), ("_two", resource_two)]
 
-        tests = self.sortTests([self.case1, self.case2, self.case3, self.case4])
-        self.assertTrue(tests.index(self.case1) < tests.index(self.case2))
-        self.assertTrue(tests.index(self.case3) < tests.index(self.case4))
-
-        tests = self.sortTests([self.case2, self.case1, self.case3, self.case4])
-        self.assertTrue(tests.index(self.case2) < tests.index(self.case1))
-        self.assertTrue(tests.index(self.case3) < tests.index(self.case4))
-
-        tests = self.sortTests([self.case4, self.case3, self.case2, self.case1])
-        self.assertTrue(tests.index(self.case2) < tests.index(self.case1))
-        self.assertTrue(tests.index(self.case4) < tests.index(self.case3))
+        for permutation in self._permute_four(self.cases):
+            sorted = self.sortTests(permutation)
+            self.assertEqual(
+                permutation.index(self.case1) < permutation.index(self.case2),
+                sorted.index(self.case1) < sorted.index(self.case2))
+            self.assertEqual(
+                permutation.index(self.case3) < permutation.index(self.case4),
+                sorted.index(self.case3) < sorted.index(self.case4))
