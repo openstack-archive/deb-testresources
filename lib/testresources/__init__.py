@@ -113,27 +113,25 @@ class OptimisingTestSuite(unittest.TestSuite):
         Feel free to override to improve the sort behaviour.
         """
         # quick hack on the plane. Need to lookup graph textbook.
-        sorted = []
+        order = []
         legacy, tests_with_resources = split_by_resources(self._tests)
         graph = self._getGraph(tests_with_resources)
         # now we have a graph, we can do lovely things like travelling
-        # salesman on it. Blech. So we just take the dijkstra for this. I
-        # think this will usually generate reasonable behaviour - its just
-        # that the needed starting resources are quite arbitrary and can thus
-        # make things less than optimal.
-        from testresources.dijkstra import Dijkstra
+        # salesman on it. Blech.
         if len(graph.keys()) > 0:
-            # XXX: Arbitrarily select the start node. This can result in
-            # sub-optimal sortings. We actually want to include the cost of
-            # establishing the start node in the calculation of the distance.
-            distances, predecessors = Dijkstra(graph, 'start')
-            # and sort by distance
-            nodes = distances.items()
-            nodes.sort(key=lambda x:x[1])
-            for test, distance in nodes:
-                if test != 'start':
-                    sorted.append(test)
-        self._tests = sorted + legacy
+            order = []
+            seen = set()
+            node = 'start'
+            while graph:
+                reachable = graph.pop(node)
+                costs = reachable.items()
+                costs.sort(key=lambda x:x[1])
+                for node, _ in costs:
+                    if node not in seen:
+                        order.append(node)
+                        seen.add(node)
+                        break
+        self._tests = order + legacy
 
     def _getGraph(self, tests_with_resources):
         """Build a graph of the resource-using nodes.
