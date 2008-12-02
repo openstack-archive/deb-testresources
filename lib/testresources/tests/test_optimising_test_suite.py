@@ -268,16 +268,16 @@ class TestCostGraph(testtools.TestCase):
         self.assertEqual({case: {}, 'start': {case: 1}}, graph)
 
     def testTwoCasesInGraph(self):
-        a = self.makeTestWithResources(
-            [self.makeResource(), self.makeResource()])
-        b = self.makeTestWithResources([self.makeResource()])
+        res1 = self.makeResource()
+        res2 = self.makeResource()
+        a = self.makeTestWithResources([res1, res2])
+        b = self.makeTestWithResources([res2])
         suite = testresources.OptimisingTestSuite()
+
         graph = suite._getGraph([a, b])
         self.assertEqual(
-            {a: {b: suite.cost_of_switching(
-                        set(a.resources), set(b.resources))},
-             b: {a: suite.cost_of_switching(
-                        set(a.resources), set(b.resources))},
+            {a: {b: suite.cost_of_switching(set([res1, res2]), set([res2]))},
+             b: {a: suite.cost_of_switching(set([res2]), set([res1, res2]))},
              'start': {a: 2, b: 1},
             }, graph)
 
