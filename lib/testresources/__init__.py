@@ -115,22 +115,18 @@ class OptimisingTestSuite(unittest.TestSuite):
         # quick hack on the plane. Need to lookup graph textbook.
         order = []
         legacy, tests_with_resources = split_by_resources(self._tests)
-        graph = self._getGraph(tests_with_resources)
-        # now we have a graph, we can do lovely things like travelling
-        # salesman on it. Blech.
-        if len(graph.keys()) > 0:
-            order = []
-            seen = set()
-            node = 'start'
-            while graph:
-                reachable = graph.pop(node)
-                costs = reachable.items()
-                costs.sort(key=lambda x:x[1])
-                for node, _ in costs:
-                    if node not in seen:
-                        order.append(node)
-                        seen.add(node)
-                        break
+        if len(tests_with_resources) > 0:
+            remaining = set(tests_with_resources)
+            graph = self._getGraph(tests_with_resources)
+            # now we have a graph, we can do lovely things like
+            # travelling salesman on it.
+            prev_test = 'start'
+            while remaining:
+                cost, test = min(
+                    (graph[prev_test][test], test) for test in remaining)
+                order.append(test)
+                remaining.remove(test)
+                prev_test = test
         self._tests = order + legacy
 
     def _getGraph(self, tests_with_resources):
