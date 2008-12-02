@@ -137,7 +137,7 @@ class OptimisingTestSuite(unittest.TestSuite):
 
     def _getGraph(self, tests_with_resources):
         """Build a graph of the resource-using nodes.
-        
+
         :return: A graph in the format the Dijkstra implementation requires,
             with start node 'start' (not reachable by anything)
         """
@@ -148,16 +148,17 @@ class OptimisingTestSuite(unittest.TestSuite):
         graph['start'] = {}
         while tests_with_resources:
             test = tests_with_resources.pop()
-            test_resources = set(test.resources)
+            test_resources = set(resource for name, resource in test.resources)
             for othertest in tests_with_resources:
-                othertest_resources = set(othertest.resources)
+                othertest_resources = set(
+                    resource for name, resource in othertest.resources)
                 cost = self.cost_of_switching(
                     test_resources, othertest_resources)
                 graph[test][othertest] = cost
                 graph[othertest][test] = cost
             # NB: a better cost metric is needed.
             graph['start'][test] = sum(resource.setUpCost for resource in
-                test.resources)
+                test_resources)
         return graph
 
 
