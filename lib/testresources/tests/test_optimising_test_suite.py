@@ -151,29 +151,40 @@ class TestSplitByResources(testtools.TestCase):
     def makeResourcedTestCase(self, has_resource=True):
         case = testresources.ResourcedTestCase('run')
         if has_resource:
-            case.resources = ['resource', testresources.TestResource()]
+            case.resources = [('resource', testresources.TestResource())]
         return case
 
     def testNoTests(self):
-        self.assertEqual(([], []), split_by_resources([]))
+        self.assertEqual({frozenset(): []}, split_by_resources([]))
 
     def testJustNormalCases(self):
         normal_case = self.makeTestCase()
-        have_nots, haves = split_by_resources([normal_case])
-        self.assertEqual([normal_case], have_nots)
-        self.assertEqual([], haves)
+        resource_set_tests = split_by_resources([normal_case])
+        self.assertEqual({frozenset(): [normal_case]}, resource_set_tests)
 
     def testJustResourcedCases(self):
         resourced_case = self.makeResourcedTestCase()
-        have_nots, haves = split_by_resources([resourced_case])
-        self.assertEqual([], have_nots)
-        self.assertEqual([resourced_case], haves)
+        resource = resourced_case.resources[0][1]
+        resource_set_tests = split_by_resources([resourced_case])
+        self.assertEqual({frozenset(): [],
+                          frozenset([resource]): [resourced_case]},
+                         resource_set_tests)
+
+    def testMultipleResources(self):
+        resource1 = testresources.TestResource()
+        resource2 = testresources.TestResource()
+        resourced_case = self.makeResourcedTestCase(has_resource=False)
+        resourced_case.resources = [('resource1', resource1),
+                                    ('resource2', resource2)]
+        resource_set_tests = split_by_resources([resourced_case])
+        self.assertEqual({frozenset(): [],
+                          frozenset([resource1, resource2]): [resourced_case]},
+                         resource_set_tests)
 
     def testResourcedCaseWithNoResources(self):
         resourced_case = self.makeResourcedTestCase(has_resource=False)
-        have_nots, haves = split_by_resources([resourced_case])
-        self.assertEqual([resourced_case], have_nots)
-        self.assertEqual([], haves)
+        resource_set_tests = split_by_resources([resourced_case])
+        self.assertEqual({frozenset(): [resourced_case]}, resource_set_tests)
 
     def testMixThemUp(self):
         normal_cases = [self.makeTestCase() for i in range(3)]
@@ -183,9 +194,12 @@ class TestSplitByResources(testtools.TestCase):
         all_cases = normal_cases + resourced_cases
         # XXX: Maybe I shouldn't be using random here.
         random.shuffle(all_cases)
-        have_nots, haves = split_by_resources(all_cases)
-        self.assertEqual(set(normal_cases), set(have_nots))
-        self.assertEqual(set(resourced_cases), set(haves))
+        resource_set_tests = split_by_resources(all_cases)
+        self.assertEqual(set(normal_cases),
+                         set(resource_set_tests[frozenset()]))
+        for case in resourced_cases:
+            resource = case.resources[0][1]
+            self.assertEqual([case], resource_set_tests[frozenset([resource])])
 
 
 class TestCostOfSwitching(testtools.TestCase):
@@ -250,36 +264,30 @@ class TestCostGraph(testtools.TestCase):
         resource.tearDownCost = tearDownCost
         return resource
 
-    def makeTestWithResources(self, resources):
-        case = testresources.ResourcedTestCase('run')
-        case.resources = [
-            (self.getUniqueString(), resource) for resource in resources]
-        return case
-
     def testEmptyGraph(self):
         suite = testresources.OptimisingTestSuite()
         graph = suite._getGraph([])
-        self.assertEqual({'start':{}}, graph)
+        self.assertEqual({}, graph)
 
     def testSingletonGraph(self):
-        case = self.makeTestWithResources([self.makeResource()])
+        resource = self.makeResource()
         suite = testresources.OptimisingTestSuite()
-        graph = suite._getGraph([case])
-        self.assertEqual({case: {}, 'start': {case: 1}}, graph)
+        graph = suite._getGraph([frozenset()])
+        self.assertEqual({frozenset(): {frozenset(): 0}}, graph)
 
     def testTwoCasesInGraph(self):
         res1 = self.makeResource()
         res2 = self.makeResource()
-        a = self.makeTestWithResources([res1, res2])
-        b = self.makeTestWithResources([res2])
-        suite = testresources.OptimisingTestSuite()
 
-        graph = suite._getGraph([a, b])
-        self.assertEqual(
-            {a: {b: suite.cost_of_switching(set([res1, res2]), set([res2]))},
-             b: {a: suite.cost_of_switching(set([res2]), set([res1, res2]))},
-             'start': {a: 2, b: 1},
-            }, graph)
+        set1 = frozenset([res1, res2])
+        set2 = frozenset([res2])
+        no_resources = frozenset()
+
+        suite = testresources.OptimisingTestSuite()
+        graph = suite._getGraph([no_resources, set1, set2])
+        self.assertEqual({no_resources: {no_resources: 0, set1: 2, set2: 1},
+                          set1: {no_resources: 2, set1: 0, set2: 1},
+                          set2: {no_resources: 1, set1: 1, set2: 0}}, graph)
 
 
 class TestGraphStuff(testtools.TestCase):
@@ -312,6 +320,12 @@ class TestGraphStuff(testtools.TestCase):
         self.cases.append(self.case3)
         self.cases.append(self.case4)
 
+    def sortTests(self, tests):
+        suite = testresources.OptimisingTestSuite()
+        suite.addTests(tests)
+        suite.sortTests()
+        return suite._tests
+
     def _permute_four(self, cases):
         case1, case2, case3, case4 = cases
         permutations = []
@@ -343,7 +357,7 @@ class TestGraphStuff(testtools.TestCase):
         permutations.append([case4, case1, case2, case3])
         permutations.append([case4, case1, case3, case2])
         return permutations
-    
+
     def testBasicSortTests(self):
         # Test every permutation of inputs, with equal cost resources and
         # legacy tests.
@@ -361,11 +375,8 @@ class TestGraphStuff(testtools.TestCase):
         # 3, 2, 1, 4
 
         for permutation in self._permute_four(self.cases):
-            suite = testresources.OptimisingTestSuite()
-            suite.addTests(permutation)
-            suite.sortTests()
             self.assertIn(
-                suite._tests, [
+                self.sortTests(permutation), [
                     [self.case1, self.case2, self.case3, self.case4],
                 [self.case3, self.case2, self.case1, self.case4]])
 
@@ -422,7 +433,23 @@ class TestGraphStuff(testtools.TestCase):
         self.case3.resources = [("_two", resource_two),
             ("_three", resource_three)]
         for permutation in self._permute_four(self.cases):
-            suite = testresources.OptimisingTestSuite()
-            suite.addTests(permutation)
-            suite.sortTests()
-            self.assertIn( suite._tests, acceptable_orders)
+            self.assertIn(self.sortTests(permutation), acceptable_orders)
+
+    def testSortIsStableWithinGroups(self):
+        """Tests with the same resources maintain their relative order."""
+        resource_one = testresources.TestResource()
+        resource_two = testresources.TestResource()
+
+        self.case1.resources = [("_one", resource_one)]
+        self.case2.resources = [("_one", resource_one)]
+        self.case3.resources = [("_one", resource_one), ("_two", resource_two)]
+        self.case4.resources = [("_one", resource_one), ("_two", resource_two)]
+
+        for permutation in self._permute_four(self.cases):
+            sorted = self.sortTests(permutation)
+            self.assertEqual(
+                permutation.index(self.case1) < permutation.index(self.case2),
+                sorted.index(self.case1) < sorted.index(self.case2))
+            self.assertEqual(
+                permutation.index(self.case3) < permutation.index(self.case4),
+                sorted.index(self.case3) < sorted.index(self.case4))

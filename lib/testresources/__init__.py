@@ -38,21 +38,19 @@ def iterate_tests(test_suite_or_case):
 
 
 def split_by_resources(tests):
-    """Split a list of tests by whether or not they use test resources.
+    """Split a list of tests by the resources that the tests use.
 
-    :return: ([tests_that_dont], [tests_that_do])
+    :return: a dictionary mapping sets of resources to lists of tests
+    using that combination of resources.  The dictionary always
+    contains an entry for "no resources".
     """
-    # XXX: We could probably use itertools.groupby for this. Or set
-    # difference.
-    resource_users = []
-    legacy = []
+    no_resources = frozenset()
+    resource_set_tests = {no_resources: []}
     for test in tests:
-        resources = getattr(test, 'resources', None)
-        if resources:
-            resource_users.append(test)
-        else:
-            legacy.append(test)
-    return legacy, resource_users
+        resources = getattr(test, "resources", ())
+        resource_set = frozenset(resource for name, resource in resources)
+        resource_set_tests.setdefault(resource_set, []).append(test)
+    return resource_set_tests
 
 
 class OptimisingTestSuite(unittest.TestSuite):
@@ -118,56 +116,50 @@ class OptimisingTestSuite(unittest.TestSuite):
 
         Feel free to override to improve the sort behaviour.
         """
-        # quick hack on the plane. Need to lookup graph textbook.
-        order = []
-        legacy, tests_with_resources = split_by_resources(self._tests)
-        if len(tests_with_resources) > 0:
-            # Recursive visit-all-nodes all-permutations.
-            def cost(from_resources, tests):
-                """Get the cost of resource traversal for tests.
+        # We group the tests by the resource combinations they use,
+        # since there will usually be fewer resource combinations than
+        # actual tests and there can never be more.
+        resource_set_tests = split_by_resources(self._tests)
 
-                :return: cost, order
-                """
-                if not tests:
-                    # tear down last resources
-                    return (sum(resource.tearDownCost for resource in
-                        from_resources), [])
-                costs = []
-                for test in tests:
-                    resources = frozenset([resource for _, resource in
-                        test.resources])
-                    child_cost, child_order = cost(resources, tests - set([test]))
-                    costs.append(
-                        (self.cost_of_switching(from_resources, resources) +
-                         child_cost, [test] + child_order))
-                return min(costs)
-            _, order = cost(frozenset(), set(tests_with_resources))
-        self._tests = order + legacy
+        graph = self._getGraph(resource_set_tests.keys())
+        no_resources = frozenset()
+        # Recursive visit-all-nodes all-permutations.
+        def cost(from_set, resource_sets):
+            """Get the cost of resource traversal for resource sets.
 
-    def _getGraph(self, tests_with_resources):
+            :return: cost, order
+            """
+            if not resource_sets:
+                # tear down last resources
+                return graph[from_set][no_resources], []
+            costs = []
+            for to_set in resource_sets:
+                child_cost, child_order = cost(
+                    to_set, resource_sets - set([to_set]))
+                costs.append((graph[from_set][to_set] + child_cost,
+                              [to_set] + child_order))
+            return min(costs)
+        _, order = cost(no_resources,
+                        set(resource_set_tests) - set([no_resources]))
+        order.append(no_resources)
+        self._tests = sum(
+            (resource_set_tests[resource_set] for resource_set in order), [])
+
+    def _getGraph(self, resource_sets):
         """Build a graph of the resource-using nodes.
 
-        :return: A graph in the format the Dijkstra implementation requires,
-            with start node 'start' (not reachable by anything)
+        :return: A complete directed graph of the switching costs
+            between each resource combination.
         """
-        # build a mesh graph where a node is a test, and and the number of
-        # resources to change to another test is the cost to travel straight
-        # to that node.
-        graph = dict((test, {}) for test in tests_with_resources)
-        graph['start'] = {}
-        while tests_with_resources:
-            test = tests_with_resources.pop()
-            test_resources = set(resource for name, resource in test.resources)
-            for othertest in tests_with_resources:
-                othertest_resources = set(
-                    resource for name, resource in othertest.resources)
-                cost = self.cost_of_switching(
-                    test_resources, othertest_resources)
-                graph[test][othertest] = cost
-                graph[othertest][test] = cost
-            # NB: a better cost metric is needed.
-            graph['start'][test] = sum(resource.setUpCost for resource in
-                test_resources)
+        graph = {}
+        for from_set in resource_sets:
+            graph[from_set] = {}
+            for to_set in resource_sets:
+                if from_set is to_set:
+                    graph[from_set][to_set] = 0
+                else:
+                    graph[from_set][to_set] = self.cost_of_switching(
+                        from_set, to_set)
         return graph
 
 
