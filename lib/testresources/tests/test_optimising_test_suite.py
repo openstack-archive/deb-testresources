@@ -264,36 +264,30 @@ class TestCostGraph(testtools.TestCase):
         resource.tearDownCost = tearDownCost
         return resource
 
-    def makeTestWithResources(self, resources):
-        case = testresources.ResourcedTestCase('run')
-        case.resources = [
-            (self.getUniqueString(), resource) for resource in resources]
-        return case
-
     def testEmptyGraph(self):
         suite = testresources.OptimisingTestSuite()
         graph = suite._getGraph([])
-        self.assertEqual({'start':{}}, graph)
+        self.assertEqual({}, graph)
 
     def testSingletonGraph(self):
-        case = self.makeTestWithResources([self.makeResource()])
+        resource = self.makeResource()
         suite = testresources.OptimisingTestSuite()
-        graph = suite._getGraph([case])
-        self.assertEqual({case: {}, 'start': {case: 1}}, graph)
+        graph = suite._getGraph([frozenset()])
+        self.assertEqual({frozenset(): {frozenset(): 0}}, graph)
 
     def testTwoCasesInGraph(self):
         res1 = self.makeResource()
         res2 = self.makeResource()
-        a = self.makeTestWithResources([res1, res2])
-        b = self.makeTestWithResources([res2])
-        suite = testresources.OptimisingTestSuite()
 
-        graph = suite._getGraph([a, b])
-        self.assertEqual(
-            {a: {b: suite.cost_of_switching(set([res1, res2]), set([res2]))},
-             b: {a: suite.cost_of_switching(set([res2]), set([res1, res2]))},
-             'start': {a: 2, b: 1},
-            }, graph)
+        set1 = frozenset([res1, res2])
+        set2 = frozenset([res2])
+        no_resources = frozenset()
+
+        suite = testresources.OptimisingTestSuite()
+        graph = suite._getGraph([no_resources, set1, set2])
+        self.assertEqual({no_resources: {no_resources: 0, set1: 2, set2: 1},
+                          set1: {no_resources: 2, set1: 0, set2: 1},
+                          set2: {no_resources: 1, set1: 1, set2: 0}}, graph)
 
 
 class TestGraphStuff(testtools.TestCase):

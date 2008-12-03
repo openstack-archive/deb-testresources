@@ -121,6 +121,7 @@ class OptimisingTestSuite(unittest.TestSuite):
         # actual tests and there can never be more.
         resource_set_tests = split_by_resources(self._tests)
 
+        graph = self._getGraph(resource_set_tests.keys())
         no_resources = frozenset()
         # Recursive visit-all-nodes all-permutations.
         def cost(from_set, resource_sets):
@@ -130,14 +131,13 @@ class OptimisingTestSuite(unittest.TestSuite):
             """
             if not resource_sets:
                 # tear down last resources
-                return self.cost_of_switching(from_set, no_resources), []
+                return graph[from_set][no_resources], []
             costs = []
             for to_set in resource_sets:
                 child_cost, child_order = cost(
                     to_set, resource_sets - set([to_set]))
-                costs.append(
-                    (self.cost_of_switching(from_set, to_set) + child_cost,
-                     [to_set] + child_order))
+                costs.append((graph[from_set][to_set] + child_cost,
+                              [to_set] + child_order))
             return min(costs)
         _, order = cost(no_resources,
                         set(resource_set_tests) - set([no_resources]))
@@ -145,30 +145,21 @@ class OptimisingTestSuite(unittest.TestSuite):
         self._tests = sum(
             (resource_set_tests[resource_set] for resource_set in order), [])
 
-    def _getGraph(self, tests_with_resources):
+    def _getGraph(self, resource_sets):
         """Build a graph of the resource-using nodes.
 
-        :return: A graph in the format the Dijkstra implementation requires,
-            with start node 'start' (not reachable by anything)
+        :return: A complete directed graph of the switching costs
+            between each resource combination.
         """
-        # build a mesh graph where a node is a test, and and the number of
-        # resources to change to another test is the cost to travel straight
-        # to that node.
-        graph = dict((test, {}) for test in tests_with_resources)
-        graph['start'] = {}
-        while tests_with_resources:
-            test = tests_with_resources.pop()
-            test_resources = set(resource for name, resource in test.resources)
-            for othertest in tests_with_resources:
-                othertest_resources = set(
-                    resource for name, resource in othertest.resources)
-                cost = self.cost_of_switching(
-                    test_resources, othertest_resources)
-                graph[test][othertest] = cost
-                graph[othertest][test] = cost
-            # NB: a better cost metric is needed.
-            graph['start'][test] = sum(resource.setUpCost for resource in
-                test_resources)
+        graph = {}
+        for from_set in resource_sets:
+            graph[from_set] = {}
+            for to_set in resource_sets:
+                if from_set is to_set:
+                    graph[from_set][to_set] = 0
+                else:
+                    graph[from_set][to_set] = self.cost_of_switching(
+                        from_set, to_set)
         return graph
 
 
