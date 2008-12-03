@@ -38,21 +38,19 @@ def iterate_tests(test_suite_or_case):
 
 
 def split_by_resources(tests):
-    """Split a list of tests by whether or not they use test resources.
+    """Split a list of tests by the resources that the tests use.
 
-    :return: ([tests_that_dont], [tests_that_do])
+    :return: a dictionary mapping sets of resources to lists of tests
+    using that combination of resources.  The dictionary always
+    contains an entry for "no resources".
     """
-    # XXX: We could probably use itertools.groupby for this. Or set
-    # difference.
-    resource_users = []
-    legacy = []
+    no_resources = frozenset()
+    resource_set_tests = {no_resources: []}
     for test in tests:
-        resources = getattr(test, 'resources', None)
-        if resources:
-            resource_users.append(test)
-        else:
-            legacy.append(test)
-    return legacy, resource_users
+        resources = getattr(test, "resources", ())
+        resource_set = frozenset(resource for name, resource in resources)
+        resource_set_tests.setdefault(resource_set, []).append(test)
+    return resource_set_tests
 
 
 class OptimisingTestSuite(unittest.TestSuite):
@@ -118,16 +116,12 @@ class OptimisingTestSuite(unittest.TestSuite):
 
         Feel free to override to improve the sort behaviour.
         """
-        # Build a map from sets of resources to the tests that require
-        # those resources.  There will usually be far fewer resource
-        # combinations than tests and there can never be more.
-        no_resources = frozenset()
-        resource_set_tests = {no_resources: []}
-        for test in self._tests:
-            resource_set = frozenset(
-                resource for name, resource in getattr(test, "resources", ()))
-            resource_set_tests.setdefault(resource_set, []).append(test)
+        # We group the tests by the resource combinations they use,
+        # since there will usually be fewer resource combinations than
+        # actual tests and there can never be more.
+        resource_set_tests = split_by_resources(self._tests)
 
+        no_resources = frozenset()
         # Recursive visit-all-nodes all-permutations.
         def cost(from_set, resource_sets):
             """Get the cost of resource traversal for resource sets.
