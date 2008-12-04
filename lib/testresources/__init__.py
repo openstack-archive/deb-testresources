@@ -198,9 +198,9 @@ class TestResource(object):
 
     def clean_all(self, resource):
         """Clean the dependencies from resource, and then resource itself."""
+        self.clean(resource)
         for name, manager in self.resources:
             manager.finishedWith(getattr(resource, name))
-        self.clean(resource)
 
     def clean(self, resource):
         """Override this to class method to hook into resource removal."""
