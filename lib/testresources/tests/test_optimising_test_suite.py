@@ -43,7 +43,7 @@ class MakeCounter(testresources.TestResource):
     def clean(self, resource):
         self.cleans += 1
 
-    def make(self):
+    def make(self, dependency_resources):
         self.makes += 1
         return "boo"
 

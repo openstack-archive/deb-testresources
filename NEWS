@@ -42,6 +42,12 @@ IN DEVELOPMENT
 
     * SampleTestResource has been removed. (Jonathan Lange)
 
+    * TestResource.make has had an API change: it must now accept a
+      dependency_resources parameter which is a dictionary listing the
+      dependencies that will be provided to the resource. This parameter is
+      provided so the resource can access its dependencies during setUp, if
+      needed. (Robert Collins)
+
     * TestResource subclasses should override 'make' and 'clean' where they
       previously overrode '_makeResource' and '_cleanResource'.
       (Jonathan Lange)

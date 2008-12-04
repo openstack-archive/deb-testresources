@@ -35,8 +35,12 @@ class MockResource(testresources.TestResource):
         testresources.TestResource.__init__(self)
         self._resource = resource
 
-    def make(self):
+    def make(self, dependency_resources):
         return self._resource
+
+
+class MockResourceInstance(object):
+    """A resource instance."""
 
 
 class TestResourcedTestCase(testtools.TestCase):
@@ -65,6 +69,17 @@ class TestResourcedTestCase(testtools.TestCase):
         self.assertEqual(self.resource, self.resourced_case.foo)
         self.assertEqual('bar_resource', self.resourced_case.bar)
 
+    def testSetUpResourcesSetsUpDependences(self):
+        resource = MockResourceInstance()
+        self.resource_manager = MockResource(resource)
+        self.resourced_case.resources = [('foo', self.resource_manager)]
+        # Give the 'foo' resource access to a 'bar' resource
+        self.resource_manager.resources.append(
+            ('bar', MockResource('bar_resource')))
+        self.resourced_case.setUpResources()
+        self.assertEqual(resource, self.resourced_case.foo)
+        self.assertEqual('bar_resource', self.resourced_case.foo.bar)
+
     def testSetUpUsesResource(self):
         # setUpResources records a use of each declared resource.
         self.resourced_case.resources = [("foo", self.resource_manager)]
@@ -84,6 +99,18 @@ class TestResourcedTestCase(testtools.TestCase):
         self.resourced_case.setUpResources()
         self.resourced_case.tearDownResources()
         self.assertEqual(self.resource_manager._uses, 0)
+
+    def testTearDownResourcesStopsUsingDependencies(self):
+        resource = MockResourceInstance()
+        dep1 = MockResource('bar_resource')
+        self.resource_manager = MockResource(resource)
+        self.resourced_case.resources = [('foo', self.resource_manager)]
+        # Give the 'foo' resource access to a 'bar' resource
+        self.resource_manager.resources.append(
+            ('bar', dep1))
+        self.resourced_case.setUpResources()
+        self.resourced_case.tearDownResources()
+        self.assertEqual(dep1._uses, 0)
 
     def testSingleWithSetup(self):
         # setUp and tearDown invoke setUpResources and tearDownResources.

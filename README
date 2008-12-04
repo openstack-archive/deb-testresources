@@ -40,16 +40,22 @@ There are three main components to make testresources work:
 
 1) testresources.TestResource
 
-A TestResource is an object that tests can use, which provides a getResource()
-method that returns an object implementing whichever interface the client
-needs, and which will accept that same object back on its finishedWith()
-method.
+A TestResource is an object that tests can use. Usually a subclass of
+testresources.TestResource, with the getResource method overridden. This method
+should return an object providing the resource that the client needs (which can
+Optionally, the clean() method can be overridden if the resource needs to take
+action to clean up external resources (e.g. threads, disk files, ...).
+The 'resources' list on the TestResource object is used to declare
+dependencies. For instance, a DataBaseResource that needs a TemporaryDirectory
+might be declared with a resources list::
+
+    class DataBaseResource(TestResource):
+
+        resources = [("scratchdir", TemporaryDirectoryResource())]
 
 Most importantly, two getResources to the same TestResource with no
-finishedWith call in the middle, should return the same object.
-
-    XXX the same object requirement may not be needed - but for expensive
-    resources that is the optimisation goal. -- rbc
+finishedWith call in the middle, will return the same object as long as it has
+not been marked dirty.
 
 The goals for TestResources that cannot finish properly are not yet clear, so
 for now the behaviour will to silently continue.

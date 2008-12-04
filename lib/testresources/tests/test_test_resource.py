@@ -40,7 +40,7 @@ class MockResource(testresources.TestResource):
     def clean(self, resource):
         self.cleans += 1
 
-    def make(self):
+    def make(self, dependency_resources):
         self.makes += 1
         return "Boo!"
 
@@ -48,7 +48,8 @@ class MockResource(testresources.TestResource):
 class TestTestResource(testtools.TestCase):
 
     def testUnimplementedGetResource(self):
-        # By default, TestResource raises NotImplementedError on getResource.
+        # By default, TestResource raises NotImplementedError on getResource
+        # because make is not defined initially.
         resource_manager = testresources.TestResource()
         self.assertRaises(NotImplementedError, resource_manager.getResource)
 
@@ -64,6 +65,32 @@ class TestTestResource(testtools.TestCase):
         resource_manager = testresources.TestResource()
         self.assertEqual(None, resource_manager._currentResource)
 
+    def testneededResourcesDefault(self):
+        # Calling neededResources on a default TestResource returns the
+        # resource.
+        resource = testresources.TestResource()
+        self.assertEqual([resource], resource.neededResources())
+
+    def testneededResourcesDependenciesFirst(self):
+        # Calling neededResources on a TestResource with dependencies puts the
+        # dependencies first.
+        resource = testresources.TestResource()
+        dep1 = testresources.TestResource()
+        dep2 = testresources.TestResource()
+        resource.resources.append(("dep1", dep1))
+        resource.resources.append(("dep2", dep2))
+        self.assertEqual([dep1, dep2, resource], resource.neededResources())
+
+    def testneededResourcesClosure(self):
+        # Calling neededResources on a TestResource with dependencies includes
+        # the needed resources of the needed resources.
+        resource = testresources.TestResource()
+        dep1 = testresources.TestResource()
+        dep2 = testresources.TestResource()
+        resource.resources.append(("dep1", dep1))
+        dep1.resources.append(("dep2", dep2))
+        self.assertEqual([dep2, dep1, resource], resource.neededResources())
+
     def testDefaultCosts(self):
         # The base TestResource costs 1 to set up and to tear down.
         resource_manager = testresources.TestResource()
@@ -73,7 +100,7 @@ class TestTestResource(testtools.TestCase):
     def testGetResourceReturnsMakeResource(self):
         resource_manager = MockResource()
         resource = resource_manager.getResource()
-        self.assertEqual(resource_manager.make(), resource)
+        self.assertEqual(resource_manager.make({}), resource)
 
     def testGetResourceIncrementsUses(self):
         resource_manager = MockResource()

@@ -171,6 +171,14 @@ class TestLoader(unittest.TestLoader):
 class TestResource(object):
     """A resource that can be shared across tests.
 
+    :cvar resources: The same as the resources list on an instance, the default
+        constructor will look for the class instance and copy it. This is a
+        convenience to avoid needing to define __init__ solely to alter the
+        dependencies list.
+    :ivar resources: The resources that this resource needs. Calling
+        neededResources will return the closure of this resource and its needed
+        resources. The resources list is in the same format as resources on a 
+        test case - a list of tuples (attribute_name, resource).
     :ivar setUpCost: The relative cost to construct a resource of this type.
          One good approach is to set this to the number of seconds it normally
          takes to set up the resource.
@@ -186,6 +194,13 @@ class TestResource(object):
         self._dirty = False
         self._uses = 0
         self._currentResource = None
+        self.resources = list(getattr(self.__class__, resources, []))
+
+    def clean_all(self, resource):
+        """Clean the dependencies from resource, and then resource itself."""
+        for name, manager in self.resources:
+            manager.finishedWith(getattr(resource, name))
+        self.clean(resource)
 
     def clean(self, resource):
         """Override this to class method to hook into resource removal."""
@@ -211,7 +226,7 @@ class TestResource(object):
         """
         self._uses -= 1
         if self._uses == 0:
-            self.clean(resource)
+            self.clean_all(resource)
             self._setResource(None)
         elif self._dirty:
             self._resetResource(resource)
@@ -225,20 +240,51 @@ class TestResource(object):
         that it is no longer needed.
         """
         if self._uses == 0:
-            self._setResource(self.make())
+            self._setResource(self.make_all())
         elif self._dirty:
             self._resetResource(self._currentResource)
         self._uses += 1
         return self._currentResource
 
-    def make(self):
-        """Override this to construct resources."""
+    def make_all(self):
+        """Make the dependencies of this resource and this resource."""
+        dependency_resources = {}
+        for name, resource in self.resources:
+            dependency_resources[name] = resource.getResource()
+        result = self.make(dependency_resources)
+        for name, value in dependency_resources.items():
+            setattr(result, name, value)
+        return result
+
+    def make(self, dependency_resources):
+        """Override this to construct resources.
+        
+        :param dependency_resources: A dict mapping name -> resource instance
+            for the resources specified as dependencies.
+        """
         raise NotImplementedError(
             "Override make to construct resources.")
 
+    def neededResources(self):
+        """Return the resources needed for this resource, including self.
+        
+        :return: A list of needed resources, in topological deepest-first
+            order.
+        """
+        seen = set([self])
+        result = []
+        for name, resource in self.resources:
+            for resource in resource.neededResources():
+                if resource in seen:
+                    continue
+                seen.add(resource)
+                result.append(resource)
+        result.append(self)
+        return result
+
     def _resetResource(self, old_resource):
-        self.clean(old_resource)
-        self._setResource(self.make())
+        self.clean_all(old_resource)
+        self._setResource(self.make_all())
 
     def _setResource(self, new_resource):
         """Set the current resource to a new value."""

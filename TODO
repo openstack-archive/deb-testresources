@@ -10,6 +10,7 @@ Tasks
 
 * Test exceptions being raised from make and clean
 
+* More docs.
 
 Questions
 =========
@@ -17,7 +18,7 @@ Questions
 * Why does finishedWith take a parameter? Why not use
   TestResource._currentResource?
 
-* How should resources be composed?
+* How should resources be composed? (Partially answered).
 
 * How can testresources be used with layers?
 

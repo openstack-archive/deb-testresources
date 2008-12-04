@@ -27,5 +27,17 @@ class SampleTestResource(TestResource):
     setUpCost = 2
     tearDownCost = 2
 
-    def make(self):
+    def make(self, dependency_resources):
         return "You need to implement your own getResource."
+
+
+class MyResource(object):
+    """My pet resource."""
+
+
+class SampleWithDependencies(TestResource):
+
+    resources = [('foo', SampleTestResource()), ('bar', SampleTestResource())]
+
+    def make(self, dependency_resources):
+        return MyResource()
