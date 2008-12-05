@@ -107,7 +107,9 @@ class OptimisingTestSuite(unittest.TestSuite):
                 break
             resources = getattr(test, 'resources', None)
             if resources is not None:
-                new_resources = set(resource for name, resource in resources)
+                new_resources = set()
+                for name, resource in resources:
+                    new_resources.update(resource.neededResources())
                 self.switch(current_resources, new_resources)
                 current_resources = new_resources
             test(result)
