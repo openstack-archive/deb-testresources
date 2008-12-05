@@ -50,9 +50,13 @@ class MakeCounter(testresources.TestResource):
 
 class TestOptimisingTestSuite(testtools.TestCase):
 
-    def makeTestCase(self):
+    def makeTestCase(self, test_running_hook=None):
         """Make a normal TestCase."""
-        return unittest.TestCase('run')
+        class TestCaseForTesting(unittest.TestCase):
+            def runTest(self):
+                if test_running_hook:
+                    test_running_hook()
+        return TestCaseForTesting('runTest')
 
     def makeResourcedTestCase(self, resource_manager, test_running_hook):
         """Make a ResourcedTestCase."""
@@ -140,6 +144,24 @@ class TestOptimisingTestSuite(testtools.TestCase):
         suite.sorted = False
         suite.run(None)
         self.assertEqual(suite.sorted, True)
+
+    def testResourcesDroppedForNonResourcedTestCase(self):
+        sample_resource = MakeCounter()
+        def resourced_case_hook():
+            self.assertTrue(sample_resource._uses > 0)
+        self.optimising_suite.addTest(self.makeResourcedTestCase(
+            sample_resource, resourced_case_hook))
+
+        def normal_case_hook():
+            # The resource should not be acquired when the normal test
+            # runs.
+            self.assertEqual(sample_resource._uses, 0)
+        self.optimising_suite.addTest(self.makeTestCase(normal_case_hook))
+
+        result = unittest.TestResult()
+        self.optimising_suite.run(result)
+        self.assertEqual(result.testsRun, 2)
+        self.assertEqual(result.wasSuccessful(), True)
 
 
 class TestSplitByResources(testtools.TestCase):

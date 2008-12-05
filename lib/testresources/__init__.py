@@ -105,13 +105,12 @@ class OptimisingTestSuite(unittest.TestSuite):
         for test in self._tests:
             if result.shouldStop:
                 break
-            resources = getattr(test, 'resources', None)
-            if resources is not None:
-                new_resources = set()
-                for name, resource in resources:
-                    new_resources.update(resource.neededResources())
-                self.switch(current_resources, new_resources)
-                current_resources = new_resources
+            resources = getattr(test, 'resources', [])
+            new_resources = set()
+            for name, resource in resources:
+                new_resources.update(resource.neededResources())
+            self.switch(current_resources, new_resources)
+            current_resources = new_resources
             test(result)
         self.switch(current_resources, set())
         return result
