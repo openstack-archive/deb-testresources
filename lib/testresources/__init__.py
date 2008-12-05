@@ -48,8 +48,11 @@ def split_by_resources(tests):
     resource_set_tests = {no_resources: []}
     for test in tests:
         resources = getattr(test, "resources", ())
-        resource_set = frozenset(resource for name, resource in resources)
-        resource_set_tests.setdefault(resource_set, []).append(test)
+        all_resources = list(resource.neededResources() for _, resource in  resources)
+        resource_set = set()
+        for resource_list in all_resources:
+            resource_set.update(resource_list)
+        resource_set_tests.setdefault(frozenset(resource_set), []).append(test)
     return resource_set_tests
 
 
@@ -194,7 +197,7 @@ class TestResource(object):
         self._dirty = False
         self._uses = 0
         self._currentResource = None
-        self.resources = list(getattr(self.__class__, resources, []))
+        self.resources = list(getattr(self.__class__, "resources", []))
 
     def clean_all(self, resource):
         """Clean the dependencies from resource, and then resource itself."""

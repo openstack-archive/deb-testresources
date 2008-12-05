@@ -181,6 +181,17 @@ class TestSplitByResources(testtools.TestCase):
                           frozenset([resource1, resource2]): [resourced_case]},
                          resource_set_tests)
 
+    def testDependentResources(self):
+        resource1 = testresources.TestResource()
+        resource2 = testresources.TestResource()
+        resource1.resources = [('foo', resource2)]
+        resourced_case = self.makeResourcedTestCase(has_resource=False)
+        resourced_case.resources = [('resource1', resource1)]
+        resource_set_tests = split_by_resources([resourced_case])
+        self.assertEqual({frozenset(): [],
+                          frozenset([resource1, resource2]): [resourced_case]},
+                         resource_set_tests)
+
     def testResourcedCaseWithNoResources(self):
         resourced_case = self.makeResourcedTestCase(has_resource=False)
         resource_set_tests = split_by_resources([resourced_case])
@@ -453,3 +464,48 @@ class TestGraphStuff(testtools.TestCase):
             self.assertEqual(
                 permutation.index(self.case3) < permutation.index(self.case4),
                 sorted.index(self.case3) < sorted.index(self.case4))
+
+    def testSortConsidersDependencies(self):
+        """Tests with different dependencies are sorted together."""
+        # We test this by having two resources (one and two) that share a very
+        # expensive dependency (dep). So one and two have to sort together. By
+        # using a cheap resource directly from several tests we can force the
+        # optimise to choose between keeping the cheap resource together or
+        # keeping the expensive dependency together.
+        # Test1, res_one, res_common_one
+        # Test2, res_two, res_common_two
+        # Test3, res_common_one, res_common_two
+        # In a dependency naive sort, we will have test3 between test1 and
+        # test2 always. In a dependency aware sort, test1 and two will
+        # always group.
+         
+        resource_one = testresources.TestResource()
+        resource_two = testresources.TestResource()
+        resource_one_common = testresources.TestResource()
+        # make it cheaper to keep a _common resource than to switch both
+        # resources (when dependencies are ignored)
+        resource_one_common.setUpCost = 2
+        resource_one_common.tearDownCost = 2
+        resource_two_common = testresources.TestResource()
+        resource_two_common.setUpCost = 2
+        resource_two_common.tearDownCost = 2
+        dep = testresources.TestResource()
+        dep.setUpCost = 20
+        dep.tearDownCost = 20
+        resource_one.resources.append(("dep1", dep))
+        resource_two.resources.append(("dep2", dep))
+
+        self.case1.resources = [("withdep", resource_one), ("common", resource_one_common)]
+        self.case2.resources = [("withdep", resource_two), ("common", resource_two_common)]
+        self.case3.resources = [("_one", resource_one_common), ("_two", resource_two_common)]
+        self.case4.resources = []
+
+        acceptable_orders = [
+            [self.case1, self.case2, self.case3, self.case4],
+            [self.case2, self.case1, self.case3, self.case4],
+            [self.case3, self.case1, self.case2, self.case4],
+            [self.case3, self.case2, self.case1, self.case4],
+            ]
+
+        for permutation in self._permute_four(self.cases):
+            self.assertIn(self.sortTests(permutation), acceptable_orders)
