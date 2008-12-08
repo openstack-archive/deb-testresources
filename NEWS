@@ -26,6 +26,9 @@ IN DEVELOPMENT
     * Calling getResource on a dirty resource now triggers a clean and re-make
       of that resource. (Jonathan Lange)
 
+    * All resources are dropped when a test with no declared resources is run.
+      (James Henstridge)
+
   API CHANGES:
 
     * All methods on TestResource are now instance methods, and thus tests
