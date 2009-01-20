@@ -232,8 +232,8 @@ class TestResource(object):
         if self._uses == 0:
             self.clean_all(resource)
             self._setResource(None)
-        elif self._dirty:
-            self._resetResource(resource)
+        else:
+            self._setResource(self.reset(resource))
 
     def getResource(self):
         """Get the resource for this class and record that it's being used.
@@ -245,8 +245,8 @@ class TestResource(object):
         """
         if self._uses == 0:
             self._setResource(self.make_all())
-        elif self._dirty:
-            self._resetResource(self._currentResource)
+        else:
+            self._setResource(self.reset(self._currentResource))
         self._uses += 1
         return self._currentResource
 
@@ -269,6 +269,20 @@ class TestResource(object):
         raise NotImplementedError(
             "Override make to construct resources.")
 
+    def reset(self, resource):
+        """Override this to reset resources.
+
+        By default, the resource will be cleaned then remade if it had
+        previously been `dirtied`.
+
+        :param resource: The existing resource.
+        :return: The new resource.
+        """
+        if self._dirty:
+            self.clean_all(resource)
+            resource = self.make_all()
+        return resource
+
     def neededResources(self):
         """Return the resources needed for this resource, including self.
         
@@ -285,10 +299,6 @@ class TestResource(object):
                 result.append(resource)
         result.append(self)
         return result
-
-    def _resetResource(self, old_resource):
-        self.clean_all(old_resource)
-        self._setResource(self.make_all())
 
     def _setResource(self, new_resource):
         """Set the current resource to a new value."""

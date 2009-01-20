@@ -45,6 +45,18 @@ class MockResource(testresources.TestResource):
         return "Boo!"
 
 
+class MockResettableResource(MockResource):
+    """Mock resource that logs the number of reset calls too."""
+
+    def __init__(self):
+        MockResource.__init__(self)
+        self.resets = 0
+
+    def reset(self, resource):
+        self.resets += 1
+        return resource + "!"
+
+
 class TestTestResource(testtools.TestCase):
 
     def testUnimplementedGetResource(self):
@@ -225,3 +237,26 @@ class TestTestResource(testtools.TestCase):
         self.assertEqual(1, resource_manager.makes)
         resource = resource_manager.getResource()
         self.assertEqual(2, resource_manager.makes)
+
+    def testGetResourceResetsResource(self):
+        resource_manager = MockResettableResource()
+        resource = resource_manager.getResource()
+        self.assertEqual(1, resource_manager.makes)
+        resource = resource_manager.getResource()
+        self.assertEqual(1, resource_manager.makes)
+        self.assertEqual(1, resource_manager.resets)
+
+    def testFinishedWithResetsResource(self):
+        resource_manager = MockResettableResource()
+        resource = resource_manager.getResource()
+        self.assertEqual(1, resource_manager.makes)
+        resource = resource_manager.getResource()
+        self.assertEqual(1, resource_manager.makes)
+        self.assertEqual(1, resource_manager.resets)
+
+        resource_manager.finishedWith(resource)
+        self.assertEqual(2, resource_manager.resets)
+        self.assertEqual(0, resource_manager.cleans)
+        resource_manager.finishedWith(resource)
+        self.assertEqual(2, resource_manager.resets)
+        self.assertEqual(1, resource_manager.cleans)
