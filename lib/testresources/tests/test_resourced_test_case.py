@@ -86,6 +86,12 @@ class TestResourcedTestCase(testtools.TestCase):
         self.resourced_case.setUpResources()
         self.assertEqual(self.resource_manager._uses, 1)
 
+    def testSetUpResourcesMarksUsed(self):
+        # resources used by a test need resetting afterwards.
+        self.resourced_case.resources = [("foo", self.resource_manager)]
+        self.resourced_case.setUpResources()
+        self.assertEqual(self.resource_manager._needsReset, True)
+
     def testTearDownResourcesDeletesResourceAttributes(self):
         self.resourced_case.resources = [("foo", self.resource_manager)]
         self.resourced_case.setUpResources()

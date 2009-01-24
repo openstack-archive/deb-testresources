@@ -196,6 +196,7 @@ class TestResource(object):
 
     def __init__(self):
         self._dirty = False
+        self._needsReset = False
         self._uses = 0
         self._currentResource = None
         self.resources = list(getattr(self.__class__, "resources", []))
@@ -232,8 +233,6 @@ class TestResource(object):
         if self._uses == 0:
             self.clean_all(resource)
             self._setResource(None)
-        else:
-            self._setResource(self.reset(resource))
 
     def getResource(self):
         """Get the resource for this class and record that it's being used.
@@ -245,10 +244,20 @@ class TestResource(object):
         """
         if self._uses == 0:
             self._setResource(self.make_all())
-        else:
+        elif self._needsReset:
             self._setResource(self.reset(self._currentResource))
         self._uses += 1
         return self._currentResource
+
+    def markUsed(self, resource):
+        """Mark the resource as having been used.
+
+        A used resource must be reset before it is used again.
+        """
+        if not self._needsReset:
+            self._needsReset = True
+            for name, manager in self.resources:
+                manager.markUsed(getattr(resource, name))
 
     def make_all(self):
         """Make the dependencies of this resource and this resource."""
@@ -304,6 +313,7 @@ class TestResource(object):
         """Set the current resource to a new value."""
         self._currentResource = new_resource
         self._dirty = False
+        self._needsReset = False
 
 
 class ResourcedTestCase(unittest.TestCase):
@@ -324,6 +334,8 @@ class ResourcedTestCase(unittest.TestCase):
         """Set up any resources that this test needs."""
         for resource in self.resources:
             setattr(self, resource[0], resource[1].getResource())
+        for resource in self.resources:
+            resource[1].markUsed(getattr(self, resource[0]))
 
     def tearDown(self):
         self.tearDownResources()

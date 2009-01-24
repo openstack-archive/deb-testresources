@@ -69,6 +69,10 @@ class TestTestResource(testtools.TestCase):
         resource_manager = testresources.TestResource()
         self.assertEqual(False, resource_manager._dirty)
 
+    def testInitiallyNotNeedsReset(self):
+        resource_manager = testresources.TestResource()
+        self.assertEqual(False, resource_manager._needsReset)
+
     def testInitiallyUnused(self):
         resource_manager = testresources.TestResource()
         self.assertEqual(0, resource_manager._uses)
@@ -148,6 +152,16 @@ class TestTestResource(testtools.TestCase):
         resource_manager.getResource()
         self.assertEqual(1, resource_manager.makes)
 
+    def testGetResourceResetsUsedResource(self):
+        resource_manager = MockResettableResource()
+        resource_manager.getResource()
+        resource = resource_manager.getResource()
+        self.assertEqual(1, resource_manager.makes)
+        resource_manager.markUsed(resource)
+        resource_manager.getResource()
+        self.assertEqual(1, resource_manager.makes)
+        self.assertEqual(1, resource_manager.resets)
+
     def testFinishedWithDecrementsUses(self):
         resource_manager = MockResource()
         resource = resource_manager.getResource()
@@ -195,6 +209,13 @@ class TestTestResource(testtools.TestCase):
         resource_manager.finishedWith(resource)
         self.assertEqual(False, resource_manager._dirty)
 
+    def testFinishedWithMarksNeedsReset(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        resource_manager.markUsed(resource)
+        resource_manager.finishedWith(resource)
+        self.assertEqual(False, resource_manager._needsReset)
+
     def testResourceAvailableBetweenFinishedWithCalls(self):
         resource_manager = MockResource()
         resource = resource_manager.getResource()
@@ -202,6 +223,30 @@ class TestTestResource(testtools.TestCase):
         resource_manager.finishedWith(resource)
         self.assertIs(resource, resource_manager._currentResource)
 
+    def testMarkUsedSetsNeedsReset(self):
+        resource_manager = MockResettableResource()
+        resource = resource_manager.getResource()
+        self.assertEqual(False, resource_manager._needsReset)
+        resource_manager.markUsed(resource)
+        self.assertEqual(True, resource_manager._needsReset)
+
+    def testUsedResourceResetBetweenUses(self):
+        resource_manager = MockResettableResource()
+        resource_manager.getResource()
+        resource = resource_manager.getResource()
+        resource_manager.markUsed(resource)
+        resource_manager.finishedWith(resource)
+        resource = resource_manager.getResource()
+        resource_manager.markUsed(resource)
+        resource_manager.finishedWith(resource)
+        resource_manager.finishedWith(resource)
+        # The resource is made once, reset once and cleaned once.
+        self.assertEqual(1, resource_manager.makes)
+        self.assertEqual(1, resource_manager.resets)
+        self.assertEqual(1, resource_manager.cleans)
+
+    # The default implementation of reset() performs a make/clean if
+    # the dirty flag is set.
     def testDirtiedSetsDirty(self):
         resource_manager = MockResource()
         resource = resource_manager.getResource()
@@ -209,25 +254,23 @@ class TestTestResource(testtools.TestCase):
         resource_manager.dirtied(resource)
         self.assertEqual(True, resource_manager._dirty)
 
-    def testDirtyingResourceTriggersClean(self):
+    def testDefaultResetMethodPreservesCleanResource(self):
         resource_manager = MockResource()
-        resource1 = resource_manager.getResource()
-        resource2 = resource_manager.getResource()
-        resource_manager.dirtied(resource2)
-        resource_manager.finishedWith(resource2)
-        self.assertEqual(1, resource_manager.cleans)
-        resource_manager.finishedWith(resource1)
-        self.assertEqual(2, resource_manager.cleans)
+        resource = resource_manager.getResource()
+        self.assertEqual(1, resource_manager.makes)
+        self.assertEqual(False, resource_manager._dirty)
+        resource_manager.reset(resource)
+        self.assertEqual(1, resource_manager.makes)
+        self.assertEqual(0, resource_manager.cleans)
 
-    def testDirtyingResourceTriggersRemake(self):
+    def testDefaultResetMethodRecreatesDirtyResource(self):
         resource_manager = MockResource()
         resource = resource_manager.getResource()
         self.assertEqual(1, resource_manager.makes)
         resource_manager.dirtied(resource)
-        resource_manager.getResource()
-        self.assertEqual(1, resource_manager.cleans)
+        resource_manager.reset(resource)
         self.assertEqual(2, resource_manager.makes)
-        self.assertEqual(False, resource_manager._dirty)
+        self.assertEqual(1, resource_manager.cleans)
 
     def testDirtyingWhenUnused(self):
         resource_manager = MockResource()
@@ -238,25 +281,11 @@ class TestTestResource(testtools.TestCase):
         resource = resource_manager.getResource()
         self.assertEqual(2, resource_manager.makes)
 
-    def testGetResourceResetsResource(self):
-        resource_manager = MockResettableResource()
+    def testMarkUsedWhenUnused(self):
+        resource_manager = MockResource()
         resource = resource_manager.getResource()
-        self.assertEqual(1, resource_manager.makes)
-        resource = resource_manager.getResource()
-        self.assertEqual(1, resource_manager.makes)
-        self.assertEqual(1, resource_manager.resets)
-
-    def testFinishedWithResetsResource(self):
-        resource_manager = MockResettableResource()
-        resource = resource_manager.getResource()
-        self.assertEqual(1, resource_manager.makes)
-        resource = resource_manager.getResource()
-        self.assertEqual(1, resource_manager.makes)
-        self.assertEqual(1, resource_manager.resets)
-
         resource_manager.finishedWith(resource)
-        self.assertEqual(2, resource_manager.resets)
-        self.assertEqual(0, resource_manager.cleans)
-        resource_manager.finishedWith(resource)
-        self.assertEqual(2, resource_manager.resets)
-        self.assertEqual(1, resource_manager.cleans)
+        resource_manager.markUsed(resource)
+        self.assertEqual(1, resource_manager.makes)
+        resource = resource_manager.getResource()
+        self.assertEqual(2, resource_manager.makes)
