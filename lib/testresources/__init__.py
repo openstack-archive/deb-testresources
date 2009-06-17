@@ -197,14 +197,22 @@ class TestResource(object):
     setUpCost = 1
     tearDownCost = 1
 
-    def __init__(self):
+    def __init__(self, trace_function=None):
+        """Create a TestResource object.
+
+        :param trace_function: A callable that takes strings to output. This
+            will be called with trace messages when the resource is made and
+            cleaned.
+        """
         self._dirty = False
         self._uses = 0
         self._currentResource = None
         self.resources = list(getattr(self.__class__, "resources", []))
+        self._trace = trace_function or (lambda x:"")
 
     def _clean_all(self, resource):
         """Clean the dependencies from resource, and then resource itself."""
+        self._trace("clean: %s\n" % self)
         self.clean(resource)
         for name, manager in self.resources:
             manager.finishedWith(getattr(resource, name))
@@ -271,6 +279,7 @@ class TestResource(object):
 
     def _make_all(self):
         """Make the dependencies of this resource and this resource."""
+        self._trace("make: %s\n" % self)
         dependency_resources = {}
         for name, resource in self.resources:
             dependency_resources[name] = resource.getResource()
