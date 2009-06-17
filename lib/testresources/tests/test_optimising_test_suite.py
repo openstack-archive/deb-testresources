@@ -49,13 +49,17 @@ class MakeCounter(testresources.TestResource):
         testresources.TestResource.__init__(self)
         self.cleans = 0
         self.makes = 0
+        self.calls = []
 
     def clean(self, resource):
         self.cleans += 1
+        self.calls.append(('clean', resource))
 
     def make(self, dependency_resources):
         self.makes += 1
-        return "boo"
+        resource = "boo %d" % self.makes
+        self.calls.append(('make', resource))
+        return resource
 
 
 class TestOptimisingTestSuite(testtools.TestCase):
@@ -65,14 +69,14 @@ class TestOptimisingTestSuite(testtools.TestCase):
         class TestCaseForTesting(unittest.TestCase):
             def runTest(self):
                 if test_running_hook:
-                    test_running_hook()
+                    test_running_hook(self)
         return TestCaseForTesting('runTest')
 
     def makeResourcedTestCase(self, resource_manager, test_running_hook):
         """Make a ResourcedTestCase."""
         class ResourcedTestCaseForTesting(testresources.ResourcedTestCase):
             def runTest(self):
-                test_running_hook()
+                test_running_hook(self)
         test_case = ResourcedTestCaseForTesting('runTest')
         test_case.resources = [('_default', resource_manager)]
         return test_case
@@ -135,7 +139,7 @@ class TestOptimisingTestSuite(testtools.TestCase):
 
     def testSingleCaseResourceAcquisition(self):
         sample_resource = MakeCounter()
-        def getResourceCount():
+        def getResourceCount(test):
             self.assertEqual(sample_resource._uses, 2)
         case = self.makeResourcedTestCase(sample_resource, getResourceCount)
         self.optimising_suite.addTest(case)
@@ -147,7 +151,7 @@ class TestOptimisingTestSuite(testtools.TestCase):
 
     def testResourceReuse(self):
         make_counter = MakeCounter()
-        def getResourceCount():
+        def getResourceCount(test):
             self.assertEqual(make_counter._uses, 2)
         case = self.makeResourcedTestCase(make_counter, getResourceCount)
         case2 = self.makeResourcedTestCase(make_counter, getResourceCount)
@@ -182,21 +186,58 @@ class TestOptimisingTestSuite(testtools.TestCase):
 
     def testResourcesDroppedForNonResourcedTestCase(self):
         sample_resource = MakeCounter()
-        def resourced_case_hook():
+        def resourced_case_hook(test):
             self.assertTrue(sample_resource._uses > 0)
         self.optimising_suite.addTest(self.makeResourcedTestCase(
             sample_resource, resourced_case_hook))
-
-        def normal_case_hook():
+        def normal_case_hook(test):
             # The resource should not be acquired when the normal test
             # runs.
             self.assertEqual(sample_resource._uses, 0)
         self.optimising_suite.addTest(self.makeTestCase(normal_case_hook))
+        result = unittest.TestResult()
+        self.optimising_suite.run(result)
+        self.assertEqual(result.testsRun, 2)
+        self.assertEqual([], result.failures)
+        self.assertEqual([], result.errors)
+        self.assertEqual(result.wasSuccessful(), True)
 
+    def testDirtiedResourceNotRecreated(self):
+        make_counter = MakeCounter()
+        def dirtyResource(test):
+            make_counter.dirtied(test._default)
+        case = self.makeResourcedTestCase(make_counter, dirtyResource)
+        self.optimising_suite.addTest(case)
+        result = unittest.TestResult()
+        self.optimising_suite.run(result)
+        self.assertEqual(result.testsRun, 1)
+        self.assertEqual(result.wasSuccessful(), True)
+        # The resource should only have been made once.
+        self.assertEqual(make_counter.makes, 1)
+
+    def testDirtiedResourceCleanedUp(self):
+        make_counter = MakeCounter()
+        def testOne(test):
+            make_counter.calls.append('test one')
+            make_counter.dirtied(test._default)
+        def testTwo(test):
+            make_counter.calls.append('test two')
+        case1 = self.makeResourcedTestCase(make_counter, testOne)
+        case2 = self.makeResourcedTestCase(make_counter, testTwo)
+        self.optimising_suite.addTest(case1)
+        self.optimising_suite.addTest(case2)
         result = unittest.TestResult()
         self.optimising_suite.run(result)
         self.assertEqual(result.testsRun, 2)
         self.assertEqual(result.wasSuccessful(), True)
+        # Two resources should have been created and cleaned up
+        self.assertEqual(make_counter.calls,
+                         [('make', 'boo 1'),
+                          'test one',
+                          ('clean', 'boo 1'),
+                          ('make', 'boo 2'),
+                          'test two',
+                          ('clean', 'boo 2')])
 
 
 class TestSplitByResources(testtools.TestCase):
