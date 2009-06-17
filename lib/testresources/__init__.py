@@ -203,7 +203,7 @@ class TestResource(object):
         self._currentResource = None
         self.resources = list(getattr(self.__class__, "resources", []))
 
-    def clean_all(self, resource):
+    def _clean_all(self, resource):
         """Clean the dependencies from resource, and then resource itself."""
         self.clean(resource)
         for name, manager in self.resources:
@@ -233,7 +233,7 @@ class TestResource(object):
         """
         self._uses -= 1
         if self._uses == 0:
-            self.clean_all(resource)
+            self._clean_all(resource)
             self._setResource(None)
 
     def getResource(self):
@@ -245,7 +245,7 @@ class TestResource(object):
         that it is no longer needed.
         """
         if self._uses == 0:
-            self._setResource(self.make_all())
+            self._setResource(self._make_all())
         elif self.isDirty():
             self._resetResource(self._currentResource)
         self._uses += 1
@@ -269,7 +269,7 @@ class TestResource(object):
             finally:
                 mgr.finishedWith(res)
 
-    def make_all(self):
+    def _make_all(self):
         """Make the dependencies of this resource and this resource."""
         dependency_resources = {}
         for name, resource in self.resources:
@@ -306,8 +306,8 @@ class TestResource(object):
         return result
 
     def _resetResource(self, old_resource):
-        self.clean_all(old_resource)
-        self._setResource(self.make_all())
+        self._clean_all(old_resource)
+        self._setResource(self._make_all())
 
     def _setResource(self, new_resource):
         """Set the current resource to a new value."""
