@@ -246,10 +246,28 @@ class TestResource(object):
         """
         if self._uses == 0:
             self._setResource(self.make_all())
-        elif self._dirty:
+        elif self.isDirty():
             self._resetResource(self._currentResource)
         self._uses += 1
         return self._currentResource
+
+    def isDirty(self):
+        """Return True if this managers cached resource is dirty.
+        
+        Calling when the resource is not currently held has undefined
+        behaviour.
+        """
+        if self._dirty:
+            return True
+        for name, mgr in self.resources:
+            if mgr.isDirty():
+                return True
+            res = mgr.getResource()
+            try:
+                if res is not getattr(self._currentResource, name):
+                    return True
+            finally:
+                mgr.finishedWith(res)
 
     def make_all(self):
         """Make the dependencies of this resource and this resource."""

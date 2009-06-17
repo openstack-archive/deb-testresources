@@ -29,6 +29,9 @@ IN DEVELOPMENT
     * All resources are dropped when a test with no declared resources is run.
       (James Henstridge)
 
+    * A dirty or changed dependency of a resource makes the resource dirty too.
+      (Robert Collins, #324202)
+
   API CHANGES:
 
     * adsorbSuite is now deprecated in favour of addTest. addTest now flattens

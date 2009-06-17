@@ -29,6 +29,18 @@ def test_suite():
     return result
 
 
+class MockResourceInstance(object):
+
+    def __init__(self, name):
+        self._name = name
+
+    def __cmp__(self, other):
+        return cmp(self.__dict__, other.__dict__)
+
+    def __repr__(self):
+        return self._name
+
+
 class MockResource(testresources.TestResource):
     """Mock resource that logs the number of make and clean calls."""
 
@@ -42,7 +54,7 @@ class MockResource(testresources.TestResource):
 
     def make(self, dependency_resources):
         self.makes += 1
-        return "Boo!"
+        return MockResourceInstance("Boo!")
 
 
 class TestTestResource(testtools.TestCase):
@@ -129,6 +141,41 @@ class TestTestResource(testtools.TestCase):
         resource_manager = MockResource()
         resource_manager.getResource()
         self.assertEqual(1, resource_manager.makes)
+
+    def testIsDirty(self):
+        resource_manager = MockResource()
+        r = resource_manager.getResource()
+        resource_manager.dirtied(r)
+        self.assertTrue(resource_manager.isDirty())
+        resource_manager.finishedWith(r)
+
+    def testIsDirtyIsTrueIfDependenciesChanged(self):
+        resource_manager = MockResource()
+        dep1 = MockResource()
+        dep2 = MockResource()
+        dep3 = MockResource()
+        resource_manager.resources.append(("dep1", dep1))
+        resource_manager.resources.append(("dep2", dep2))
+        resource_manager.resources.append(("dep3", dep3))
+        r = resource_manager.getResource()
+        dep2.dirtied(r.dep2)
+        r2 =dep2.getResource()
+        self.assertTrue(resource_manager.isDirty())
+        resource_manager.finishedWith(r)
+        dep2.finishedWith(r2)
+
+    def testIsDirtyIsTrueIfDependenciesAreDirty(self):
+        resource_manager = MockResource()
+        dep1 = MockResource()
+        dep2 = MockResource()
+        dep3 = MockResource()
+        resource_manager.resources.append(("dep1", dep1))
+        resource_manager.resources.append(("dep2", dep2))
+        resource_manager.resources.append(("dep3", dep3))
+        r = resource_manager.getResource()
+        dep2.dirtied(r.dep2)
+        self.assertTrue(resource_manager.isDirty())
+        resource_manager.finishedWith(r)
 
     def testRepeatedGetResourceCallsMakeResourceOnceOnly(self):
         resource_manager = MockResource()
