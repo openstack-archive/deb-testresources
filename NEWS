@@ -31,6 +31,13 @@ IN DEVELOPMENT
 
   API CHANGES:
 
+    * adsorbSuite is now deprecated in favour of addTest. addTest now flattens
+      standard library TestSuites and distributes custom TestSuite across
+      their member tests. (Jonathan Lange)
+
+    * ResourcedTestCase.setUpResources and tearDownResources are now instance
+      methods, not static methods. (Jonathan Lange)
+
     * All methods on TestResource are now instance methods, and thus tests
       should use instances of TestResource subclasses, not the classes
       themselves. (Jonathan Lange)

@@ -50,30 +50,6 @@ Ideas
 
 * There are now many simple test helpers. These can probably be consolidated.
 
-* We want to support adding other "special" test suites to
-  OptimisingTestSuite. In particular, if we add a test suite that provides
-  services to its tests to an OptimisingTestSuite, adsorbSuite should not
-  totally flatten the suite, but instead keep the suite, even if it changes
-  the structure of the tests.
-
-  e.g. addTest maintains the structure:
-    >>> OptimisingTestSuite().addTest(SpecialSuite([a, b]))._tests
-    [SpecialSuite([a, b])]
-
-  Currently, adsorbSuite destroys all suite structure:
-    >>> OptimisingTestSuite().adsorbSuite(SpecialSuite([a, b]))._tests
-    [a, b]
-
-  Instead, it should preserve the suite while changing the structure:
-    >>> OptimisingTestSuite().adsorbSuite(SpecialSuite([a, b]))._tests
-    [SpecialSuite(a), SpecialSuite(b)]
-
-  All of the tests in each of the resulting new SpecialSuites should have
-  identical resource requirements so we can still optimise.
-
-  Once it does this, we should deprecate adsorbSuite and move this
-  functionality to addTest / addTests.
-
 * 'TestResource' isn't a very good name. Since the switch to instance-based
   resources, it's even worse, since the objects are more like resource
   factories or resource managers. Other possible names involve 'asset',

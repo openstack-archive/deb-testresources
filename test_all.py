@@ -54,7 +54,7 @@ class EarlyStoppingTextTestResult(unittest._TextTestResult):
             self.stop()
 
     def addFailure(self, test, err):
-        unittest._TextTestResult.addError(self, test, err)
+        unittest._TextTestResult.addFailure(self, test, err)
         if self.stopOnFailure():
             self.stop()
 

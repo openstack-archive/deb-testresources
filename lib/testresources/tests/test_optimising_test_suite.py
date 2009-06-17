@@ -32,6 +32,16 @@ def test_suite():
     return result
 
 
+class CustomSuite(unittest.TestSuite):
+    """Custom TestSuite that's comparable using == and !=."""
+
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__
+                and self._tests == other._tests)
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
 class MakeCounter(testresources.TestResource):
     """Test resource that counts makes and cleans."""
 
@@ -71,32 +81,57 @@ class TestOptimisingTestSuite(testtools.TestCase):
         testtools.TestCase.setUp(self)
         self.optimising_suite = testresources.OptimisingTestSuite()
 
-    def testAdsorbTest(self):
-        # Adsorbing a single test case is the same as adding one using
-        # addTest.
+    def testAddTest(self):
+        # Adding a single test case is the same as adding one using the
+        # standard addTest.
         case = self.makeTestCase()
-        self.optimising_suite.adsorbSuite(case)
+        self.optimising_suite.addTest(case)
         self.assertEqual([case], self.optimising_suite._tests)
 
-    def testAdsorbTestSuite(self):
-        # Adsorbing a test suite will is the same as adding all the tests in
+    def testAddTestSuite(self):
+        # Adding a standard test suite is the same as adding all the tests in
         # that suite.
         case = self.makeTestCase()
         suite = unittest.TestSuite([case])
-        self.optimising_suite.adsorbSuite(suite)
+        self.optimising_suite.addTest(suite)
         self.assertEqual([case], self.optimising_suite._tests)
 
-    def testAdsorbFlattensAllSuiteStructure(self):
-        # adsorbSuite will get rid of all suite structure when adding a test,
-        # no matter how much nesting is going on.
+    def testAddFlattensStandardSuiteStructure(self):
+        # addTest will get rid of all unittest.TestSuite structure when adding
+        # a test, no matter how much nesting is going on.
         case1 = self.makeTestCase()
         case2 = self.makeTestCase()
         case3 = self.makeTestCase()
         suite = unittest.TestSuite(
             [unittest.TestSuite([case1, unittest.TestSuite([case2])]),
              case3])
-        self.optimising_suite.adsorbSuite(suite)
+        self.optimising_suite.addTest(suite)
         self.assertEqual([case1, case2, case3], self.optimising_suite._tests)
+
+    def testAddDistributesNonStandardSuiteStructure(self):
+        # addTest distributes all non-standard TestSuites across their
+        # members.
+        case1 = self.makeTestCase()
+        case2 = self.makeTestCase()
+        inner_suite = unittest.TestSuite([case2])
+        suite = CustomSuite([case1, inner_suite])
+        self.optimising_suite.addTest(suite)
+        self.assertEqual(
+            [CustomSuite([case1]), CustomSuite([inner_suite])],
+            self.optimising_suite._tests)
+
+    def testAddPullsNonStandardSuitesUp(self):
+        # addTest flattens standard TestSuites, even those that contain custom
+        # suites. When it reaches the custom suites, it distributes them
+        # across their members.
+        case1 = self.makeTestCase()
+        case2 = self.makeTestCase()
+        inner_suite = CustomSuite([case1, case2])
+        self.optimising_suite.addTest(
+            unittest.TestSuite([unittest.TestSuite([inner_suite])]))
+        self.assertEqual(
+            [CustomSuite([case1]), CustomSuite([case2])],
+            self.optimising_suite._tests)
 
     def testSingleCaseResourceAcquisition(self):
         sample_resource = MakeCounter()
