@@ -278,10 +278,14 @@ class TestTestResource(testtools.TestCase):
 
     def testTraceFunction(self):
         output = []
-        resource_manager = MockResource(trace_function=output.append)
-        expected = ["make: %s\n" % resource_manager]
+        def trace(operation, phase, mgr):
+            output.append((operation, phase, mgr))
+        resource_manager = MockResource(trace_function=trace)
+        expected = [("make", "start", resource_manager),
+            ("make", "stop", resource_manager)]
         r = resource_manager.getResource()
         self.assertEqual(expected, output)
-        expected.append("clean: %s\n" % resource_manager)
+        expected.extend([("clean", "start", resource_manager),
+            ("clean", "stop", resource_manager)])
         resource_manager.finishedWith(r)
         self.assertEqual(expected, output)

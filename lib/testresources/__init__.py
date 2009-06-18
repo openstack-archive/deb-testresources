@@ -208,14 +208,15 @@ class TestResource(object):
         self._uses = 0
         self._currentResource = None
         self.resources = list(getattr(self.__class__, "resources", []))
-        self._trace = trace_function or (lambda x:"")
+        self._trace = trace_function or (lambda x,y,z:"")
 
     def _clean_all(self, resource):
         """Clean the dependencies from resource, and then resource itself."""
-        self._trace("clean: %s\n" % self)
+        self._trace("clean", "start", self)
         self.clean(resource)
         for name, manager in self.resources:
             manager.finishedWith(getattr(resource, name))
+        self._trace("clean", "stop", self)
 
     def clean(self, resource):
         """Override this to class method to hook into resource removal."""
@@ -279,13 +280,14 @@ class TestResource(object):
 
     def _make_all(self):
         """Make the dependencies of this resource and this resource."""
-        self._trace("make: %s\n" % self)
+        self._trace("make", "start", self)
         dependency_resources = {}
         for name, resource in self.resources:
             dependency_resources[name] = resource.getResource()
         result = self.make(dependency_resources)
         for name, value in dependency_resources.items():
             setattr(result, name, value)
+        self._trace("make", "stop", self)
         return result
 
     def make(self, dependency_resources):
