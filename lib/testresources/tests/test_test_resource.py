@@ -57,6 +57,19 @@ class MockResource(testresources.TestResource):
         return MockResourceInstance("Boo!")
 
 
+class MockResettableResource(MockResource):
+    """Mock resource that logs the number of reset calls too."""
+
+    def __init__(self):
+        MockResource.__init__(self)
+        self.resets = 0
+
+    def reset(self, resource):
+        self.resets += 1
+        resource._name += "!"
+        return resource
+
+
 class TestTestResource(testtools.TestCase):
 
     def testUnimplementedGetResource(self):
@@ -183,6 +196,33 @@ class TestTestResource(testtools.TestCase):
         resource_manager.getResource()
         self.assertEqual(1, resource_manager.makes)
 
+    def testGetResourceResetsUsedResource(self):
+        resource_manager = MockResettableResource()
+        resource_manager.getResource()
+        resource = resource_manager.getResource()
+        self.assertEqual(1, resource_manager.makes)
+        resource_manager.dirtied(resource)
+        resource_manager.getResource()
+        self.assertEqual(1, resource_manager.makes)
+        self.assertEqual(1, resource_manager.resets)
+        resource_manager.finishedWith(resource)
+
+    def testUsedResourceResetBetweenUses(self):
+        resource_manager = MockResettableResource()
+        # take two refs; like happens with OptimisingTestSuite.
+        resource_manager.getResource()
+        resource = resource_manager.getResource()
+        resource_manager.dirtied(resource)
+        resource_manager.finishedWith(resource)
+        # Get again, but its been dirtied.
+        resource = resource_manager.getResource()
+        resource_manager.finishedWith(resource)
+        resource_manager.finishedWith(resource)
+        # The resource is made once, reset once and cleaned once.
+        self.assertEqual(1, resource_manager.makes)
+        self.assertEqual(1, resource_manager.resets)
+        self.assertEqual(1, resource_manager.cleans)
+
     def testFinishedWithDecrementsUses(self):
         resource_manager = MockResource()
         resource = resource_manager.getResource()
@@ -237,6 +277,8 @@ class TestTestResource(testtools.TestCase):
         resource_manager.finishedWith(resource)
         self.assertIs(resource, resource_manager._currentResource)
 
+    # The default implementation of reset() performs a make/clean if
+    # the dirty flag is set.
     def testDirtiedSetsDirty(self):
         resource_manager = MockResource()
         resource = resource_manager.getResource()
@@ -257,15 +299,23 @@ class TestTestResource(testtools.TestCase):
         resource_manager.finishedWith(resource1)
         self.assertEqual(2, resource_manager.cleans)
 
-    def testDirtyingResourceTriggersRemake(self):
+    def testDefaultResetMethodPreservesCleanResource(self):
+        resource_manager = MockResource()
+        resource = resource_manager.getResource()
+        self.assertEqual(1, resource_manager.makes)
+        self.assertEqual(False, resource_manager._dirty)
+        resource_manager.reset(resource)
+        self.assertEqual(1, resource_manager.makes)
+        self.assertEqual(0, resource_manager.cleans)
+
+    def testDefaultResetMethodRecreatesDirtyResource(self):
         resource_manager = MockResource()
         resource = resource_manager.getResource()
         self.assertEqual(1, resource_manager.makes)
         resource_manager.dirtied(resource)
-        resource_manager.getResource()
-        self.assertEqual(1, resource_manager.cleans)
+        resource_manager.reset(resource)
         self.assertEqual(2, resource_manager.makes)
-        self.assertEqual(False, resource_manager._dirty)
+        self.assertEqual(1, resource_manager.cleans)
 
     def testDirtyingWhenUnused(self):
         resource_manager = MockResource()

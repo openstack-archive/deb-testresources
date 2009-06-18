@@ -247,7 +247,7 @@ class TestResource(object):
         if self._uses == 0:
             self._setResource(self._make_all())
         elif self.isDirty():
-            self._resetResource(self._currentResource)
+            self._setResource(self.reset(self._currentResource))
         self._uses += 1
         return self._currentResource
 
@@ -305,9 +305,23 @@ class TestResource(object):
         result.append(self)
         return result
 
-    def _resetResource(self, old_resource):
-        self._clean_all(old_resource)
-        self._setResource(self._make_all())
+    def reset(self, old_resource):
+        """Override this to reset resources.
+
+        By default, the resource will be cleaned then remade if it had
+        previously been `dirtied`.
+
+        This function needs to take the dependent resource stack into
+        consideration as _make_all and _clean_all do.
+
+        :return: The new resource.
+        """
+        if self._dirty:
+            self._clean_all(old_resource)
+            resource = self._make_all()
+        else:
+            resource = old_resource
+        return resource
 
     def _setResource(self, new_resource):
         """Set the current resource to a new value."""

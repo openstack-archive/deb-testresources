@@ -19,6 +19,11 @@ IN DEVELOPMENT
 
     * Expanded TODO. (Jonathan Lange)
 
+    * Resources can now be reset by overriding TestResource.reset, which for
+      some resources is significantly cheaper. If checking for dirtiness is
+      expensive, isDirty can also be overridden.
+      (James Henstridge, Robert Collins)
+
     * Started keeping a NEWS file! (Jonathan Lange)
 
   BUG FIXES:
