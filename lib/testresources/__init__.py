@@ -306,10 +306,10 @@ class TestResource(object):
         return result
 
     def reset(self, old_resource):
-        """Override this to reset resources.
+        """Overridable method to return a clean version of old_resource.
 
         By default, the resource will be cleaned then remade if it had
-        previously been `dirtied`.
+        previously been `dirtied`. 
 
         This function needs to take the dependent resource stack into
         consideration as _make_all and _clean_all do.
