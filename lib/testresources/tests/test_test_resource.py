@@ -44,8 +44,8 @@ class MockResourceInstance(object):
 class MockResource(testresources.TestResource):
     """Mock resource that logs the number of make and clean calls."""
 
-    def __init__(self):
-        testresources.TestResource.__init__(self)
+    def __init__(self, trace_function=None):
+        testresources.TestResource.__init__(self, trace_function=trace_function)
         self.makes = 0
         self.cleans = 0
 
@@ -325,3 +325,17 @@ class TestTestResource(testtools.TestCase):
         self.assertEqual(1, resource_manager.makes)
         resource = resource_manager.getResource()
         self.assertEqual(2, resource_manager.makes)
+
+    def testTraceFunction(self):
+        output = []
+        def trace(operation, phase, mgr):
+            output.append((operation, phase, mgr))
+        resource_manager = MockResource(trace_function=trace)
+        expected = [("make", "start", resource_manager),
+            ("make", "stop", resource_manager)]
+        r = resource_manager.getResource()
+        self.assertEqual(expected, output)
+        expected.extend([("clean", "start", resource_manager),
+            ("clean", "stop", resource_manager)])
+        resource_manager.finishedWith(r)
+        self.assertEqual(expected, output)

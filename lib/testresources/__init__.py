@@ -197,17 +197,26 @@ class TestResource(object):
     setUpCost = 1
     tearDownCost = 1
 
-    def __init__(self):
+    def __init__(self, trace_function=None):
+        """Create a TestResource object.
+
+        :param trace_function: A callable that takes (event_label,
+            "start"|"stop", resource). This will be called with to tracec
+            events when the resource is made and cleaned.
+        """
         self._dirty = False
         self._uses = 0
         self._currentResource = None
         self.resources = list(getattr(self.__class__, "resources", []))
+        self._trace = trace_function or (lambda x,y,z:"")
 
     def _clean_all(self, resource):
         """Clean the dependencies from resource, and then resource itself."""
+        self._trace("clean", "start", self)
         self.clean(resource)
         for name, manager in self.resources:
             manager.finishedWith(getattr(resource, name))
+        self._trace("clean", "stop", self)
 
     def clean(self, resource):
         """Override this to class method to hook into resource removal."""
@@ -271,12 +280,14 @@ class TestResource(object):
 
     def _make_all(self):
         """Make the dependencies of this resource and this resource."""
+        self._trace("make", "start", self)
         dependency_resources = {}
         for name, resource in self.resources:
             dependency_resources[name] = resource.getResource()
         result = self.make(dependency_resources)
         for name, value in dependency_resources.items():
             setattr(result, name, value)
+        self._trace("make", "stop", self)
         return result
 
     def make(self, dependency_resources):

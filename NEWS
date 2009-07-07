@@ -26,6 +26,10 @@ IN DEVELOPMENT
 
     * Started keeping a NEWS file! (Jonathan Lange)
 
+    * A trace_function can be supplied when constructing TestResource objects,
+      to allow debugging of when resources are made/cleaned. (Robert Collins,
+      #284125)
+
   BUG FIXES:
 
     * Calling getResource on a dirty resource now triggers a clean and re-make
