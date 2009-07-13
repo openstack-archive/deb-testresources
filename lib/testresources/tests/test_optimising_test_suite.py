@@ -22,6 +22,7 @@ import testtools
 import random
 import testresources
 from testresources import split_by_resources
+from testresources.tests import ResultWithResourceExtensions
 import unittest
 
 
@@ -164,6 +165,17 @@ class TestOptimisingTestSuite(testtools.TestCase):
         self.assertEqual(make_counter._uses, 0)
         self.assertEqual(make_counter.makes, 1)
         self.assertEqual(make_counter.cleans, 1)
+
+    def testResultPassedToResources(self):
+        resource_manager = MakeCounter()
+        test_case = self.makeTestCase(lambda x:None)
+        test_case.resources = [('_default', resource_manager)]
+        self.optimising_suite.addTest(test_case)
+        result = ResultWithResourceExtensions()
+        self.optimising_suite.run(result)
+        # We should see the resource made and cleaned once. As its not a
+        # resource aware test, it won't make any calls itself.
+        self.assertEqual(4, len(result._calls))
 
     def testOptimisedRunNonResourcedTestCase(self):
         case = self.makeTestCase()

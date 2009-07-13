@@ -21,6 +21,10 @@
 import testtools
 
 import testresources
+from testresources.tests import (
+    ResultWithResourceExtensions,
+    ResultWithoutResourceExtensions,
+    )
 
 
 def test_suite():
@@ -44,8 +48,8 @@ class MockResourceInstance(object):
 class MockResource(testresources.TestResource):
     """Mock resource that logs the number of make and clean calls."""
 
-    def __init__(self, trace_function=None):
-        testresources.TestResource.__init__(self, trace_function=trace_function)
+    def __init__(self):
+        testresources.TestResource.__init__(self)
         self.makes = 0
         self.cleans = 0
 
@@ -64,7 +68,7 @@ class MockResettableResource(MockResource):
         MockResource.__init__(self)
         self.resets = 0
 
-    def reset(self, resource):
+    def reset(self, resource, result):
         self.resets += 1
         resource._name += "!"
         return resource
@@ -276,6 +280,7 @@ class TestTestResource(testtools.TestCase):
         resource = resource_manager.getResource()
         resource_manager.finishedWith(resource)
         self.assertIs(resource, resource_manager._currentResource)
+        resource_manager.finishedWith(resource)
 
     # The default implementation of reset() performs a make/clean if
     # the dirty flag is set.
@@ -326,16 +331,61 @@ class TestTestResource(testtools.TestCase):
         resource = resource_manager.getResource()
         self.assertEqual(2, resource_manager.makes)
 
-    def testTraceFunction(self):
-        output = []
-        def trace(operation, phase, mgr):
-            output.append((operation, phase, mgr))
-        resource_manager = MockResource(trace_function=trace)
+    def testFinishedActivityForResourceWithoutExtensions(self):
+        result = ResultWithoutResourceExtensions()
+        resource_manager = MockResource()
+        r = resource_manager.getResource()
+        resource_manager.finishedWith(r, result)
+
+    def testFinishedActivityForResourceWithExtensions(self):
+        result = ResultWithResourceExtensions()
+        resource_manager = MockResource()
+        r = resource_manager.getResource()
+        expected = [("clean", "start", resource_manager),
+            ("clean", "stop", resource_manager)]
+        resource_manager.finishedWith(r, result)
+        self.assertEqual(expected, result._calls)
+
+    def testGetActivityForResourceWithoutExtensions(self):
+        result = ResultWithoutResourceExtensions()
+        resource_manager = MockResource()
+        r = resource_manager.getResource(result)
+        resource_manager.finishedWith(r)
+
+    def testGetActivityForResourceWithExtensions(self):
+        result = ResultWithResourceExtensions()
+        resource_manager = MockResource()
+        r = resource_manager.getResource(result)
         expected = [("make", "start", resource_manager),
             ("make", "stop", resource_manager)]
-        r = resource_manager.getResource()
-        self.assertEqual(expected, output)
-        expected.extend([("clean", "start", resource_manager),
-            ("clean", "stop", resource_manager)])
         resource_manager.finishedWith(r)
-        self.assertEqual(expected, output)
+        self.assertEqual(expected, result._calls)
+
+    def testResetActivityForResourceWithoutExtensions(self):
+        result = ResultWithoutResourceExtensions()
+        resource_manager = MockResource()
+        resource_manager.getResource()
+        r = resource_manager.getResource()
+        resource_manager.dirtied(r)
+        resource_manager.finishedWith(r)
+        r = resource_manager.getResource(result)
+        resource_manager.dirtied(r)
+        resource_manager.finishedWith(r)
+        resource_manager.finishedWith(resource_manager._currentResource)
+
+    def testResetActivityForResourceWithExtensions(self):
+        result = ResultWithResourceExtensions()
+        resource_manager = MockResource()
+        expected = [("clean", "start", resource_manager),
+            ("clean", "stop", resource_manager),
+            ("make", "start", resource_manager),
+            ("make", "stop", resource_manager)]
+        resource_manager.getResource()
+        r = resource_manager.getResource()
+        resource_manager.dirtied(r)
+        resource_manager.finishedWith(r)
+        r = resource_manager.getResource(result)
+        resource_manager.dirtied(r)
+        resource_manager.finishedWith(r)
+        resource_manager.finishedWith(resource_manager._currentResource)
+        self.assertEqual(expected, result._calls)

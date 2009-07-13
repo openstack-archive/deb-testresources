@@ -17,6 +17,7 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import inspect
 import unittest
 
 
@@ -88,19 +89,21 @@ class OptimisingTestSuite(unittest.TestSuite):
         return (sum(resource.setUpCost for resource in new_resources) +
             sum(resource.tearDownCost for resource in gone_resources))
 
-    def switch(self, old_resource_set, new_resource_set):
+    def switch(self, old_resource_set, new_resource_set, result):
         """Switch from 'old_resource_set' to 'new_resource_set'.
 
         Tear down resources in old_resource_set that aren't in
         new_resource_set and set up resources that are in new_resource_set but
         not in old_resource_set.
+
+        :param result: TestResult object to report activity on.
         """
         new_resources = new_resource_set - old_resource_set
         old_resources = old_resource_set - new_resource_set
         for resource in old_resources:
-            resource.finishedWith(resource._currentResource)
+            resource.finishedWith(resource._currentResource, result)
         for resource in new_resources:
-            resource.getResource()
+            resource.getResource(result)
 
     def run(self, result):
         self.sortTests()
@@ -112,10 +115,10 @@ class OptimisingTestSuite(unittest.TestSuite):
             new_resources = set()
             for name, resource in resources:
                 new_resources.update(resource.neededResources())
-            self.switch(current_resources, new_resources)
+            self.switch(current_resources, new_resources, result)
             current_resources = new_resources
             test(result)
-        self.switch(current_resources, set())
+        self.switch(current_resources, set(), result)
         return result
 
     def sortTests(self):
@@ -178,6 +181,14 @@ class TestLoader(unittest.TestLoader):
 class TestResource(object):
     """A resource that can be shared across tests.
 
+    Resources can report activity to a TestResult. The methods
+     - startCleanResource(resource)
+     - stopCleanResource(resource)
+     - startMakeResource(resource)
+     - stopMakeResource(resource)
+    will be looked for and if present invoked before and after cleaning or
+    creation of resource objects takes place.
+
     :cvar resources: The same as the resources list on an instance, the default
         constructor will look for the class instance and copy it. This is a
         convenience to avoid needing to define __init__ solely to alter the
@@ -197,26 +208,26 @@ class TestResource(object):
     setUpCost = 1
     tearDownCost = 1
 
-    def __init__(self, trace_function=None):
-        """Create a TestResource object.
-
-        :param trace_function: A callable that takes (event_label,
-            "start"|"stop", resource). This will be called with to tracec
-            events when the resource is made and cleaned.
-        """
+    def __init__(self):
+        """Create a TestResource object."""
         self._dirty = False
         self._uses = 0
         self._currentResource = None
         self.resources = list(getattr(self.__class__, "resources", []))
-        self._trace = trace_function or (lambda x,y,z:"")
 
-    def _clean_all(self, resource):
+    def _call_result_method_if_exists(self, result, methodname, *args):
+        """Call a method on a TestResult that may exist."""
+        method = getattr(result, methodname, None)
+        if callable(method):
+            method(*args)
+
+    def _clean_all(self, resource, result):
         """Clean the dependencies from resource, and then resource itself."""
-        self._trace("clean", "start", self)
+        self._call_result_method_if_exists(result, "startCleanResource", self)
         self.clean(resource)
         for name, manager in self.resources:
             manager.finishedWith(getattr(resource, name))
-        self._trace("clean", "stop", self)
+        self._call_result_method_if_exists(result, "stopCleanResource", self)
 
     def clean(self, resource):
         """Override this to class method to hook into resource removal."""
@@ -231,7 +242,7 @@ class TestResource(object):
         """
         self._dirty = True
 
-    def finishedWith(self, resource):
+    def finishedWith(self, resource, result=None):
         """Indicate that 'resource' has one less user.
 
         If there are no more registered users of 'resource' then we trigger
@@ -239,24 +250,26 @@ class TestResource(object):
         cleanup.
 
         :param resource: A resource returned by `TestResource.getResource`.
+        :param result: An optional TestResult to report resource changes to.
         """
         self._uses -= 1
         if self._uses == 0:
-            self._clean_all(resource)
+            self._clean_all(resource, result)
             self._setResource(None)
 
-    def getResource(self):
+    def getResource(self, result=None):
         """Get the resource for this class and record that it's being used.
 
         The resource is constructed using the `make` hook.
 
         Once done with the resource, pass it to `finishedWith` to indicated
         that it is no longer needed.
+        :param result: An optional TestResult to report resource changes to.
         """
         if self._uses == 0:
-            self._setResource(self._make_all())
+            self._setResource(self._make_all(result))
         elif self.isDirty():
-            self._setResource(self.reset(self._currentResource))
+            self._setResource(self.reset(self._currentResource, result))
         self._uses += 1
         return self._currentResource
 
@@ -278,17 +291,17 @@ class TestResource(object):
             finally:
                 mgr.finishedWith(res)
 
-    def _make_all(self):
+    def _make_all(self, result):
         """Make the dependencies of this resource and this resource."""
-        self._trace("make", "start", self)
+        self._call_result_method_if_exists(result, "startMakeResource", self)
         dependency_resources = {}
         for name, resource in self.resources:
             dependency_resources[name] = resource.getResource()
-        result = self.make(dependency_resources)
+        resource = self.make(dependency_resources)
         for name, value in dependency_resources.items():
-            setattr(result, name, value)
-        self._trace("make", "stop", self)
-        return result
+            setattr(resource, name, value)
+        self._call_result_method_if_exists(result, "stopMakeResource", self)
+        return resource
 
     def make(self, dependency_resources):
         """Override this to construct resources.
@@ -316,7 +329,7 @@ class TestResource(object):
         result.append(self)
         return result
 
-    def reset(self, old_resource):
+    def reset(self, old_resource, result=None):
         """Overridable method to return a clean version of old_resource.
 
         By default, the resource will be cleaned then remade if it had
@@ -326,10 +339,11 @@ class TestResource(object):
         consideration as _make_all and _clean_all do.
 
         :return: The new resource.
+        :param result: An optional TestResult to report resource changes to.
         """
         if self._dirty:
-            self._clean_all(old_resource)
-            resource = self._make_all()
+            self._clean_all(old_resource, result)
+            resource = self._make_all(result)
         else:
             resource = old_resource
         return resource
@@ -350,14 +364,27 @@ class ResourcedTestCase(unittest.TestCase):
 
     resources = []
 
+    def __get_result(self):
+        # unittest hides the result. This forces us to look up the stack.
+        # The result is passed to a run() or a __call__ method 4 or more frames
+        # up: that method is what calls setUp and tearDown, and they call their
+        # parent setUp etc. Its not guaranteed that the parameter to run will
+        # be calls result as its not required to be a keyword parameter in 
+        # TestCase. However, in practice, this works.
+        stack = inspect.stack()
+        for frame in stack[3:]:
+            if frame[3] in ('run', '__call__'):
+                return frame[0].f_locals['result']
+
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.setUpResources()
 
     def setUpResources(self):
         """Set up any resources that this test needs."""
+        result = self.__get_result()
         for resource in self.resources:
-            setattr(self, resource[0], resource[1].getResource())
+            setattr(self, resource[0], resource[1].getResource(result))
 
     def tearDown(self):
         self.tearDownResources()
@@ -365,6 +392,7 @@ class ResourcedTestCase(unittest.TestCase):
 
     def tearDownResources(self):
         """Tear down any resources that this test declares."""
+        result = self.__get_result()
         for resource in self.resources:
-            resource[1].finishedWith(getattr(self, resource[0]))
+            resource[1].finishedWith(getattr(self, resource[0]), result)
             delattr(self, resource[0])

@@ -18,6 +18,8 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+from unittest import TestResult
+
 import testresources
 from testresources.tests import TestUtil
 
@@ -33,3 +35,27 @@ def test_suite():
     result.addTest(
         testresources.tests.test_optimising_test_suite.test_suite())
     return result
+
+
+class ResultWithoutResourceExtensions(object):
+    """A test fake which does not have resource extensions."""
+
+
+class ResultWithResourceExtensions(TestResult):
+    """A test fake which has resource extensions."""
+
+    def __init__(self):
+        TestResult.__init__(self)
+        self._calls = []
+
+    def startCleanResource(self, resource):
+        self._calls.append(("clean", "start", resource))
+
+    def stopCleanResource(self, resource):
+        self._calls.append(("clean", "stop", resource))
+
+    def startMakeResource(self, resource):
+        self._calls.append(("make", "start", resource))
+
+    def stopMakeResource(self, resource):
+        self._calls.append(("make", "stop", resource))

@@ -20,6 +20,7 @@
 
 import testtools
 import testresources
+from testresources.tests import ResultWithResourceExtensions
 
 
 def test_suite():
@@ -47,12 +48,21 @@ class TestResourcedTestCase(testtools.TestCase):
 
     def setUp(self):
         testtools.TestCase.setUp(self)
-        self.resourced_case = testresources.ResourcedTestCase('run')
+        class Example(testresources.ResourcedTestCase):
+            def test_example(self):
+                pass
+        self.resourced_case = Example('test_example')
         self.resource = self.getUniqueString()
         self.resource_manager = MockResource(self.resource)
 
     def testDefaults(self):
         self.assertEqual(self.resourced_case.resources, [])
+
+    def testResultPassedToResources(self):
+        result = ResultWithResourceExtensions()
+        self.resourced_case.resources = [("foo", self.resource_manager)]
+        self.resourced_case.run(result)
+        self.assertEqual(4, len(result._calls))
 
     def testSetUpResourcesSingle(self):
         # setUpResources installs the resources listed in ResourcedTestCase.

@@ -36,7 +36,7 @@ can use testresources in your own app without using testtools.
 How testresources works:
 ========================
 
-There are three main components to make testresources work:
+These are the main components to make testresources work:
 
 1) testresources.TestResource
 
@@ -106,3 +106,11 @@ during tearDown().
 4) testresources.TestLoader
 
 This is a trivial TestLoader that creates OptimisingTestSuites by default.
+
+5) unittest.TestResult
+
+testresources will log activity about resource creation and destruction to the
+result object tests are run with. 4 extension methods are looked for:
+``startCleanResource``, ``stopCleanResource``, ``startMakeResource``,
+``stopMakeResource``. ``testresources.tests.ResultWithResourceExtensions`` is
+an example of a ``TestResult`` with these methods present.

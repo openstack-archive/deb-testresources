@@ -26,9 +26,9 @@ IN DEVELOPMENT
 
     * Started keeping a NEWS file! (Jonathan Lange)
 
-    * A trace_function can be supplied when constructing TestResource objects,
-      to allow debugging of when resources are made/cleaned. (Robert Collins,
-      #284125)
+    * Resource creation and destruction are traced by calling methods on the
+      TestResult object that tests are being run with.
+      (Robert Collins, #284125)
 
   BUG FIXES:
 
