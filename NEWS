@@ -8,6 +8,19 @@ IN DEVELOPMENT
 
   CHANGES:
 
+  IMPROVEMENTS:
+
+  BUG FIXES:
+
+  API CHANGES:
+
+  INTERNALS:
+
+0.2
+---
+
+  CHANGES:
+
     * testresources needs testtools to run the testresources test suite. You
       can still use testresources without using testtools. (Jonathan Lange)
 
