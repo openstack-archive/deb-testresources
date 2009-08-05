@@ -374,7 +374,12 @@ class ResourcedTestCase(unittest.TestCase):
         stack = inspect.stack()
         for frame in stack[3:]:
             if frame[3] in ('run', '__call__'):
-                return frame[0].f_locals['result']
+                # Not all frames called 'run' will be unittest. It could be a
+                # reactor in trial, for instance.
+                result = frame[0].f_locals.get('result')
+                if (result is not None and
+                    getattr(result, 'startTest', None) is not None):
+                    return result
 
     def setUp(self):
         unittest.TestCase.setUp(self)
