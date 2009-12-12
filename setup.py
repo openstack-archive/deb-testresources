@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name="testresources",
-      version="0.2",
+      version="0.2.1",
       description="Testresources, a pyunit extension for managing expensive "
                   "test resources",
       maintainer="Test Resources developers",

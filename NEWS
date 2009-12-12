@@ -2,19 +2,34 @@
 testresources release notes
 ---------------------------
 
-
 IN DEVELOPMENT
 --------------
 
-  CHANGES:
+CHANGES
+~~~~~~~
 
-  IMPROVEMENTS:
+IMPROVEMENTS
+~~~~~~~~~~~~
 
-  BUG FIXES:
+BUG FIXES
+~~~~~~~~~
 
-  API CHANGES:
+API CHANGES
+~~~~~~~~~~~
 
-  INTERNALS:
+INTERNALS
+~~~~~~~~~
+
+0.2.1
+------
+
+A small bugfix release for compatibility with newer testtools.
+
+INTERNALS
+~~~~~~~~~
+
+* One test case wasn't upcalling setUp properly, causing test failures with
+  more recent testtools that check for this mistake.
 
 0.2
 ---

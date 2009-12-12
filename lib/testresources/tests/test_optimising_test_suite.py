@@ -414,7 +414,7 @@ class TestCostGraph(testtools.TestCase):
 class TestGraphStuff(testtools.TestCase):
 
     def setUp(self):
-
+        testtools.TestCase.setUp(self)
         class MockTest(unittest.TestCase):
             def __repr__(self):
                 """The representation is the tests name.
