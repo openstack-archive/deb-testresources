@@ -20,6 +20,17 @@ API CHANGES
 INTERNALS
 ~~~~~~~~~
 
+0.2.2
+-----
+
+BUG FIXES
+~~~~~~~~~
+
+* OptimisingTestSuite.addTest was not unpacking OptimisingTestSuite instances.
+  When using testresources.TestLoader to load tests this was generating an
+  unoptimised layout, with each test in its own little suite, and no resource
+  sharing happening.
+
 0.2.1
 ------
 

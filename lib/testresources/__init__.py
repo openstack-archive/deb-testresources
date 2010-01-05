@@ -65,7 +65,7 @@ class OptimisingTestSuite(unittest.TestSuite):
         except TypeError:
             unittest.TestSuite.addTest(self, test_case_or_suite)
             return
-        if unittest.TestSuite == test_case_or_suite.__class__:
+        if test_case_or_suite.__class__ in (unittest.TestSuite, OptimisingTestSuite):
             for test in tests:
                 self.adsorbSuite(test)
         else:

@@ -101,6 +101,15 @@ class TestOptimisingTestSuite(testtools.TestCase):
         self.optimising_suite.addTest(suite)
         self.assertEqual([case], self.optimising_suite._tests)
 
+    def testAddTestOptimisingTestSuite(self):
+        # when adding an optimising test suite, it should be unpacked.
+        case = self.makeTestCase()
+        suite1 = testresources.OptimisingTestSuite([case])
+        suite2 = testresources.OptimisingTestSuite([case])
+        self.optimising_suite.addTest(suite1)
+        self.optimising_suite.addTest(suite2)
+        self.assertEqual([case, case], self.optimising_suite._tests)
+
     def testAddFlattensStandardSuiteStructure(self):
         # addTest will get rid of all unittest.TestSuite structure when adding
         # a test, no matter how much nesting is going on.
