@@ -17,6 +17,8 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+"""TestResources: declaritive management of external resources for tests."""
+
 import inspect
 import unittest
 
@@ -352,6 +354,48 @@ class TestResource(object):
         """Set the current resource to a new value."""
         self._currentResource = new_resource
         self._dirty = False
+
+
+class GenericResource(TestResource):
+    """A TestResource that decorates an external helper of some kind.
+
+    GenericResource can be used to adapt an external resource so that 
+    testresources can use it. By default the setUp and tearDown methods are
+    called when making and cleaning the resource, and the resource is 
+    considered permanently dirty, so it is torn down and brought up again
+    between every use.
+
+    The constructor method is called with the dependency resources dict::
+        resource_factory(**dependency_resources)
+    This permits naming those resources to match the contract of the setUp
+    method.
+    """
+
+    def __init__(self, resource_factory, setup_method_name='setUp',
+        teardown_method_name='tearDown'):
+        """Create a GenericResource
+
+        :param resource_factory: A factory to create a new resource.
+        :param setup_method_name: Optional method name to call to setup the
+            resource. Defaults to 'setUp'.
+        :param teardown_method_name: Optional method name to call to tear down
+            the resource. Defaults to 'tearDown'.
+        """
+        TestResource.__init__(self)
+        self.resource_factory = resource_factory
+        self.setup_method_name = setup_method_name
+        self.teardown_method_name = teardown_method_name
+
+    def clean(self, resource):
+        getattr(resource, self.teardown_method_name)()
+
+    def make(self, dependency_resources):
+        result = self.resource_factory(**dependency_resources)
+        getattr(result, self.setup_method_name)()
+        return result
+
+    def isDirty(self):
+        return True
 
 
 class ResourcedTestCase(unittest.TestCase):
