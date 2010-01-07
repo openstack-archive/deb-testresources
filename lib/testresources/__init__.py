@@ -17,7 +17,7 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-"""TestResources: declaritive management of external resources for tests."""
+"""TestResources: declarative management of external resources for tests."""
 
 import inspect
 import unittest
