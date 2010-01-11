@@ -20,6 +20,10 @@ BUG FIXES
 API CHANGES
 ~~~~~~~~~~~
 
+* New public functions testresources.setUpResources and
+  testresources.tearDownResources for folk that cannot easily use
+  ResourcedTestCase. Fixes bug #504146.
+
 INTERNALS
 ~~~~~~~~~
 

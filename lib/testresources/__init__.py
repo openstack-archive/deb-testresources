@@ -401,6 +401,13 @@ class GenericResource(TestResource):
 class ResourcedTestCase(unittest.TestCase):
     """A TestCase parent or utility that enables cross-test resource usage.
 
+    ResourcedTestCase is a thin wrapper around the
+    testresources.setUpResources and testresources.tearDownResources helper
+    functions. It should be trivially reimplemented where a different base
+    class is neded, or you can use multiple inheritance and call into
+    ResourcedTestCase.setUpResources and ResourcedTestCase.tearDownResources
+    from your setUp and tearDown (or whatever cleanup idiom is used).
+
     :ivar resources: A list of (name, resource) pairs, where 'resource' is a
         subclass of `TestResource` and 'name' is the name of the attribute
         that the resource should be stored on.
@@ -408,40 +415,61 @@ class ResourcedTestCase(unittest.TestCase):
 
     resources = []
 
-    def __get_result(self):
-        # unittest hides the result. This forces us to look up the stack.
-        # The result is passed to a run() or a __call__ method 4 or more frames
-        # up: that method is what calls setUp and tearDown, and they call their
-        # parent setUp etc. Its not guaranteed that the parameter to run will
-        # be calls result as its not required to be a keyword parameter in 
-        # TestCase. However, in practice, this works.
-        stack = inspect.stack()
-        for frame in stack[3:]:
-            if frame[3] in ('run', '__call__'):
-                # Not all frames called 'run' will be unittest. It could be a
-                # reactor in trial, for instance.
-                result = frame[0].f_locals.get('result')
-                if (result is not None and
-                    getattr(result, 'startTest', None) is not None):
-                    return result
-
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.setUpResources()
 
     def setUpResources(self):
-        """Set up any resources that this test needs."""
-        result = self.__get_result()
-        for resource in self.resources:
-            setattr(self, resource[0], resource[1].getResource(result))
+        setUpResources(self, self.resources, _get_result())
 
     def tearDown(self):
         self.tearDownResources()
         unittest.TestCase.tearDown(self)
 
     def tearDownResources(self):
-        """Tear down any resources that this test declares."""
-        result = self.__get_result()
-        for resource in self.resources:
-            resource[1].finishedWith(getattr(self, resource[0]), result)
-            delattr(self, resource[0])
+        tearDownResources(self, self.resources, _get_result())
+
+
+def setUpResources(test, resources, result):
+    """Set up resources for test.
+    
+    :param test: The test to setup resources for.
+    :param resources: The resources to setup.
+    :param result: A result object for tracing resource activity.
+    """
+    for resource in resources:
+        setattr(test, resource[0], resource[1].getResource(result))
+
+
+def tearDownResources(test, resources, result):
+    """Tear down resources for test.
+    
+    :param test: The test to tear down resources from.
+    :param resources: The resources to tear down.
+    :param result: A result object for tracing resource activity.
+    """
+    for resource in resources:
+        resource[1].finishedWith(getattr(test, resource[0]), result)
+        delattr(test, resource[0])
+
+
+def _get_result():
+    """Find a TestResult in the stack.
+
+    unittest hides the result. This forces us to look up the stack.
+    The result is passed to a run() or a __call__ method 4 or more frames
+    up: that method is what calls setUp and tearDown, and they call their
+    parent setUp etc. Its not guaranteed that the parameter to run will
+    be calls result as its not required to be a keyword parameter in 
+    TestCase. However, in practice, this works.
+    """
+    stack = inspect.stack()
+    for frame in stack[2:]:
+        if frame[3] in ('run', '__call__'):
+            # Not all frames called 'run' will be unittest. It could be a
+            # reactor in trial, for instance.
+            result = frame[0].f_locals.get('result')
+            if (result is not None and
+                getattr(result, 'startTest', None) is not None):
+                return result
+

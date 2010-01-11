@@ -67,7 +67,8 @@ class TestResourcedTestCase(testtools.TestCase):
     def testSetUpResourcesSingle(self):
         # setUpResources installs the resources listed in ResourcedTestCase.
         self.resourced_case.resources = [("foo", self.resource_manager)]
-        self.resourced_case.setUpResources()
+        testresources.setUpResources(self.resourced_case,
+            self.resourced_case.resources, None)
         self.assertEqual(self.resource, self.resourced_case.foo)
 
     def testSetUpResourcesMultiple(self):
@@ -75,7 +76,8 @@ class TestResourcedTestCase(testtools.TestCase):
         self.resourced_case.resources = [
             ('foo', self.resource_manager),
             ('bar', MockResource('bar_resource'))]
-        self.resourced_case.setUpResources()
+        testresources.setUpResources(self.resourced_case,
+            self.resourced_case.resources, None)
         self.assertEqual(self.resource, self.resourced_case.foo)
         self.assertEqual('bar_resource', self.resourced_case.bar)
 
@@ -86,14 +88,16 @@ class TestResourcedTestCase(testtools.TestCase):
         # Give the 'foo' resource access to a 'bar' resource
         self.resource_manager.resources.append(
             ('bar', MockResource('bar_resource')))
-        self.resourced_case.setUpResources()
+        testresources.setUpResources(self.resourced_case,
+            self.resourced_case.resources, None)
         self.assertEqual(resource, self.resourced_case.foo)
         self.assertEqual('bar_resource', self.resourced_case.foo.bar)
 
     def testSetUpUsesResource(self):
         # setUpResources records a use of each declared resource.
         self.resourced_case.resources = [("foo", self.resource_manager)]
-        self.resourced_case.setUpResources()
+        testresources.setUpResources(self.resourced_case,
+            self.resourced_case.resources, None)
         self.assertEqual(self.resource_manager._uses, 1)
 
     def testTearDownResourcesDeletesResourceAttributes(self):
