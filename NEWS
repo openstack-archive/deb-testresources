@@ -11,6 +11,9 @@ CHANGES
 IMPROVEMENTS
 ~~~~~~~~~~~~
 
+* New helper testresources.GenericResource which should remove the need for
+  much boilerplate when using testresources with existing test fixtures.
+
 BUG FIXES
 ~~~~~~~~~
 
