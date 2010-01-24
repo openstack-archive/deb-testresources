@@ -41,10 +41,9 @@ These are the main components to make testresources work:
 1) testresources.TestResource
 
 A TestResource is an object that tests can use. Usually a subclass of
-testresources.TestResource, with the getResource method overridden. This method
-should return an object providing the resource that the client needs (which can
-Optionally, the clean() method can be overridden if the resource needs to take
-action to clean up external resources (e.g. threads, disk files, ...).
+testresources.TestResource, with the make and possibly the clean and isDirty
+methods overridden. These methods create, decide on reuse and free resources.
+
 The 'resources' list on the TestResource object is used to declare
 dependencies. For instance, a DataBaseResource that needs a TemporaryDirectory
 might be declared with a resources list::
@@ -57,8 +56,10 @@ Most importantly, two getResources to the same TestResource with no
 finishedWith call in the middle, will return the same object as long as it has
 not been marked dirty.
 
-The goals for TestResources that cannot finish properly are not yet clear, so
-for now the behaviour will to silently continue.
+When a Test has a dependency and that dependency successfully completes but
+returns None, the framework does *not* consider this an error: be sure to always
+return a valid resource, or raise an error. Error handling hasn't been heavily
+exercised, but any bugs in this area will be promptly dealt with.
 
 A sample TestResource can be found in the doc/ folder.
 

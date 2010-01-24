@@ -5,11 +5,16 @@ testresources release notes
 IN DEVELOPMENT
 --------------
 
+0.2.2
+-----
+
 CHANGES
 ~~~~~~~
 
 IMPROVEMENTS
 ~~~~~~~~~~~~
+
+* Distribute doc/*.py in the source tarball.
 
 * New helper testresources.GenericResource which should remove the need for
   much boilerplate when using testresources with existing test fixtures.

@@ -14,4 +14,7 @@ TAGS: lib/testresources/*.py lib/testresources/tests/*.py
 tags: lib/testresources/*.py lib/testresources/tests/*.py
 	ctags -R lib/testresources/
 
+release:
+	python setup.py sdist upload --sign
+
 .PHONY: all check clean

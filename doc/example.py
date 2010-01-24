@@ -40,4 +40,6 @@ class SampleWithDependencies(TestResource):
     resources = [('foo', SampleTestResource()), ('bar', SampleTestResource())]
 
     def make(self, dependency_resources):
+        # dependency_resources will be {'foo': result_of_make_in_foo, 'bar':
+        # result_of_make_in_bar}
         return MyResource()
