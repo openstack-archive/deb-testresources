@@ -60,18 +60,18 @@ By extending or mixing-in this class, tests can have necessary resources
 automatically allocated and disposed or recycled.
 
 ResourceTestCase can be used as a base class for tests, and when that is done
-tests will have their ``resources`` attribute automatically checked for resources
-by both OptimisingTestSuite and their own setUp() and tearDown() methods.
-(This allows tests to remain functional without needing this specific
-TestSuite as a container). Alternatively, you can call
-ResourceTestCase.setUpResources(self) and
-ResourceTestCase.tearDownResources(self) from your own classes setUp and
-tearDown and the same behaviour will be activated.
+tests will have their ``resources`` attribute automatically checked for
+resources by both OptimisingTestSuite and their own setUp() and tearDown()
+methods. (This allows tests to remain functional without needing this specific
+TestSuite as a container). Alternatively, you can call setUpResources(self,
+resources, test_result) and tearDownResources(self, resources, test_result)
+from your own classes setUp and tearDown and the same behaviour will be
+activated.
 
 To declare the use of a resource, set the ``resources`` attribute to a list of
 tuples of ``(attribute_name, resource_factory)``.
 
-During setUp, for each declared requriment, the test gains an attribute
+During setUp, for each declared requirement, the test gains an attribute
 pointing to an allocated resource, which is the result of calling
 ``resource_factory.getResource()``.  ``finishedWith`` will be called on each
 resource during tearDown().
