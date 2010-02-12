@@ -180,10 +180,10 @@ class TestLoader(unittest.TestLoader):
     suiteClass = OptimisingTestSuite
 
 
-class TestResource(object):
-    """A resource that can be shared across tests.
+class TestResourceManager(object):
+    """A manager for resources that can be shared across tests.
 
-    Resources can report activity to a TestResult. The methods
+    ResourceManagers can report activity to a TestResult. The methods
      - startCleanResource(resource)
      - stopCleanResource(resource)
      - startMakeResource(resource)
@@ -211,7 +211,7 @@ class TestResource(object):
     tearDownCost = 1
 
     def __init__(self):
-        """Create a TestResource object."""
+        """Create a TestResourceManager object."""
         self._dirty = False
         self._uses = 0
         self._currentResource = None
@@ -354,7 +354,7 @@ class TestResource(object):
         """Set the current resource to a new value."""
         self._currentResource = new_resource
         self._dirty = False
-
+TestResource = TestResourceManager
 
 class GenericResource(TestResource):
     """A TestResource that decorates an external helper of some kind.

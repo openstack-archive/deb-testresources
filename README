@@ -42,9 +42,10 @@ The basic idea of testresources is:
 * When the test is run, the required resource objects are allocated (either 
   newly constructed, or reused), and assigned to attributes of the TestCase.
 
-testresources distinguishes a 'resource' (a subclass of ``TestResource``)
-which acts as a kind of factory, and a 'resource' which can be any kind of
-object returned from the resource class's ``getResource`` method.
+testresources distinguishes a 'resource manager' (a subclass of 
+``TestResourceManager``) which acts as a kind of factory, and a 'resource'
+which can be any kind of object returned from the manager class's
+``getResource`` method.
 
 Resources are either clean or dirty.  Being clean means they have same state in
 all important ways as a newly constructed instance and they can therefore be
@@ -85,22 +86,22 @@ For example::
         def test_log(self):
             show_log(self.branch, ...)
 
-testresources.TestResource
---------------------------
+testresources.TestResourceManager
+---------------------------------
 
-A TestResource is an object that tests can use to create resources.  It can be
-overridden to manage different types of resources.  Normally test code doesn't
-need to call any methods on it, as this will be arranged by the testresources
-machinery.
+A TestResourceManager is an object that tests can use to create resources.  It
+can be overridden to manage different types of resources.  Normally test code
+doesn't need to call any methods on it, as this will be arranged by the
+testresources machinery.
 
-When implementing a new ``TestResource`` subclass you should consider
+When implementing a new ``TestResourceManager`` subclass you should consider
 overriding these methods:
 
 ``make``
     Must be overridden in every concrete subclass.  
 
     Returns a new instance of the resource object
-    (the actual resource, not the TestResource).  Doesn't need to worry about 
+    (the actual resource, not the TestResourceManager).  Doesn't need to worry about 
     reuse, which is taken care of separately.  This method is only called when a 
     new resource is definitely needed.  
 
@@ -116,11 +117,11 @@ overriding these methods:
 
 ``isDirty``
     Check whether an existing resource is dirty.  By default this just reports whether 
-    ``TestResource.dirtied`` has been called.
+    ``TestResourceManager.dirtied`` has been called.
 
 For instance::
 
-    class TemporaryDirectoryResource(TestResource):
+    class TemporaryDirectoryResource(TestResourceManager):
 
 	def clean(self, resource):
 	    osutils.rmtree(resource) 
@@ -134,15 +135,15 @@ For instance::
             # not catch it being open as a cwd etc.
 	    return True
 
-The ``resources`` list on the TestResource object is used to declare
+The ``resources`` list on the TestResourceManager object is used to declare
 dependencies. For instance, a DataBaseResource that needs a TemporaryDirectory
 might be declared with a resources list::
 
-    class DataBaseResource(TestResource):
+    class DataBaseResource(TestResourceManager):
 
         resources = [("scratchdir", TemporaryDirectoryResource())]
 
-Most importantly, two getResources to the same TestResource with no
+Most importantly, two getResources to the same TestResourceManager with no
 finishedWith call in the middle, will return the same object as long as it is
 not dirty.
 
@@ -151,9 +152,9 @@ returns None, the framework does *not* consider this an error: be sure to always
 return a valid resource, or raise an error. Error handling hasn't been heavily
 exercised, but any bugs in this area will be promptly dealt with.
 
-A sample TestResource can be found in the doc/ folder.
+A sample TestResourceManager can be found in the doc/ folder.
 
-See pydoc testresources.TestResource for details.
+See pydoc testresources.TestResourceManager for details.
 
 testresources.GenericResource
 -----------------------------
@@ -201,17 +202,17 @@ Controlling Resource Reuse
 
 When or how do I mark the resource dirtied?
 
-The simplest approach is to have ``TestResource.make`` call ``self.dirtied``:
+The simplest approach is to have ``TestResourceManager.make`` call ``self.dirtied``:
 the resource is always immediately dirty and will never be reused without first
 being reset.  This is appropriate when the underlying resource is cheap to
 reset or recreate, or when it's hard to detect whether it's been dirtied or to
 trap operations that change it.
 
-Alternatively, override ``TestResource.isDirty`` and inspect the resource to
+Alternatively, override ``TestResourceManager.isDirty`` and inspect the resource to
 see if it is safe to reuse.
 
 Finally, you can arrange for the returned resource to always call back to
-``TestResource.dirtied`` on the first operation that mutates it.
+``TestResourceManager.dirtied`` on the first operation that mutates it.
 
 FAQ
 ===
@@ -222,14 +223,10 @@ FAQ
   declared statically, so that testresources can "smooth" resource usage across
   several tests.
 
-* Isn't using the same word 'resource' for the TestResource and the resource
-  confusing?
-
-  Yes.
-
-* If the resource is held inside the TestResource object, and the TestResource
-  is typically constructed inline in the test case ``resources`` attribute, how
-  can they be shared across different test classes?
+* If the resource is held inside the TestResourceManager object, and the
+  TestResourceManager is typically constructed inline in the test case
+  ``resources`` attribute, how can they be shared across different test
+  classes?
 
   Good question.
 

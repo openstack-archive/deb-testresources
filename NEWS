@@ -10,6 +10,9 @@ IMPROVEMENTS
 
 * Substantially improved documentation in README. (mbp)
 
+* Rename TestResource to TestResourceManager leaving TestResource as an alias.
+  Fixes bug #520769.
+
 0.2.3
 -----
 
