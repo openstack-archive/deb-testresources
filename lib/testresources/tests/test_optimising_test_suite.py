@@ -584,6 +584,24 @@ class TestGraphStuff(testtools.TestCase):
                 permutation.index(self.case3) < permutation.index(self.case4),
                 sorted.index(self.case3) < sorted.index(self.case4))
 
+    def testSortingTwelveIndependentIsFast(self):
+        # Given twelve independent resource sets, my patience is not exhausted.
+        managers = []
+        for pos in range(12):
+            managers.append(testresources.TestResourceManager())
+        # Add more sample tests
+        cases = [self.case1, self.case2, self.case3, self.case4]
+        for pos in range(5,13):
+            cases.append(
+                testtools.clone_test_with_new_id(cases[0], 'case%d' % pos))
+        # We care that this is fast in this test, so we don't need to have
+        # overlapping resource usage
+        for case, manager in zip(cases, managers):
+            case.resources = [('_resource', manager)]
+        # Any sort is ok, as long as its the right length :)
+        result = self.sortTests(cases)
+        self.assertEqual(12, len(result))
+
     def testSortConsidersDependencies(self):
         """Tests with different dependencies are sorted together."""
         # We test this by having two resources (one and two) that share a very

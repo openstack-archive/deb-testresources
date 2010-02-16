@@ -13,6 +13,10 @@ IMPROVEMENTS
 * Rename TestResource to TestResourceManager leaving TestResource as an alias.
   Fixes bug #520769.
 
+* Test sorting no longer performs N! work on tests that can never benefit from
+  order optimisations (when resources are not shared an arbitrary order is
+  sufficient). Partial fix for bug #522338.
+
 0.2.3
 -----
 

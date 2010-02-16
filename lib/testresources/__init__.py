@@ -28,6 +28,29 @@ def test_suite():
     return testresources.tests.test_suite()
 
 
+def _resource_graph(resource_sets):
+    """Convert an iterable of resource_sets into a graph.
+
+    Each resource_set in the iterable is treated as a node, and each resource
+    in that resource_set is used as an edge to other nodes.
+    """
+    nodes = {}
+    edges = {}
+    for resource_set in resource_sets:
+        # put node in nodes
+        node = frozenset(resource_set)
+        nodes[node] = set()
+        # put its contents in as edges
+        for resource in resource_set:
+            edges.setdefault(resource, []).append(node)
+    # populate the adjacent members of nodes
+    for node, connected in nodes.iteritems():
+        for resource in node:
+            connected.update(edges[resource])
+        connected.discard(node)
+    return nodes
+
+
 def split_by_resources(tests):
     """Split a list of tests by the resources that the tests use.
 
@@ -132,30 +155,48 @@ class OptimisingTestSuite(unittest.TestSuite):
         # since there will usually be fewer resource combinations than
         # actual tests and there can never be more.
         resource_set_tests = split_by_resources(self._tests)
-
-        graph = self._getGraph(resource_set_tests.keys())
+        # Partition into separate sets of resources, there is no ordering
+        # preference between sets that do not share members.
+        resource_set_graph = _resource_graph(resource_set_tests)
         no_resources = frozenset()
-        # Recursive visit-all-nodes all-permutations.
-        def cost(from_set, resource_sets):
-            """Get the cost of resource traversal for resource sets.
+        # A list of resource_set_tests, all containing no_resources at minimum.
+        partitions = []
+        while resource_set_graph:
+            node, pending = resource_set_graph.popitem()
+            current_partition = set([no_resources, node])
+            while pending:
+                # add all the nodes connected to a connected node to pending.
+                node = pending.pop()
+                current_partition.add(node)
+                pending.update(resource_set_graph.pop(node, []))
+                # don't try to process things we've allready processed.
+                pending.difference_update(current_partition)
+            partitions.append(current_partition)
+        result = []
+        for partition in partitions:
+            graph = self._getGraph(partition)
+            # Recursive visit-all-nodes all-permutations.
+            def cost(from_set, resource_sets):
+                """Get the cost of resource traversal for resource sets.
 
-            :return: cost, order
-            """
-            if not resource_sets:
-                # tear down last resources
-                return graph[from_set][no_resources], []
-            costs = []
-            for to_set in resource_sets:
-                child_cost, child_order = cost(
-                    to_set, resource_sets - set([to_set]))
-                costs.append((graph[from_set][to_set] + child_cost,
-                              [to_set] + child_order))
-            return min(costs)
-        _, order = cost(no_resources,
-                        set(resource_set_tests) - set([no_resources]))
-        order.append(no_resources)
-        self._tests = sum(
-            (resource_set_tests[resource_set] for resource_set in order), [])
+                :return: cost, order
+                """
+                if not resource_sets:
+                    # tear down last resources
+                    return graph[from_set][no_resources], []
+                costs = []
+                for to_set in resource_sets:
+                    child_cost, child_order = cost(
+                        to_set, resource_sets - set([to_set]))
+                    costs.append((graph[from_set][to_set] + child_cost,
+                                  [to_set] + child_order))
+                return min(costs)
+            _, order = cost(no_resources, partition - set([no_resources]))
+            # Spit this partition out into result
+            for resource_set in order:
+                result.extend(resource_set_tests[resource_set])
+        result.extend(resource_set_tests[no_resources])
+        self._tests = result
 
     def _getGraph(self, resource_sets):
         """Build a graph of the resource-using nodes.
