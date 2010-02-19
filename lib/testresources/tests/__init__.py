@@ -28,10 +28,12 @@ def test_suite():
     import testresources.tests.test_resourced_test_case
     import testresources.tests.test_test_loader
     import testresources.tests.test_test_resource
+    import testresources.tests.test_resource_graph
     result = TestUtil.TestSuite()
     result.addTest(testresources.tests.test_test_loader.test_suite())
     result.addTest(testresources.tests.test_test_resource.test_suite())
     result.addTest(testresources.tests.test_resourced_test_case.test_suite())
+    result.addTest(testresources.tests.test_resource_graph.test_suite())
     result.addTest(
         testresources.tests.test_optimising_test_suite.test_suite())
     return result
