@@ -17,6 +17,10 @@ IMPROVEMENTS
   order optimisations (when resources are not shared an arbitrary order is
   sufficient). Partial fix for bug #522338.
 
+* Test sorting now uses a heuristic on each partition to get a sort that is
+  no worse than twice the optimal number of setup/teardown operations and is
+  fast to calculate. Fixes bug #522338
+
 0.2.3
 -----
 

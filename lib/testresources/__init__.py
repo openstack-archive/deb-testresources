@@ -19,13 +19,91 @@
 
 """TestResources: declarative management of external resources for tests."""
 
+import heapq
 import inspect
+import operator
 import unittest
 
 
 def test_suite():
     import testresources.tests
     return testresources.tests.test_suite()
+
+
+def _digraph_to_graph(digraph, prime_node_mapping):
+    """Convert digraph to a graph.
+
+    :param digraph: A directed graph in the form
+        {from:{to:value}}.
+    :param prime_node_mapping: A mapping from every
+        node in digraph to a new unique and not in digraph node.
+    :return: A symmetric graph in the form {from:to:value}} created by
+        creating edges in the result between every N to M-prime with the
+        original N-M value and from every N to N-prime with a cost of 0.
+        No other edges are created.
+    """
+    result = {}
+    for from_node, from_prime_node in prime_node_mapping.iteritems():
+        result[from_node] = {from_prime_node:0}
+        result[from_prime_node] = {from_node:0}
+    for from_node, to_nodes in digraph.iteritems():
+        from_prime = prime_node_mapping[from_node]
+        for to_node, value in to_nodes.iteritems():
+            to_prime = prime_node_mapping[to_node]
+            result[from_prime][to_node] = value
+            result[to_node][from_prime] = value
+    return result
+
+
+def _kruskals_graph_MST(graph):
+    """Find the minimal spanning tree in graph using Kruskals algorithm.
+
+    See http://en.wikipedia.org/wiki/Kruskal%27s_algorithm.
+    :param graph: A graph in {from:{to:value}} form. Every node present in
+        graph must be in the outer dict (because graph is not a directed graph.
+    :return: A graph with all nodes and those vertices that are part of the MST
+        for graph. If graph is not connected, then the result will also be a
+        forest.
+    """
+    # forest contains all the nodes -> graph that node is in.
+    forest = {}
+    # graphs is the count of graphs we have yet to combine.
+    for node in graph:
+        forest[node] = {node:{}}
+    graphs = len(forest)
+    # collect edges: every edge is present twice (due to the graph
+    # representation), so normalise.
+    edges = set()
+    for from_node, to_nodes in graph.iteritems():
+        for to_node, value in to_nodes.iteritems():
+            edge = (value,) + tuple(sorted([from_node, to_node]))
+            edges.add(edge)
+    edges = list(edges)
+    heapq.heapify(edges)
+    while edges and graphs > 1:
+        # more edges to go and we haven't gotten a spanning tree yet.
+        edge = heapq.heappop(edges)
+        g1 = forest[edge[1]]
+        g2 = forest[edge[2]]
+        if g1 is g2:
+            continue # already joined
+        # combine g1 and g2 into g1
+        graphs -= 1
+        for from_node, to_nodes in g2.iteritems():
+            #remember its symmetric, don't need to do 'to'.
+            forest[from_node] = g1
+            g1.setdefault(from_node, {}).update(to_nodes)
+        # add edge
+        g1[edge[1]][edge[2]] = edge[0]
+        g1[edge[2]][edge[1]] = edge[0]
+    # union the remaining graphs
+    _, result = forest.popitem()
+    for _, g2 in forest.iteritems():
+        if g2 is result: # common case
+            continue
+        for from_node, to_nodes in g2.iteritems():
+            result.setdefault(from_node, {}).update(to_nodes)
+    return result
 
 
 def _resource_graph(resource_sets):
@@ -68,6 +146,30 @@ def split_by_resources(tests):
             resource_set.update(resource_list)
         resource_set_tests.setdefault(frozenset(resource_set), []).append(test)
     return resource_set_tests
+
+
+def _strongly_connected_components(graph, no_resources):
+    """Find the strongly connected components in graph.
+    
+    This is essentially a nonrecursive flatterning of Tarjan's method. It
+    may be worth profiling against an actual Tarjan's implementation at some
+    point, but sets are often faster than python calls.
+
+    graph gets consumed, but that could be changed easily enough.
+    """
+    partitions = []
+    while graph:
+        node, pending = graph.popitem()
+        current_partition = set([node])
+        while pending:
+            # add all the nodes connected to a connected node to pending.
+            node = pending.pop()
+            current_partition.add(node)
+            pending.update(graph.pop(node, []))
+            # don't try to process things we've allready processed.
+            pending.difference_update(current_partition)
+        partitions.append(current_partition)
+    return partitions
 
 
 class OptimisingTestSuite(unittest.TestSuite):
@@ -149,49 +251,38 @@ class OptimisingTestSuite(unittest.TestSuite):
     def sortTests(self):
         """Attempt to topographically sort the contained tests.
 
+        This function biases to reusing a resource: it assumes that resetting
+        a resource is usually cheaper than a teardown + setup; and that most
+        resources are not dirtied by most tests.
+
         Feel free to override to improve the sort behaviour.
         """
         # We group the tests by the resource combinations they use,
         # since there will usually be fewer resource combinations than
-        # actual tests and there can never be more.
+        # actual tests and there can never be more: This gives us 'nodes' or
+        # 'resource_sets' that represent many tests using the same set of 
+        # resources.
         resource_set_tests = split_by_resources(self._tests)
         # Partition into separate sets of resources, there is no ordering
-        # preference between sets that do not share members.
+        # preference between sets that do not share members. Rationale:
+        # If resource_set A and B have no common resources, AB and BA are
+        # equally good - the global setup/teardown sums are identical. Secondly
+        # if A shares one or more resources with C, then pairing AC|CA is better
+        # than having B between A and C, because the shared resources can be
+        # reset or reused. Having partitioned we can use connected graph logic
+        # on each partition.
         resource_set_graph = _resource_graph(resource_set_tests)
         no_resources = frozenset()
-        # A list of resource_set_tests, all containing no_resources at minimum.
-        partitions = []
-        while resource_set_graph:
-            node, pending = resource_set_graph.popitem()
-            current_partition = set([no_resources, node])
-            while pending:
-                # add all the nodes connected to a connected node to pending.
-                node = pending.pop()
-                current_partition.add(node)
-                pending.update(resource_set_graph.pop(node, []))
-                # don't try to process things we've allready processed.
-                pending.difference_update(current_partition)
-            partitions.append(current_partition)
+        # A list of resource_set_tests, all fully internally connected.
+        partitions = _strongly_connected_components(resource_set_graph,
+            no_resources)
         result = []
         for partition in partitions:
-            graph = self._getGraph(partition)
-            # Recursive visit-all-nodes all-permutations.
-            def cost(from_set, resource_sets):
-                """Get the cost of resource traversal for resource sets.
-
-                :return: cost, order
-                """
-                if not resource_sets:
-                    # tear down last resources
-                    return graph[from_set][no_resources], []
-                costs = []
-                for to_set in resource_sets:
-                    child_cost, child_order = cost(
-                        to_set, resource_sets - set([to_set]))
-                    costs.append((graph[from_set][to_set] + child_cost,
-                                  [to_set] + child_order))
-                return min(costs)
-            _, order = cost(no_resources, partition - set([no_resources]))
+            # we process these at the end for no particularly good reason (it makes
+            # testing slightly easier).
+            if partition == [no_resources]:
+                continue
+            order = self._makeOrder(partition)
             # Spit this partition out into result
             for resource_set in order:
                 result.extend(resource_set_tests[resource_set])
@@ -201,19 +292,107 @@ class OptimisingTestSuite(unittest.TestSuite):
     def _getGraph(self, resource_sets):
         """Build a graph of the resource-using nodes.
 
+        This special cases set(['root']) to be a node with no resources and
+        edges to everything.
+
         :return: A complete directed graph of the switching costs
-            between each resource combination.
+            between each resource combination. Note that links from N to N are
+            not included.
         """
+        no_resources = frozenset()
         graph = {}
+        root = set(['root'])
+        # bottom = set(['bottom'])
         for from_set in resource_sets:
             graph[from_set] = {}
+            if from_set == root:
+                from_resources = no_resources
+            #elif from_set == bottom:
+            #    continue # no links from bottom
+            else:
+                from_resources = from_set
             for to_set in resource_sets:
                 if from_set is to_set:
-                    graph[from_set][to_set] = 0
+                    continue # no self-edges
+                #if to_set == bottom:
+                #   if from_set == root:
+                #       continue # no short cuts!
+                #   to_resources = no_resources
+                #el
+                if to_set == root:
+                    continue # no links to root
                 else:
-                    graph[from_set][to_set] = self.cost_of_switching(
-                        from_set, to_set)
+                    to_resources = to_set
+                graph[from_set][to_set] = self.cost_of_switching(
+                        from_resources, to_resources)
         return graph
+
+    def _makeOrder(self, partition):
+        """Return a order for the resource sets in partition."""
+        # This problem is NP-C - find the lowest cost hamiltonian path. It 
+        # also meets the triangle inequality, so we can use an approximation.
+        # TODO: implement Christofides.
+        # See http://en.wikipedia.org/wiki/Travelling_salesman_problem#Metric_TSP
+        # We need a root
+        root = frozenset(['root'])
+        partition.add(root)
+        # and an end
+        # partition.add(frozenset(['bottom']))
+        # get rid of 'noresources'
+        partition.discard(frozenset())
+        digraph = self._getGraph(partition)
+        # build a prime map
+        primes = {}
+        prime = frozenset(['prime'])
+        for node in digraph:
+            primes[node] = node.union(prime)
+        graph = _digraph_to_graph(digraph, primes)
+        mst = _kruskals_graph_MST(graph)
+        # Because the representation is a digraph, we can build an Eulerian
+        # cycle directly from the representation by just following the links:
+        # a node with only 1 'edge' has two directed edges; and we can only
+        # enter and leave it once, so the edge lookups will match precisely.
+        # As the mst is a spanning tree, the graph will become disconnected
+        # (we choose non-disconnecting edges first)
+        #  - for a stub node (1 outgoing link): when exiting it unless it is
+        #    the first node started at
+        # - for a non-stub node if choosing an outgoing link where some other
+        #   endpoints incoming link has not been traversed. [exit by a
+        #   different node than entering, until all exits taken].
+        # We don't need the mst after, so it gets modified in place.
+        node = root
+        cycle = [node]
+        steps = 2 * (len(mst) - 1)
+        for step in xrange(steps):
+            found = False
+            outgoing = None # For clearer debugging.
+            for outgoing in mst[node]:
+                if node in mst[outgoing]:
+                    # we have a return path: take it
+                    # print node, '->', outgoing, ' can return'
+                    del mst[node][outgoing]
+                    node = outgoing
+                    cycle.append(node)
+                    found = True
+                    break
+            if not found:
+                # none of the outgoing links have an incoming, so follow an
+                # arbitrary one (the last examined outgoing)
+                # print node, '->', outgoing
+                del mst[node][outgoing]
+                node = outgoing
+                cycle.append(node)
+        # Convert to a path:
+        visited = set()
+        order = []
+        for node in cycle:
+            if node in visited:
+                continue
+            if node in primes:
+                order.append(node)
+            visited.add(node)
+        assert order[0] == root
+        return order[1:]
 
 
 class TestLoader(unittest.TestLoader):

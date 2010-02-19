@@ -403,7 +403,7 @@ class TestCostGraph(testtools.TestCase):
         resource = self.makeResource()
         suite = testresources.OptimisingTestSuite()
         graph = suite._getGraph([frozenset()])
-        self.assertEqual({frozenset(): {frozenset(): 0}}, graph)
+        self.assertEqual({frozenset(): {}}, graph)
 
     def testTwoCasesInGraph(self):
         res1 = self.makeResource()
@@ -415,9 +415,9 @@ class TestCostGraph(testtools.TestCase):
 
         suite = testresources.OptimisingTestSuite()
         graph = suite._getGraph([no_resources, set1, set2])
-        self.assertEqual({no_resources: {no_resources: 0, set1: 2, set2: 1},
-                          set1: {no_resources: 2, set1: 0, set2: 1},
-                          set2: {no_resources: 1, set1: 1, set2: 0}}, graph)
+        self.assertEqual({no_resources: {set1: 2, set2: 1},
+                          set1: {no_resources: 2, set2: 1},
+                          set2: {no_resources: 1, set1: 1 }}, graph)
 
 
 class TestGraphStuff(testtools.TestCase):
@@ -489,10 +489,15 @@ class TestGraphStuff(testtools.TestCase):
         return permutations
 
     def testBasicSortTests(self):
-        # Test every permutation of inputs, with equal cost resources and
-        # legacy tests.
+        # Test every permutation of inputs, with legacy tests.
+        # Cannot use equal costs because of the use of
+        # a 2*optimal heuristic for sorting: with equal
+        # costs the wrong sort order is < twice the optimal
+        # weight, and thus can be selected.
         resource_one = testresources.TestResource()
         resource_two = testresources.TestResource()
+        resource_two.setUpCost = 5
+        resource_two.tearDownCost = 5
         resource_three = testresources.TestResource()
 
         self.case1.resources = [
@@ -598,6 +603,25 @@ class TestGraphStuff(testtools.TestCase):
         # overlapping resource usage
         for case, manager in zip(cases, managers):
             case.resources = [('_resource', manager)]
+        # Any sort is ok, as long as its the right length :)
+        result = self.sortTests(cases)
+        self.assertEqual(12, len(result))
+
+    def testSortingTwelveOverlappingIsFast(self):
+        # Given twelve connected resource sets, my patience is not exhausted.
+        managers = []
+        for pos in range(12):
+            managers.append(testresources.TestResourceManager())
+        # Add more sample tests
+        cases = [self.case1, self.case2, self.case3, self.case4]
+        for pos in range(5,13):
+            cases.append(
+                testtools.clone_test_with_new_id(cases[0], 'case%d' % pos))
+        tempdir = testresources.TestResourceManager()
+        # give all tests a tempdir, enough to provoke a single partition in
+        # the current code.
+        for case, manager in zip(cases, managers):
+            case.resources = [('_resource', manager), ('tempdir', tempdir)]
         # Any sort is ok, as long as its the right length :)
         result = self.sortTests(cases)
         self.assertEqual(12, len(result))
