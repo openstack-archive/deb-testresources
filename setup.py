@@ -14,7 +14,7 @@ setup(name="testresources",
       maintainer_email="https://launchpad.net/~testresources-developers",
       url="https://launchpad.net/testresources",
       packages=['testresources', 'testresources.tests'],
-      package_dir = {'':'lib'}
+      package_dir = {'':'lib'},
       classifiers = [
           'Development Status :: 6 - Mature',
           'Intended Audience :: Developers',
