@@ -15,6 +15,7 @@
 #  license.
 #
 
+from fixtures.tests.helpers import LoggingFixture
 import testtools
 
 import testresources
@@ -443,6 +444,25 @@ class TestGenericResource(testtools.TestCase):
             def setUp(self):pass
             def tearDown(self):pass
         mgr = testresources.GenericResource(Wrapped)
+        resource = mgr.getResource()
+        self.assertTrue(mgr.isDirty())
+        mgr.finishedWith(resource)
+
+
+class TestFixtureResource(testtools.TestCase):
+
+    def test_uses_setUp_cleanUp(self):
+        fixture = LoggingFixture()
+        mgr = testresources.FixtureResource(fixture)
+        resource = mgr.getResource()
+        self.assertEqual(fixture, resource)
+        self.assertEqual(['setUp'], fixture.calls)
+        mgr.finishedWith(resource)
+        self.assertEqual(['setUp', 'cleanUp'], fixture.calls)
+
+    def test_always_dirty(self):
+        fixture = LoggingFixture()
+        mgr = testresources.FixtureResource(fixture)
         resource = mgr.getResource()
         self.assertTrue(mgr.isDirty())
         mgr.finishedWith(resource)

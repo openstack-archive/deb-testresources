@@ -5,6 +5,12 @@ testresources release notes
 IN DEVELOPMENT
 --------------
 
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* Added ``testresources.FixtureResource`` to wrap ``fixtures.Fixture``
+  instances. (Robert Collins)
+
 0.2.4
 -----
 

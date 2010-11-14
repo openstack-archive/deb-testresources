@@ -25,14 +25,18 @@ provide test optimisation where expensive common resources are needed for test
 cases - for example sample working trees for VCS systems, reference databases
 for enterprise applications, or web servers ... let imagination run wild.
 
-Dependencies
-============
+Dependencies to build/selftest
+==============================
 
 * Python 2.4+
-* testtools
+* testtools (http://pypi.python.org/pypi/testtools/)
+* fixtures (http://pypi.python.org/pypi/fixtures)
 
-Note that testtools is required for *running* the tests for testresources. You
-can use testresources in your own app without using testtools.
+Dependencies to use testresources
+=================================
+
+* Python 2.4+
+* fixtures (http://pypi.python.org/pypi/fixtures)
 
 
 How testresources Works

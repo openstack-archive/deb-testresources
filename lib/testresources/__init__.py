@@ -616,6 +616,42 @@ class GenericResource(TestResource):
         return True
 
 
+class FixtureResource(TestResource):
+    """A TestResource that decorates a ``fixtures.Fixture``.
+
+    The fixture has its setUp and cleanUp called as expected, and
+    reset is called between uses.
+
+    Due to the API of fixtures, dependency_resources are not
+    accessible to the wrapped fixture. However, if you are using
+    resource optimisation, you should wrap any dependencies in a
+    FixtureResource and set resources appropriately. 
+
+    See the ``fixtures`` documentation for information on managing
+    dependencies within the ``fixtures`` API.
+
+    :ivar fixture: The wrapped fixture.
+    """
+
+    def __init__(self, fixture):
+        """Create a FixtureResource
+
+        :param fixture: The fixture to wrap.
+        """
+        TestResource.__init__(self)
+        self.fixture = fixture
+
+    def clean(self, resource):
+        resource.cleanUp()
+
+    def make(self, dependency_resources):
+        self.fixture.setUp()
+        return self.fixture
+
+    def isDirty(self):
+        return True
+
+
 class ResourcedTestCase(unittest.TestCase):
     """A TestCase parent or utility that enables cross-test resource usage.
 
