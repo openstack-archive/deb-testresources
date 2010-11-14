@@ -625,7 +625,11 @@ class FixtureResource(TestResource):
     Due to the API of fixtures, dependency_resources are not
     accessible to the wrapped fixture. However, if you are using
     resource optimisation, you should wrap any dependencies in a
-    FixtureResource and set resources appropriately. 
+    FixtureResource and set the resources attribute appropriately.
+    Note that when this is done, testresources will take care of
+    calling setUp and cleanUp on the dependency fixtures and so
+    the fixtures should not implicitly setUp or cleanUp their
+    dependencies (that have been mapped).
 
     See the ``fixtures`` documentation for information on managing
     dependencies within the ``fixtures`` API.
