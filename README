@@ -36,7 +36,6 @@ Dependencies to use testresources
 =================================
 
 * Python 2.4+
-* fixtures (http://pypi.python.org/pypi/fixtures)
 
 
 How testresources Works
@@ -166,6 +165,13 @@ testresources.GenericResource
 -----------------------------
 
 Glue to adapt testresources to an existing resource-like class.
+
+testresources.FixtureResource
+-----------------------------
+
+Glue to adapt testresources to the simpler fixtures.Fixture API. Long
+term testresources is likely to consolidate on that simpler API as the
+recommended method of writing resources.
 
 testresources.OptimisingTestSuite
 ---------------------------------
