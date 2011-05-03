@@ -44,7 +44,7 @@ class MockResourceInstance(object):
 class TestResourcedTestCase(testtools.TestCase):
 
     def setUp(self):
-        testtools.TestCase.setUp(self)
+        super(TestResourcedTestCase, self).setUp()
         class Example(testresources.ResourcedTestCase):
             def test_example(self):
                 pass
