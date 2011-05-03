@@ -80,7 +80,7 @@ class TestOptimisingTestSuite(testtools.TestCase):
         return test_case
 
     def setUp(self):
-        super(TestOptimizingTestSuite, self).setUp()
+        super(TestOptimisingTestSuite, self).setUp()
         self.optimising_suite = testresources.OptimisingTestSuite()
 
     def testAddTest(self):

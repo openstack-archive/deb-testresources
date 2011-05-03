@@ -674,7 +674,7 @@ class ResourcedTestCase(unittest.TestCase):
     resources = []
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        super(ResourcedTestCase, self).setUp()
         self.setUpResources()
 
     def setUpResources(self):
@@ -682,7 +682,7 @@ class ResourcedTestCase(unittest.TestCase):
 
     def tearDown(self):
         self.tearDownResources()
-        unittest.TestCase.tearDown(self)
+        super(ResourcedTestCase, self).tearDown()
 
     def tearDownResources(self):
         tearDownResources(self, self.resources, _get_result())
