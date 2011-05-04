@@ -80,7 +80,7 @@ class TestOptimisingTestSuite(testtools.TestCase):
         return test_case
 
     def setUp(self):
-        testtools.TestCase.setUp(self)
+        super(TestOptimisingTestSuite, self).setUp()
         self.optimising_suite = testresources.OptimisingTestSuite()
 
     def testAddTest(self):
@@ -333,7 +333,7 @@ class TestCostOfSwitching(testtools.TestCase):
     """Tests for cost_of_switching."""
 
     def setUp(self):
-        testtools.TestCase.setUp(self)
+        super(TestCostOfSwitching, self).setUp()
         self.suite = testresources.OptimisingTestSuite()
 
     def makeResource(self, setUpCost=1, tearDownCost=1):
@@ -420,7 +420,7 @@ class TestCostGraph(testtools.TestCase):
 class TestGraphStuff(testtools.TestCase):
 
     def setUp(self):
-        testtools.TestCase.setUp(self)
+        super(TestGraphStuff, self).setUp()
         class MockTest(unittest.TestCase):
             def __repr__(self):
                 """The representation is the tests name.

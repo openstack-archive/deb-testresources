@@ -15,6 +15,7 @@
 #  license.
 #
 
+import unittest
 import testtools
 import testresources
 from testresources.tests import ResultWithResourceExtensions
@@ -44,13 +45,40 @@ class MockResourceInstance(object):
 class TestResourcedTestCase(testtools.TestCase):
 
     def setUp(self):
-        testtools.TestCase.setUp(self)
+        super(TestResourcedTestCase, self).setUp()
         class Example(testresources.ResourcedTestCase):
             def test_example(self):
                 pass
         self.resourced_case = Example('test_example')
         self.resource = self.getUniqueString()
         self.resource_manager = MockResource(self.resource)
+
+    def testSetUpUsesSuper(self):
+        class OtherBaseCase(unittest.TestCase):
+            setUpCalled = False
+            def setUp(self):
+                self.setUpCalled = True
+                super(OtherBaseCase, self).setUp()
+        class OurCase(testresources.ResourcedTestCase, OtherBaseCase):
+            def runTest(self):
+                pass
+        ourCase = OurCase()
+        ourCase.setUp()
+        self.assertTrue(ourCase.setUpCalled)
+
+    def testTearDownUsesSuper(self):
+        class OtherBaseCase(unittest.TestCase):
+            tearDownCalled = False
+            def tearDown(self):
+                self.tearDownCalled = True
+                super(OtherBaseCase, self).setUp()
+        class OurCase(testresources.ResourcedTestCase, OtherBaseCase):
+            def runTest(self):
+                pass
+        ourCase = OurCase()
+        ourCase.setUp()
+        ourCase.tearDown()
+        self.assertTrue(ourCase.tearDownCalled)
 
     def testDefaults(self):
         self.assertEqual(self.resourced_case.resources, [])

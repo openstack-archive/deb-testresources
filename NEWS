@@ -11,6 +11,9 @@ IMPROVEMENTS
 * Added ``testresources.FixtureResource`` to wrap ``fixtures.Fixture``
   instances. (Robert Collins)
 
+* super() is now called from ResourcedTestCase fixing a long standing issue
+  with using it as a mix-in in Python 2.4 and above. (Tim Cole, #771505)
+
 0.2.4
 -----
 
