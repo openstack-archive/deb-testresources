@@ -6,7 +6,7 @@ import os.path
 description = file(os.path.join(os.path.dirname(__file__), 'README'), 'rb').read()
 
 setup(name="testresources",
-      version="0.2.4",
+      version="0.2.5",
       description="Testresources, a pyunit extension for managing expensive "
                   "test resources",
       long_description=description,
