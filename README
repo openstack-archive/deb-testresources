@@ -84,7 +84,7 @@ resource during tearDown().
 
 For example::
 
-    class TestLog(testresources.TestCase):
+    class TestLog(testresources.ResourcedTestCase):
 
         resources = [('branch', BzrPopulatedBranch())]
 

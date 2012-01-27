@@ -14,6 +14,8 @@ IMPROVEMENTS
 * super() is now called from ResourcedTestCase fixing a long standing issue
   with using it as a mix-in in Python 2.4 and above. (Tim Cole, #771505)
 
+* Typo in NEWS fixed. (Thommi Richards)
+
 0.2.4
 -----
 
