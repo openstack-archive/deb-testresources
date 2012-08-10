@@ -2,24 +2,23 @@
 #  of resources by test cases.
 #
 #  Copyright (c) 2005-2010 Testresources Contributors
-#  
+#
 #  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
-#  Unless required by applicable law or agreed to in writing, software distributed
-#  under these licenses is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-#  CONDITIONS OF ANY KIND, either express or implied.  See the license you chose
-#  for the specific language governing permissions and limitations under that
-#  license.
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
+#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+#  license you chose for the specific language governing permissions and
+#  limitations under that license.
 #
 
 """TestResources: declarative management of external resources for tests."""
 
 import heapq
 import inspect
-import operator
 import unittest
 
 
@@ -42,8 +41,8 @@ def _digraph_to_graph(digraph, prime_node_mapping):
     """
     result = {}
     for from_node, from_prime_node in prime_node_mapping.iteritems():
-        result[from_node] = {from_prime_node:0}
-        result[from_prime_node] = {from_node:0}
+        result[from_node] = {from_prime_node: 0}
+        result[from_prime_node] = {from_node: 0}
     for from_node, to_nodes in digraph.iteritems():
         from_prime = prime_node_mapping[from_node]
         for to_node, value in to_nodes.iteritems():
@@ -67,7 +66,7 @@ def _kruskals_graph_MST(graph):
     forest = {}
     # graphs is the count of graphs we have yet to combine.
     for node in graph:
-        forest[node] = {node:{}}
+        forest[node] = {node: {}}
     graphs = len(forest)
     # collect edges: every edge is present twice (due to the graph
     # representation), so normalise.
@@ -84,7 +83,7 @@ def _kruskals_graph_MST(graph):
         g1 = forest[edge[1]]
         g2 = forest[edge[2]]
         if g1 is g2:
-            continue # already joined
+            continue  # already joined
         # combine g1 and g2 into g1
         graphs -= 1
         for from_node, to_nodes in g2.iteritems():
@@ -97,7 +96,7 @@ def _kruskals_graph_MST(graph):
     # union the remaining graphs
     _, result = forest.popitem()
     for _, g2 in forest.iteritems():
-        if g2 is result: # common case
+        if g2 is result:  # common case
             continue
         for from_node, to_nodes in g2.iteritems():
             result.setdefault(from_node, {}).update(to_nodes)
@@ -138,7 +137,8 @@ def split_by_resources(tests):
     resource_set_tests = {no_resources: []}
     for test in tests:
         resources = getattr(test, "resources", ())
-        all_resources = list(resource.neededResources() for _, resource in  resources)
+        all_resources = list(resource.neededResources()
+                             for _, resource in resources)
         resource_set = set()
         for resource_list in all_resources:
             resource_set.update(resource_list)
@@ -148,7 +148,7 @@ def split_by_resources(tests):
 
 def _strongly_connected_components(graph, no_resources):
     """Find the strongly connected components in graph.
-    
+
     This is essentially a nonrecursive flatterning of Tarjan's method. It
     may be worth profiling against an actual Tarjan's implementation at some
     point, but sets are often faster than python calls.
@@ -190,7 +190,8 @@ class OptimisingTestSuite(unittest.TestSuite):
         except TypeError:
             unittest.TestSuite.addTest(self, test_case_or_suite)
             return
-        if test_case_or_suite.__class__ in (unittest.TestSuite, OptimisingTestSuite):
+        if test_case_or_suite.__class__ in (unittest.TestSuite,
+                                            OptimisingTestSuite):
             for test in tests:
                 self.adsorbSuite(test)
         else:
@@ -258,17 +259,17 @@ class OptimisingTestSuite(unittest.TestSuite):
         # We group the tests by the resource combinations they use,
         # since there will usually be fewer resource combinations than
         # actual tests and there can never be more: This gives us 'nodes' or
-        # 'resource_sets' that represent many tests using the same set of 
+        # 'resource_sets' that represent many tests using the same set of
         # resources.
         resource_set_tests = split_by_resources(self._tests)
         # Partition into separate sets of resources, there is no ordering
         # preference between sets that do not share members. Rationale:
         # If resource_set A and B have no common resources, AB and BA are
         # equally good - the global setup/teardown sums are identical. Secondly
-        # if A shares one or more resources with C, then pairing AC|CA is better
-        # than having B between A and C, because the shared resources can be
-        # reset or reused. Having partitioned we can use connected graph logic
-        # on each partition.
+        # if A shares one or more resources with C, then pairing AC|CA is
+        # better than having B between A and C, because the shared resources
+        # can be reset or reused. Having partitioned we can use connected graph
+        # logic on each partition.
         resource_set_graph = _resource_graph(resource_set_tests)
         no_resources = frozenset()
         # A list of resource_set_tests, all fully internally connected.
@@ -276,8 +277,8 @@ class OptimisingTestSuite(unittest.TestSuite):
             no_resources)
         result = []
         for partition in partitions:
-            # we process these at the end for no particularly good reason (it makes
-            # testing slightly easier).
+            # we process these at the end for no particularly good reason (it
+            # makes testing slightly easier).
             if partition == [no_resources]:
                 continue
             order = self._makeOrder(partition)
@@ -311,14 +312,14 @@ class OptimisingTestSuite(unittest.TestSuite):
                 from_resources = from_set
             for to_set in resource_sets:
                 if from_set is to_set:
-                    continue # no self-edges
+                    continue  # no self-edges
                 #if to_set == bottom:
                 #   if from_set == root:
                 #       continue # no short cuts!
                 #   to_resources = no_resources
                 #el
                 if to_set == root:
-                    continue # no links to root
+                    continue  # no links to root
                 else:
                     to_resources = to_set
                 graph[from_set][to_set] = self.cost_of_switching(
@@ -327,10 +328,12 @@ class OptimisingTestSuite(unittest.TestSuite):
 
     def _makeOrder(self, partition):
         """Return a order for the resource sets in partition."""
-        # This problem is NP-C - find the lowest cost hamiltonian path. It 
+        # This problem is NP-C - find the lowest cost hamiltonian path. It
         # also meets the triangle inequality, so we can use an approximation.
         # TODO: implement Christofides.
-        # See http://en.wikipedia.org/wiki/Travelling_salesman_problem#Metric_TSP
+        # See:
+        #   http://en.wikipedia.org/wiki/Travelling_salesman_problem#Metric_TSP
+
         # We need a root
         root = frozenset(['root'])
         partition.add(root)
@@ -363,7 +366,7 @@ class OptimisingTestSuite(unittest.TestSuite):
         steps = 2 * (len(mst) - 1)
         for step in xrange(steps):
             found = False
-            outgoing = None # For clearer debugging.
+            outgoing = None  # For clearer debugging.
             for outgoing in mst[node]:
                 if node in mst[outgoing]:
                     # we have a return path: take it
@@ -415,7 +418,7 @@ class TestResourceManager(object):
         dependencies list.
     :ivar resources: The resources that this resource needs. Calling
         neededResources will return the closure of this resource and its needed
-        resources. The resources list is in the same format as resources on a 
+        resources. The resources list is in the same format as resources on a
         test case - a list of tuples (attribute_name, resource).
     :ivar setUpCost: The relative cost to construct a resource of this type.
          One good approach is to set this to the number of seconds it normally
@@ -495,7 +498,7 @@ class TestResourceManager(object):
 
     def isDirty(self):
         """Return True if this managers cached resource is dirty.
-        
+
         Calling when the resource is not currently held has undefined
         behaviour.
         """
@@ -525,7 +528,7 @@ class TestResourceManager(object):
 
     def make(self, dependency_resources):
         """Override this to construct resources.
-        
+
         :param dependency_resources: A dict mapping name -> resource instance
             for the resources specified as dependencies.
         """
@@ -534,7 +537,7 @@ class TestResourceManager(object):
 
     def neededResources(self):
         """Return the resources needed for this resource, including self.
-        
+
         :return: A list of needed resources, in topological deepest-first
             order.
         """
@@ -553,7 +556,7 @@ class TestResourceManager(object):
         """Overridable method to return a clean version of old_resource.
 
         By default, the resource will be cleaned then remade if it had
-        previously been `dirtied`. 
+        previously been `dirtied`.
 
         This function needs to take the dependent resource stack into
         consideration as _make_all and _clean_all do.
@@ -574,12 +577,13 @@ class TestResourceManager(object):
         self._dirty = False
 TestResource = TestResourceManager
 
+
 class GenericResource(TestResource):
     """A TestResource that decorates an external helper of some kind.
 
-    GenericResource can be used to adapt an external resource so that 
+    GenericResource can be used to adapt an external resource so that
     testresources can use it. By default the setUp and tearDown methods are
-    called when making and cleaning the resource, and the resource is 
+    called when making and cleaning the resource, and the resource is
     considered permanently dirty, so it is torn down and brought up again
     between every use.
 
@@ -690,7 +694,7 @@ class ResourcedTestCase(unittest.TestCase):
 
 def setUpResources(test, resources, result):
     """Set up resources for test.
-    
+
     :param test: The test to setup resources for.
     :param resources: The resources to setup.
     :param result: A result object for tracing resource activity.
@@ -701,7 +705,7 @@ def setUpResources(test, resources, result):
 
 def tearDownResources(test, resources, result):
     """Tear down resources for test.
-    
+
     :param test: The test to tear down resources from.
     :param resources: The resources to tear down.
     :param result: A result object for tracing resource activity.
@@ -718,7 +722,7 @@ def _get_result():
     The result is passed to a run() or a __call__ method 4 or more frames
     up: that method is what calls setUp and tearDown, and they call their
     parent setUp etc. Its not guaranteed that the parameter to run will
-    be calls result as its not required to be a keyword parameter in 
+    be calls result as its not required to be a keyword parameter in
     TestCase. However, in practice, this works.
     """
     stack = inspect.stack()
@@ -730,4 +734,3 @@ def _get_result():
             if (result is not None and
                 getattr(result, 'startTest', None) is not None):
                 return result
-
