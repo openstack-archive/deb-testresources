@@ -7,7 +7,7 @@ Copyright (C) 2005-2010  Robert Collins <robertc@robertcollins.net>
   license at the users choice. A copy of both licenses are available in the
   project source as Apache-2.0 and BSD. You may not use this file except in
   compliance with one of these two licences.
-  
+
   Unless required by applicable law or agreed to in writing, software
   distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -44,10 +44,10 @@ How testresources Works
 The basic idea of testresources is:
 
 * Tests declare the resources they need in a ``resources`` attribute.
-* When the test is run, the required resource objects are allocated (either 
+* When the test is run, the required resource objects are allocated (either
   newly constructed, or reused), and assigned to attributes of the TestCase.
 
-testresources distinguishes a 'resource manager' (a subclass of 
+testresources distinguishes a 'resource manager' (a subclass of
 ``TestResourceManager``) which acts as a kind of factory, and a 'resource'
 which can be any kind of object returned from the manager class's
 ``getResource`` method.
@@ -75,11 +75,11 @@ from your own classes setUp and tearDown and the same behaviour will be
 activated.
 
 To declare the use of a resource, set the ``resources`` attribute to a list of
-tuples of ``(attribute_name, resource_factory)``.
+tuples of ``(attribute_name, resource_manager)``.
 
 During setUp, for each declared requirement, the test gains an attribute
 pointing to an allocated resource, which is the result of calling
-``resource_factory.getResource()``.  ``finishedWith`` will be called on each
+``resource_manager.getResource()``.  ``finishedWith`` will be called on each
 resource during tearDown().
 
 For example::
@@ -103,16 +103,19 @@ When implementing a new ``TestResourceManager`` subclass you should consider
 overriding these methods:
 
 ``make``
-    Must be overridden in every concrete subclass.  
+    Must be overridden in every concrete subclass.
 
     Returns a new instance of the resource object
-    (the actual resource, not the TestResourceManager).  Doesn't need to worry about 
-    reuse, which is taken care of separately.  This method is only called when a 
-    new resource is definitely needed.  
+    (the actual resource, not the TestResourceManager).  Doesn't need to worry about
+    reuse, which is taken care of separately.  This method is only called when a
+    new resource is definitely needed.
+
+    ``make`` is called by ``getResource``; you should not normally need to override
+    the latter.
 
 ``clean``
-    Cleans up an existing resource instance, eg by deleting a directory or 
-    closing a network connection.  By default this does nothing, which may be 
+    Cleans up an existing resource instance, eg by deleting a directory or
+    closing a network connection.  By default this does nothing, which may be
     appropriate for resources that are automatically garbage collected.
 
 ``reset``
@@ -121,7 +124,7 @@ overriding these methods:
     faster way to reset them.
 
 ``isDirty``
-    Check whether an existing resource is dirty.  By default this just reports whether 
+    Check whether an existing resource is dirty.  By default this just reports whether
     ``TestResourceManager.dirtied`` has been called.
 
 For instance::
@@ -129,13 +132,13 @@ For instance::
     class TemporaryDirectoryResource(TestResourceManager):
 
 	def clean(self, resource):
-	    osutils.rmtree(resource) 
+	    shutil.rmtree(resource)
 
         def make(self):
 	    return tempfile.mkdtemp()
 
 	def isDirty(self, resource):
-            # Can't detect when the directory is written to, so assume it 
+            # Can't detect when the directory is written to, so assume it
             # can never be reused.  We could list the directory, but that might
             # not catch it being open as a cwd etc.
 	    return True
@@ -234,6 +237,10 @@ FAQ
   Generally, no, you shouldn't do this.  The idea is that the resources are
   declared statically, so that testresources can "smooth" resource usage across
   several tests.
+
+  But, you may be able to find some object that is statically declared and reusable
+  to act as the resource, which can then provide methods to generate sub-elements
+  of itself during a test.
 
 * If the resource is held inside the TestResourceManager object, and the
   TestResourceManager is typically constructed inline in the test case
