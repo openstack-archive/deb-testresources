@@ -3,10 +3,10 @@
 from distutils.core import setup
 import os.path
 
-description = file(os.path.join(os.path.dirname(__file__), 'README'), 'rb').read()
+description = open(os.path.join(os.path.dirname(__file__), 'README'), 'rt').read()
 
 setup(name="testresources",
-      version="0.2.5",
+      version="0.2.6",
       description="Testresources, a pyunit extension for managing expensive "
                   "test resources",
       long_description=description,
@@ -15,6 +15,7 @@ setup(name="testresources",
       url="https://launchpad.net/testresources",
       packages=['testresources', 'testresources.tests'],
       package_dir = {'':'lib'},
+      keywords="unittest testing fixtures",
       classifiers = [
           'Development Status :: 6 - Mature',
           'Intended Audience :: Developers',
@@ -22,6 +23,7 @@ setup(name="testresources",
           'License :: OSI Approved :: Apache Software License',
           'Operating System :: OS Independent',
           'Programming Language :: Python',
+          'Programming Language :: Python :: 3',
           'Topic :: Software Development :: Quality Assurance',
           'Topic :: Software Development :: Testing',
           ],

@@ -132,8 +132,8 @@ class TestKruskalsMST(testtools.TestCase):
             F:{               D:6},
             G:{                     E:9}}
         result = testresources._kruskals_graph_MST(graph)
-        e_weight = sum(sum(row.itervalues()) for row in expected.itervalues())
-        r_weight = sum(sum(row.itervalues()) for row in result.itervalues())
+        e_weight = sum(sum(row.values()) for row in expected.values())
+        r_weight = sum(sum(row.values()) for row in result.values())
         self.assertEqual(e_weight, r_weight)
         self.assertEqual(expected,
             testresources._kruskals_graph_MST(graph))

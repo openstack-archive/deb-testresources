@@ -21,6 +21,20 @@ import heapq
 import inspect
 import unittest
 
+# same format as sys.version_info: "A tuple containing the five components of
+# the version number: major, minor, micro, releaselevel, and serial. All
+# values except releaselevel are integers; the release level is 'alpha',
+# 'beta', 'candidate', or 'final'. The version_info value corresponding to the
+# Python version 2.0 is (2, 0, 0, 'final', 0)."  Additionally we use a
+# releaselevel of 'dev' for unreleased under-development code.
+#
+# If the releaselevel is 'alpha' then the major/minor/micro components are not
+# established at this point, and setup.py will use a version of next-$(revno).
+# If the releaselevel is 'final', then the tarball will be major.minor.micro.
+# Otherwise it is major.minor.micro~$(revno).
+
+__version__ = (0, 2, 6, 'final', 0)
+
 
 def test_suite():
     import testresources.tests
@@ -40,12 +54,12 @@ def _digraph_to_graph(digraph, prime_node_mapping):
         No other edges are created.
     """
     result = {}
-    for from_node, from_prime_node in prime_node_mapping.iteritems():
+    for from_node, from_prime_node in prime_node_mapping.items():
         result[from_node] = {from_prime_node: 0}
         result[from_prime_node] = {from_node: 0}
-    for from_node, to_nodes in digraph.iteritems():
+    for from_node, to_nodes in digraph.items():
         from_prime = prime_node_mapping[from_node]
-        for to_node, value in to_nodes.iteritems():
+        for to_node, value in to_nodes.items():
             to_prime = prime_node_mapping[to_node]
             result[from_prime][to_node] = value
             result[to_node][from_prime] = value
@@ -71,8 +85,8 @@ def _kruskals_graph_MST(graph):
     # collect edges: every edge is present twice (due to the graph
     # representation), so normalise.
     edges = set()
-    for from_node, to_nodes in graph.iteritems():
-        for to_node, value in to_nodes.iteritems():
+    for from_node, to_nodes in graph.items():
+        for to_node, value in to_nodes.items():
             edge = (value,) + tuple(sorted([from_node, to_node]))
             edges.add(edge)
     edges = list(edges)
@@ -86,7 +100,7 @@ def _kruskals_graph_MST(graph):
             continue  # already joined
         # combine g1 and g2 into g1
         graphs -= 1
-        for from_node, to_nodes in g2.iteritems():
+        for from_node, to_nodes in g2.items():
             #remember its symmetric, don't need to do 'to'.
             forest[from_node] = g1
             g1.setdefault(from_node, {}).update(to_nodes)
@@ -95,10 +109,10 @@ def _kruskals_graph_MST(graph):
         g1[edge[2]][edge[1]] = edge[0]
     # union the remaining graphs
     _, result = forest.popitem()
-    for _, g2 in forest.iteritems():
+    for _, g2 in forest.items():
         if g2 is result:  # common case
             continue
-        for from_node, to_nodes in g2.iteritems():
+        for from_node, to_nodes in g2.items():
             result.setdefault(from_node, {}).update(to_nodes)
     return result
 
@@ -119,7 +133,7 @@ def _resource_graph(resource_sets):
         for resource in resource_set:
             edges.setdefault(resource, []).append(node)
     # populate the adjacent members of nodes
-    for node, connected in nodes.iteritems():
+    for node, connected in nodes.items():
         for resource in node:
             connected.update(edges[resource])
         connected.discard(node)
@@ -364,7 +378,7 @@ class OptimisingTestSuite(unittest.TestSuite):
         node = root
         cycle = [node]
         steps = 2 * (len(mst) - 1)
-        for step in xrange(steps):
+        for step in range(steps):
             found = False
             outgoing = None  # For clearer debugging.
             for outgoing in mst[node]:

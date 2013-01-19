@@ -1,7 +1,7 @@
 testresources: extensions to python unittest to allow declarative use
 of resources by test cases.
 
-Copyright (C) 2005-2010  Robert Collins <robertc@robertcollins.net>
+Copyright (C) 2005-2013  Robert Collins <robertc@robertcollins.net>
 
   Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
   license at the users choice. A copy of both licenses are available in the
@@ -20,23 +20,22 @@ Copyright (C) 2005-2010  Robert Collins <robertc@robertcollins.net>
 Testresources
 +++++++++++++
 
-testresources is attempting to extend unittest with a clean and simple api to
-provide test optimisation where expensive common resources are needed for test
-cases - for example sample working trees for VCS systems, reference databases
-for enterprise applications, or web servers ... let imagination run wild.
+testresources extends unittest with a clean and simple api to provide test
+optimisation where expensive common resources are needed for test cases - for
+example sample working trees for VCS systems, reference databases for
+enterprise applications, or web servers ... let imagination run wild.
 
 Dependencies to build/selftest
 ==============================
 
-* Python 2.4+
+* Python 2.4+ (or 3.2+)
 * testtools (http://pypi.python.org/pypi/testtools/)
 * fixtures (http://pypi.python.org/pypi/fixtures)
 
 Dependencies to use testresources
 =================================
 
-* Python 2.4+
-
+* Python 2.4+ (or 3.2+)
 
 How testresources Works
 =======================
@@ -131,17 +130,17 @@ For instance::
 
     class TemporaryDirectoryResource(TestResourceManager):
 
-	def clean(self, resource):
-	    shutil.rmtree(resource)
+        def clean(self, resource):
+            shutil.rmtree(resource)
 
         def make(self):
-	    return tempfile.mkdtemp()
+            return tempfile.mkdtemp()
 
-	def isDirty(self, resource):
+        def isDirty(self, resource):
             # Can't detect when the directory is written to, so assume it
             # can never be reused.  We could list the directory, but that might
             # not catch it being open as a cwd etc.
-	    return True
+            return True
 
 The ``resources`` list on the TestResourceManager object is used to declare
 dependencies. For instance, a DataBaseResource that needs a TemporaryDirectory

@@ -5,10 +5,15 @@ testresources release notes
 IN DEVELOPMENT
 --------------
 
+0.2.6
+-----
+
 IMPROVEMENTS
 ~~~~~~~~~~~~
 
 * NEWS made clearer. (Martin Pool)
+
+* Python3.2+ compatible. (Robert Collins)
 
 0.2.5
 -----
