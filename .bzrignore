@@ -2,3 +2,6 @@ TAGS
 tags
 lib/pyunit3k
 lib/testtools
+__pycache__
+./dist
+./MANIFEST
