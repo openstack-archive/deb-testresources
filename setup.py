@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup
 import os.path
 
 description = open(os.path.join(os.path.dirname(__file__), 'README'), 'rt').read()
 
 setup(name="testresources",
-      version="0.2.6",
+      version="0.2.7",
       description="Testresources, a pyunit extension for managing expensive "
                   "test resources",
       long_description=description,

@@ -5,6 +5,13 @@ testresources release notes
 IN DEVELOPMENT
 --------------
 
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* FixtureResource was not triggering cleanups or resets between uses, this is
+  fixed (but will make OptimisingTestSuite trigger resets on every transition
+  between tests). (Robert Collins, James Westby, #1023423)
+
 0.2.6
 -----
 

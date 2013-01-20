@@ -33,7 +33,7 @@ import unittest
 # If the releaselevel is 'final', then the tarball will be major.minor.micro.
 # Otherwise it is major.minor.micro~$(revno).
 
-__version__ = (0, 2, 6, 'final', 0)
+__version__ = (0, 2, 7, 'final', 0)
 
 
 def test_suite():
@@ -486,7 +486,8 @@ class TestResourceManager(object):
         the `clean` hook, which should do any resource-specific
         cleanup.
 
-        :param resource: A resource returned by `TestResource.getResource`.
+        :param resource: A resource returned by
+            `TestResourceManager.getResource`.
         :param result: An optional TestResult to report resource changes to.
         """
         self._uses -= 1
@@ -592,8 +593,8 @@ class TestResourceManager(object):
 TestResource = TestResourceManager
 
 
-class GenericResource(TestResource):
-    """A TestResource that decorates an external helper of some kind.
+class GenericResource(TestResourceManager):
+    """A TestResourceManager that decorates an external helper of some kind.
 
     GenericResource can be used to adapt an external resource so that
     testresources can use it. By default the setUp and tearDown methods are
@@ -617,7 +618,7 @@ class GenericResource(TestResource):
         :param teardown_method_name: Optional method name to call to tear down
             the resource. Defaults to 'tearDown'.
         """
-        TestResource.__init__(self)
+        super(GenericResource, self).__init__()
         self.resource_factory = resource_factory
         self.setup_method_name = setup_method_name
         self.teardown_method_name = teardown_method_name
@@ -634,8 +635,8 @@ class GenericResource(TestResource):
         return True
 
 
-class FixtureResource(TestResource):
-    """A TestResource that decorates a ``fixtures.Fixture``.
+class FixtureResource(TestResourceManager):
+    """A TestResourceManager that decorates a ``fixtures.Fixture``.
 
     The fixture has its setUp and cleanUp called as expected, and
     reset is called between uses.
@@ -660,7 +661,7 @@ class FixtureResource(TestResource):
 
         :param fixture: The fixture to wrap.
         """
-        TestResource.__init__(self)
+        super(FixtureResource, self).__init__()
         self.fixture = fixture
 
     def clean(self, resource):
@@ -672,6 +673,8 @@ class FixtureResource(TestResource):
 
     def isDirty(self):
         return True
+
+    _dirty = property(lambda _:True, lambda _, _1:None)
 
 
 class ResourcedTestCase(unittest.TestCase):
@@ -685,8 +688,8 @@ class ResourcedTestCase(unittest.TestCase):
     from your setUp and tearDown (or whatever cleanup idiom is used).
 
     :ivar resources: A list of (name, resource) pairs, where 'resource' is a
-        subclass of `TestResource` and 'name' is the name of the attribute
-        that the resource should be stored on.
+        subclass of `TestResourceManager` and 'name' is the name of the
+        attribute that the resource should be stored on.
     """
 
     resources = []

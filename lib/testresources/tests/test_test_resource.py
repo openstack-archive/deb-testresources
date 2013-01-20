@@ -469,3 +469,12 @@ class TestFixtureResource(testtools.TestCase):
         resource = mgr.getResource()
         self.assertTrue(mgr.isDirty())
         mgr.finishedWith(resource)
+
+    def test_reset_called(self):
+        fixture = LoggingFixture()
+        mgr = testresources.FixtureResource(fixture)
+        resource = mgr.getResource()
+        mgr.reset(resource)
+        mgr.finishedWith(resource)
+        self.assertEqual(
+            ['setUp', 'cleanUp', 'setUp', 'cleanUp'], fixture.calls)
