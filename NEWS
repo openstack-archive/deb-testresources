@@ -12,6 +12,9 @@ IMPROVEMENTS
   fixed (but will make OptimisingTestSuite trigger resets on every transition
   between tests). (Robert Collins, James Westby, #1023423)
 
+* TestResourceManager.reset() was not taking dependency dirtiness into
+  consideration. (Brian Sutherland, #783488)
+
 0.2.6
 -----
 

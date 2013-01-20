@@ -212,6 +212,17 @@ class TestTestResource(testtools.TestCase):
         self.assertEqual(1, resource_manager.resets)
         resource_manager.finishedWith(resource)
 
+    def testIsResetIfDependenciesAreDirty(self):
+        resource_manager = MockResource()
+        dep1 = MockResource()
+        resource_manager.resources.append(("dep1", dep1))
+        r = resource_manager.getResource()
+        dep1.dirtied(r.dep1)
+        # if we get the resource again, it should be clean
+        r = resource_manager.getResource()
+        self.assertFalse(resource_manager.isDirty())
+        self.assertFalse(dep1.isDirty())
+
     def testUsedResourceResetBetweenUses(self):
         resource_manager = MockResettableResource()
         # take two refs; like happens with OptimisingTestSuite.

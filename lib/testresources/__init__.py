@@ -579,7 +579,7 @@ class TestResourceManager(object):
         :return: The new resource.
         :param result: An optional TestResult to report resource changes to.
         """
-        if self._dirty:
+        if self.isDirty():
             self._clean_all(old_resource, result)
             resource = self._make_all(result)
         else:
