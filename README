@@ -117,14 +117,15 @@ overriding these methods:
     closing a network connection.  By default this does nothing, which may be
     appropriate for resources that are automatically garbage collected.
 
-``reset``
+``_reset``
     Reset a no-longer-used dirty resource to a clean state.  By default this
     just discards it and creates a new one, but for some resources there may be a
     faster way to reset them.
 
 ``isDirty``
-    Check whether an existing resource is dirty.  By default this just reports whether
-    ``TestResourceManager.dirtied`` has been called.
+    Check whether an existing resource is dirty.  By default this just reports
+    whether ``TestResourceManager.dirtied`` has been called or any of the
+    dependency resources are dirty.
 
 For instance::
 
@@ -206,9 +207,10 @@ unittest.TestResult
 -------------------
 
 testresources will log activity about resource creation and destruction to the
-result object tests are run with. 4 extension methods are looked for:
+result object tests are run with. 6 extension methods are looked for:
 ``startCleanResource``, ``stopCleanResource``, ``startMakeResource``,
-``stopMakeResource``. ``testresources.tests.ResultWithResourceExtensions`` is
+``stopMakeResource``, ``startResetResource`` and finally ``stopResetResource``.
+``testresources.tests.ResultWithResourceExtensions`` is
 an example of a ``TestResult`` with these methods present.
 
 Controlling Resource Reuse

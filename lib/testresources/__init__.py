@@ -546,6 +546,7 @@ class TestResourceManager(object):
 
         :param dependency_resources: A dict mapping name -> resource instance
             for the resources specified as dependencies.
+        :return: The made resource.
         """
         raise NotImplementedError(
             "Override make to construct resources.")
@@ -568,23 +569,70 @@ class TestResourceManager(object):
         return result
 
     def reset(self, old_resource, result=None):
-        """Overridable method to return a clean version of old_resource.
+        """Return a clean version of old_resource.
 
         By default, the resource will be cleaned then remade if it had
-        previously been `dirtied`.
+        previously been `dirtied` by the helper self._reset() - which is the
+        extension point folk should override to customise reset behaviour.
 
-        This function needs to take the dependent resource stack into
-        consideration as _make_all and _clean_all do.
+        This function takes the dependent resource stack into consideration as
+        _make_all and _clean_all do. The inconsistent naming is because reset
+        is part of the public interface, but _make_all and _clean_all is not.
 
-        :return: The new resource.
+        Note that if a resource A holds a lock or other blocking thing on
+        a dependency D, reset will result in this call sequence over a 
+        getResource(), dirty(), getResource(), finishedWith(), finishedWith()
+        sequence:
+        B.make(), A.make(), B.reset(), A.reset(), A.clean(), B.clean()
+        Thus it is important that B.reset not assume that A has been cleaned or
+        reset before B is reset: it should arrange to reference count, lazy
+        cleanup or forcibly reset resource in some fashion.
+
+        As an example, consider that B is a database with sample data, and
+        A is an application server serving content from it. B._reset() should
+        disconnect all database clients, reset the state of the database, and
+        A._reset() should tell the application server to dump any internal
+        caches it might have.
+
+        In principle we might make a richer API to allow before-and-after
+        reset actions, but so far that hasn't been needed.
+
+        :return: The possibly new resource.
         :param result: An optional TestResult to report resource changes to.
         """
-        if self.isDirty():
-            self._clean_all(old_resource, result)
-            resource = self._make_all(result)
-        else:
-            resource = old_resource
+        # Core logic:
+        #  - if neither we nor any parent is dirty, do nothing.
+        # otherwise
+        #  - emit a signal to the test result
+        #  - reset all dependencies all, getting new attributes.
+        #  - call self._reset(old_resource, dependency_attributes)
+        #    [the default implementation does a clean + make]
+        if not self.isDirty():
+            return old_resource
+        self._call_result_method_if_exists(result, "startResetResource", self)
+        dependency_resources = {}
+        for name, mgr in self.resources:
+            dependency_resources[name] = mgr.reset(
+                getattr(old_resource, name), result)
+        resource = self._reset(old_resource, dependency_resources)
+        for name, value in dependency_resources.items():
+            setattr(resource, name, value)
+        self._call_result_method_if_exists(result, "stopResetResource", self)
         return resource
+
+    def _reset(self, resource, dependency_resources):
+        """Override this to reset resources other than via clean+make.
+
+        This method should reset the self._dirty flag (assuming the manager can
+        ever be clean) and return either the old resource cleaned or a fresh
+        one.
+
+        :param resource: The resource to reset.
+        :param dependency_resources: A dict mapping name -> resource instance
+            for the resources specified as dependencies.
+        """
+        self.clean(resource)
+        return self.make(dependency_resources)
 
     def _setResource(self, new_resource):
         """Set the current resource to a new value."""
@@ -669,6 +717,10 @@ class FixtureResource(TestResourceManager):
 
     def make(self, dependency_resources):
         self.fixture.setUp()
+        return self.fixture
+
+    def _reset(self, resource, dependency_resources):
+        self.fixture.reset()
         return self.fixture
 
     def isDirty(self):

@@ -9,8 +9,12 @@ IMPROVEMENTS
 ~~~~~~~~~~~~
 
 * FixtureResource was not triggering cleanups or resets between uses, this is
-  fixed (but will make OptimisingTestSuite trigger resets on every transition
-  between tests). (Robert Collins, James Westby, #1023423)
+  fixed (but doing so cleanly involved a new extension point - ``_reset`` on
+  ``TestResourceManager``. This is called from ``reset`` which should no
+  longer be overridden. (Though overridden versions will still behave correctly
+  - the change is backwards compatible). Lastly two new TestResult methods were
+  added to track reset (as opposed to make and clean).
+  (Robert Collins, James Westby, #1023423)
 
 * TestResourceManager.reset() was not taking dependency dirtiness into
   consideration. (Brian Sutherland, #783488)

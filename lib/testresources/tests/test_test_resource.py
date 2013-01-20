@@ -46,11 +46,11 @@ class MockResourceInstance(object):
         return self._name
 
 
-class MockResource(testresources.TestResource):
+class MockResource(testresources.TestResourceManager):
     """Mock resource that logs the number of make and clean calls."""
 
     def __init__(self):
-        testresources.TestResource.__init__(self)
+        super(MockResource, self).__init__()
         self.makes = 0
         self.cleans = 0
 
@@ -66,12 +66,13 @@ class MockResettableResource(MockResource):
     """Mock resource that logs the number of reset calls too."""
 
     def __init__(self):
-        MockResource.__init__(self)
+        super(MockResettableResource, self).__init__()
         self.resets = 0
 
-    def reset(self, resource, result):
+    def _reset(self, resource, dependency_resources):
         self.resets += 1
         resource._name += "!"
+        self._dirty = False
         return resource
 
 
@@ -214,14 +215,16 @@ class TestTestResource(testtools.TestCase):
 
     def testIsResetIfDependenciesAreDirty(self):
         resource_manager = MockResource()
-        dep1 = MockResource()
+        dep1 = MockResettableResource()
         resource_manager.resources.append(("dep1", dep1))
         r = resource_manager.getResource()
         dep1.dirtied(r.dep1)
-        # if we get the resource again, it should be clean
+        # if we get the resource again, it should be cleaned.
         r = resource_manager.getResource()
         self.assertFalse(resource_manager.isDirty())
         self.assertFalse(dep1.isDirty())
+        resource_manager.finishedWith(r)
+        resource_manager.finishedWith(r)
 
     def testUsedResourceResetBetweenUses(self):
         resource_manager = MockResettableResource()
@@ -294,8 +297,6 @@ class TestTestResource(testtools.TestCase):
         self.assertIs(resource, resource_manager._currentResource)
         resource_manager.finishedWith(resource)
 
-    # The default implementation of reset() performs a make/clean if
-    # the dirty flag is set.
     def testDirtiedSetsDirty(self):
         resource_manager = MockResource()
         resource = resource_manager.getResource()
@@ -333,6 +334,39 @@ class TestTestResource(testtools.TestCase):
         resource_manager.reset(resource)
         self.assertEqual(2, resource_manager.makes)
         self.assertEqual(1, resource_manager.cleans)
+
+    def testDefaultResetResetsDependencies(self):
+        resource_manager = MockResettableResource()
+        dep1 = MockResettableResource()
+        dep2 = MockResettableResource()
+        resource_manager.resources.append(("dep1", dep1))
+        resource_manager.resources.append(("dep2", dep2))
+        # A typical OptimisingTestSuite workflow
+        r_outer = resource_manager.getResource()
+        # test 1
+        r_inner = resource_manager.getResource()
+        dep2.dirtied(r_inner.dep2)
+        resource_manager.finishedWith(r_inner)
+        # test 2
+        r_inner = resource_manager.getResource()
+        dep2.dirtied(r_inner.dep2)
+        resource_manager.finishedWith(r_inner)
+        resource_manager.finishedWith(r_outer)
+        # Dep 1 was clean, doesn't do a reset, and should only have one
+        # make+clean.
+        self.assertEqual(1, dep1.makes)
+        self.assertEqual(1, dep1.cleans)
+        self.assertEqual(0, dep1.resets)
+        # Dep 2 was dirty, so _reset happens, and likewise only one make and
+        # clean.
+        self.assertEqual(1, dep2.makes)
+        self.assertEqual(1, dep2.cleans)
+        self.assertEqual(1, dep2.resets)
+        # The top layer should have had a reset happen, and only one make and
+        # clean.
+        self.assertEqual(1, resource_manager.makes)
+        self.assertEqual(1, resource_manager.cleans)
+        self.assertEqual(1, resource_manager.resets)
 
     def testDirtyingWhenUnused(self):
         resource_manager = MockResource()
@@ -388,10 +422,9 @@ class TestTestResource(testtools.TestCase):
     def testResetActivityForResourceWithExtensions(self):
         result = ResultWithResourceExtensions()
         resource_manager = MockResource()
-        expected = [("clean", "start", resource_manager),
-            ("clean", "stop", resource_manager),
-            ("make", "start", resource_manager),
-            ("make", "stop", resource_manager)]
+        expected = [("reset", "start", resource_manager),
+            ("reset", "stop", resource_manager),
+            ]
         resource_manager.getResource()
         r = resource_manager.getResource()
         resource_manager.dirtied(r)
@@ -488,4 +521,4 @@ class TestFixtureResource(testtools.TestCase):
         mgr.reset(resource)
         mgr.finishedWith(resource)
         self.assertEqual(
-            ['setUp', 'cleanUp', 'setUp', 'cleanUp'], fixture.calls)
+            ['setUp', 'reset', 'cleanUp'], fixture.calls)
