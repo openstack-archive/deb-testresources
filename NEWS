@@ -1,0 +1,207 @@
+---------------------------
+testresources release notes
+---------------------------
+
+IN DEVELOPMENT
+--------------
+
+0.2.7
+-----
+
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* FixtureResource was not triggering cleanups or resets between uses, this is
+  fixed (but doing so cleanly involved a new extension point - ``_reset`` on
+  ``TestResourceManager``. This is called from ``reset`` which should no
+  longer be overridden. (Though overridden versions will still behave correctly
+  - the change is backwards compatible). Lastly two new TestResult methods were
+  added to track reset (as opposed to make and clean).
+  (Robert Collins, James Westby, #1023423)
+
+* TestResourceManager.reset() was not taking dependency dirtiness into
+  consideration. (Brian Sutherland, #783488)
+
+0.2.6
+-----
+
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* NEWS made clearer. (Martin Pool)
+
+* Python3.2+ compatible. (Robert Collins)
+
+0.2.5
+-----
+
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* Added ``testresources.FixtureResource`` to wrap ``fixtures.Fixture``
+  instances. (Robert Collins)
+
+* super() is now called from ResourcedTestCase fixing a long standing issue
+  with using it as a mix-in in Python 2.4 and above. (Tim Cole, #771505)
+
+* Typo in NEWS fixed. (Thommi Richards)
+
+0.2.4
+-----
+
+CHANGES
+~~~~~~~
+
+* Relicenced to BSD / Apache2.0 with full agreement of contributors.
+
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* Substantially improved documentation in README. (mbp)
+
+* Rename TestResource to TestResourceManager leaving TestResource as an alias.
+  Fixes bug #520769.
+
+* Test sorting no longer performs N! work on tests that can never benefit from
+  order optimisations (when resources are not shared an arbitrary order is
+  sufficient). Partial fix for bug #522338.
+
+* Test sorting now uses a heuristic on each partition to get a sort that is
+  no worse than twice the optimal number of setup/teardown operations and is
+  fast to calculate. Fixes bug #522338
+
+0.2.3
+-----
+
+CHANGES
+~~~~~~~
+
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* Distribute doc/*.py in the source tarball.
+
+* New helper testresources.GenericResource which should remove the need for
+  much boilerplate when using testresources with existing test fixtures.
+
+BUG FIXES
+~~~~~~~~~
+
+API CHANGES
+~~~~~~~~~~~
+
+* New public functions testresources.setUpResources and
+  testresources.tearDownResources for folk that cannot easily use
+  ResourcedTestCase. Fixes bug #504146.
+
+INTERNALS
+~~~~~~~~~
+
+0.2.2
+-----
+
+BUG FIXES
+~~~~~~~~~
+
+* OptimisingTestSuite.addTest was not unpacking OptimisingTestSuite instances.
+  When using testresources.TestLoader to load tests this was generating an
+  unoptimised layout, with each test in its own little suite, and no resource
+  sharing happening.
+
+0.2.1
+------
+
+A small bugfix release for compatibility with newer testtools.
+
+INTERNALS
+~~~~~~~~~
+
+* One test case wasn't upcalling setUp properly, causing test failures with
+  more recent testtools that check for this mistake.
+
+0.2
+---
+
+  CHANGES:
+
+    * testresources needs testtools to run the testresources test suite. You
+      can still use testresources without using testtools. (Jonathan Lange)
+
+  IMPROVEMENTS:
+
+    * Many more docstrings. (Jonathan Lange)
+
+    * Expanded README. (Jonathan Lange)
+
+    * Expanded TODO. (Jonathan Lange)
+
+    * Resources can now be reset by overriding TestResource.reset, which for
+      some resources is significantly cheaper. If checking for dirtiness is
+      expensive, isDirty can also be overridden.
+      (James Henstridge, Robert Collins)
+
+    * Started keeping a NEWS file! (Jonathan Lange)
+
+    * Resource creation and destruction are traced by calling methods on the
+      TestResult object that tests are being run with.
+      (Robert Collins, #284125)
+
+  BUG FIXES:
+
+    * Calling getResource on a dirty resource now triggers a clean and re-make
+      of that resource. (Jonathan Lange)
+
+    * All resources are dropped when a test with no declared resources is run.
+      (James Henstridge)
+
+    * A dirty or changed dependency of a resource makes the resource dirty too.
+      (Robert Collins, #324202)
+
+  API CHANGES:
+
+    * adsorbSuite is now deprecated in favour of addTest. addTest now flattens
+      standard library TestSuites and distributes custom TestSuite across
+      their member tests. (Jonathan Lange)
+
+    * ResourcedTestCase.setUpResources and tearDownResources are now instance
+      methods, not static methods. (Jonathan Lange)
+
+    * All methods on TestResource are now instance methods, and thus tests
+      should use instances of TestResource subclasses, not the classes
+      themselves. (Jonathan Lange)
+
+    * Now imports from testtools rather than pyunit3k. (Jonathan Lange)
+
+    * ResourcedTestCase will now look for resources in the 'resources'
+      attribute, rather than the '_resources' attribute. (Jonathan Lange)
+
+    * ResourcedTestCase.setUpResources and tearDownResources are now instance
+      methods, not static methods. (Jonathan Lange)
+
+    * SampleTestResource has been removed. (Jonathan Lange)
+
+    * TestResource.make has had an API change: it must now accept a
+      dependency_resources parameter which is a dictionary listing the
+      dependencies that will be provided to the resource. This parameter is
+      provided so the resource can access its dependencies during setUp, if
+      needed. (Robert Collins)
+
+    * TestResource subclasses should override 'make' and 'clean' where they
+      previously overrode '_makeResource' and '_cleanResource'.
+      (Jonathan Lange)
+
+    * TestResource.setResource has been renamed to _setResource.
+      (Jonathan Lange)
+
+  INTERNALS:
+
+    * A lot of the tests have been split up into smaller tests. Others have
+      been refactored. (Jonathan Lange)
+
+    * If calling finishedWith on a TestResource reduces its usage count to
+      zero, then the TestResource considers itself clean, i.e. _dirty is set
+      to True. (Jonathan Lange)
+
+    * OptimisingTestSuite has been refactored internally so that the way we
+      switch active resources and determine the cost of switching is more
+      obvious. (Jonathan Lange)
