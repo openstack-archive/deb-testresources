@@ -13,6 +13,7 @@ testresources (0.2.7-2) unstable; urgency=medium
   * Switched to 3.0 (quilt) format, and added extend-diff-ignore =
     "^[^/]*[.]egg-info/" in debian/source/options.
   * Added a watch file (tracking version on pypi).
+  * Runs nosetests / nosetests3 on build.
 
  -- Thomas Goirand <zigo@debian.org>  Mon, 24 Mar 2014 19:01:35 +0800
 
