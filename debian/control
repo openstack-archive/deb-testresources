@@ -1,0 +1,48 @@
+Source: testresources
+Section: python
+Priority: optional
+Maintainer: PKG OpenStack <openstack-devel@lists.alioth.debian.org>
+Uploaders: Thomas Goirand <zigo@debian.org>,
+           Robert Collins <robertc@robertcollins.net>
+Build-Depends: debhelper (>= 9),
+               python-all (>= 2.6.6-3~),
+               python-nose,
+               python-setuptools,
+               python3-all (>= 3.2),
+               python3-nose,
+               python3-setuptools
+Build-Depends-Indep: python-docutils, python-fixtures, python-testtools
+Standards-Version: 3.9.5
+Vcs-Browser: http://anonscm.debian.org/gitweb/?p=openstack/testresources.git
+Vcs-Git: git://anonscm.debian.org/openstack/testresources.git
+Homepage: https://pypi.python.org/pypi/testresources
+
+Package: python-testresources
+Architecture: all
+Depends: ${misc:Depends}, ${python:Depends}
+Conflicts: python2.4-testresources
+Replaces: python2.4-testresources
+Description: PyUnit extension for managing expensive test fixtures - Python 2.x
+ PyUnit extension to manage the initialisation and lifetime of expensive
+ test fixtures.
+ .
+ For example reference databases are often only need to be constructed
+ once but standard test isolation causes them to be constructed for every
+ fixture, making test execution very slow.
+ .
+ This package provides the Python 2.x module.
+
+Package: python3-testresources
+Architecture: all
+Depends: ${misc:Depends}, ${python3:Depends}
+Conflicts: python2.4-testresources
+Replaces: python2.4-testresources
+Description: PyUnit extension for managing expensive test fixtures - Python 3.x
+ PyUnit extension to manage the initialisation and lifetime of expensive
+ test fixtures.
+ .
+ For example reference databases are often only need to be constructed
+ once but standard test isolation causes them to be constructed for every
+ fixture, making test execution very slow.
+ .
+ This package provides the Python 3.x module.
