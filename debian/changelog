@@ -1,3 +1,9 @@
+testresources (0.2.7-4) unstable; urgency=medium
+
+  * Drops useless build-depends on python-docutils (Closes: #635275).
+
+ -- Thomas Goirand <zigo@debian.org>  Sat, 19 Apr 2014 18:45:55 +0800
+
 testresources (0.2.7-3) unstable; urgency=medium
 
   * Correct debian/copyright (Closes: #742620).
