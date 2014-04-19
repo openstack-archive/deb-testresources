@@ -1,6 +1,7 @@
 testresources (0.2.7-3) unstable; urgency=medium
 
   * Correct debian/copyright (Closes: #742620).
+  * Removed now useless Conflict / Replaces.
 
  -- Thomas Goirand <zigo@debian.org>  Sat, 19 Apr 2014 09:56:11 +0800
 

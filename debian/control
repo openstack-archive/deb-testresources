@@ -24,8 +24,6 @@ Homepage: https://pypi.python.org/pypi/testresources
 Package: python-testresources
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends}
-Conflicts: python2.4-testresources
-Replaces: python2.4-testresources
 Description: PyUnit extension for managing expensive test fixtures - Python 2.x
  PyUnit extension to manage the initialisation and lifetime of expensive
  test fixtures.
@@ -39,8 +37,6 @@ Description: PyUnit extension for managing expensive test fixtures - Python 2.x
 Package: python3-testresources
 Architecture: all
 Depends: ${misc:Depends}, ${python3:Depends}
-Conflicts: python2.4-testresources
-Replaces: python2.4-testresources
 Description: PyUnit extension for managing expensive test fixtures - Python 3.x
  PyUnit extension to manage the initialisation and lifetime of expensive
  test fixtures.
