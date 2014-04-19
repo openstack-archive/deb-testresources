@@ -15,7 +15,7 @@ Build-Depends: debhelper (>= 9),
                python3-nose,
                python3-setuptools,
                python3-testtools
-Build-Depends-Indep: python-docutils, python-fixtures, python-testtools
+Build-Depends-Indep: python-fixtures, python-testtools
 Standards-Version: 3.9.5
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=openstack/testresources.git
 Vcs-Git: git://anonscm.debian.org/openstack/testresources.git
