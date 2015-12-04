@@ -33,7 +33,10 @@ import unittest
 # If the releaselevel is 'final', then the tarball will be major.minor.micro.
 # Otherwise it is major.minor.micro~$(revno).
 
-__version__ = (0, 2, 7, 'final', 0)
+from pbr.version import VersionInfo
+_version = VersionInfo('testresources')
+__version__ = _version.semantic_version().version_tuple()
+version = _version.release_string()
 
 
 def test_suite():
