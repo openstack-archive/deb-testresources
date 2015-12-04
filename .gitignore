@@ -5,3 +5,4 @@ lib/testtools
 __pycache__
 ./dist
 ./MANIFEST
+*~
