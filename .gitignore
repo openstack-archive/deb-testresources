@@ -6,3 +6,9 @@ __pycache__
 ./dist
 ./MANIFEST
 *~
+.eggs
+.*.swp
+AUTHORS
+ChangeLog
+dist/
+testresources.egg-info/
