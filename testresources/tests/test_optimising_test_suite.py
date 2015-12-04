@@ -21,6 +21,10 @@ import testresources
 from testresources import split_by_resources
 from testresources.tests import ResultWithResourceExtensions
 import unittest
+try:
+    import unittest2
+except ImportError:
+    unittest2 = None
 
 
 def test_suite():
@@ -95,6 +99,15 @@ class TestOptimisingTestSuite(testtools.TestCase):
         # that suite.
         case = self.makeTestCase()
         suite = unittest.TestSuite([case])
+        self.optimising_suite.addTest(suite)
+        self.assertEqual([case], self.optimising_suite._tests)
+
+    @testtools.skipIf(unittest2 is None, "Unittest2 needed")
+    def testAddUnittest2TestSuite(self):
+        # Adding a unittest2 test suite is the same as adding all the tests in
+        # that suite.
+        case = self.makeTestCase()
+        suite = unittest2.TestSuite([case])
         self.optimising_suite.addTest(suite)
         self.assertEqual([case], self.optimising_suite._tests)
 

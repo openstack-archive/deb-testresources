@@ -20,6 +20,10 @@
 import heapq
 import inspect
 import unittest
+try:
+    import unittest2
+except ImportError:
+    unittest2 = None
 
 # same format as sys.version_info: "A tuple containing the five components of
 # the version number: major, minor, micro, releaselevel, and serial. All
@@ -190,6 +194,8 @@ def _strongly_connected_components(graph, no_resources):
 class OptimisingTestSuite(unittest.TestSuite):
     """A resource creation optimising TestSuite."""
 
+    known_suite_classes = None
+
     def adsorbSuite(self, test_case_or_suite):
         """Deprecated. Use addTest instead."""
         self.addTest(test_case_or_suite)
@@ -207,8 +213,7 @@ class OptimisingTestSuite(unittest.TestSuite):
         except TypeError:
             unittest.TestSuite.addTest(self, test_case_or_suite)
             return
-        if test_case_or_suite.__class__ in (unittest.TestSuite,
-                                            OptimisingTestSuite):
+        if test_case_or_suite.__class__ in self.__class__.known_suite_classes:
             for test in tests:
                 self.adsorbSuite(test)
         else:
@@ -411,6 +416,12 @@ class OptimisingTestSuite(unittest.TestSuite):
             visited.add(node)
         assert order[0] == root
         return order[1:]
+
+
+OptimisingTestSuite.known_suite_classes = (
+    unittest.TestSuite, OptimisingTestSuite)
+if unittest2 is not None:
+    OptimisingTestSuite.known_suite_classes += (unittest2.TestSuite,)
 
 
 class TestLoader(unittest.TestLoader):

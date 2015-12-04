@@ -56,6 +56,11 @@ Resources are either clean or dirty.  Being clean means they have same state in
 all important ways as a newly constructed instance and they can therefore be
 safely reused.
 
+At this time, testresources is incompatible with setUpClass and setUpModule -
+when an OptimisingTestSuite is wrapped around a test suite using those
+features, the result will be flattened for optimisation and those setup's will
+not run at all.
+
 Main Classes
 ============
 
