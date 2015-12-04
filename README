@@ -29,6 +29,7 @@ Dependencies to build/selftest
 ==============================
 
 * Python 2.4+ (or 3.2+)
+* docutils
 * testtools (http://pypi.python.org/pypi/testtools/)
 * fixtures (http://pypi.python.org/pypi/fixtures)
 
