@@ -510,7 +510,8 @@ class TestGraphStuff(testtools.TestCase):
             self.assertIn(
                 self.sortTests(permutation), [
                     [self.case1, self.case2, self.case3, self.case4],
-                [self.case3, self.case2, self.case1, self.case4]])
+                    [self.case3, self.case2, self.case1, self.case4]],
+                "failed with permutation %s" % (permutation,))
 
     def testGlobalMinimum(self):
         # When a local minimum leads to a global non-minum, the global
