@@ -15,6 +15,6 @@ tags: lib/testresources/*.py lib/testresources/tests/*.py
 	ctags -R lib/testresources/
 
 release:
-	python setup.py sdist upload --sign
+	python setup.py sdist upload bdist_wheel --sign
 
 .PHONY: all check clean
