@@ -12,3 +12,5 @@ AUTHORS
 ChangeLog
 dist/
 testresources.egg-info/
+.tox
+*.pyc
