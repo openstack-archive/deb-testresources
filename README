@@ -258,3 +258,10 @@ FAQ
 
   I guess you should arrange for a single instance to be held in an appropriate
   module scope, then referenced by the test classes that want to share it.
+
+Releasing
+=========
+
+1. Add a section to NEWS (after In Development).
+2. git tag -s
+3. python setup.py sdist bdist_wheel upload -s
