@@ -3,6 +3,9 @@
 PYTHONS:=$(shell pyversions -vr)
 PYTHON3S:=$(shell py3versions -vr)
 
+UPSTREAM_GIT := git://github.com/testing-cabal/testresources.git
+include /usr/share/openstack-pkg-tools/pkgos.make
+
 %:
 	dh $@ --buildsystem=python_distutils --with python2,python3
 
