@@ -1,0 +1,52 @@
+
+Tasks
+=====
+
+* Sort out naming & coding convention and write up in tree.
+
+* Test exceptions being raised from make and clean
+
+* More docs.
+
+Questions
+=========
+
+* Why does finishedWith take a parameter? Why not use
+  TestResource._currentResource?
+
+* How should resources be composed? (Partially answered).
+
+* How can testresources be used with layers?
+
+* How can testresources be used to *replace* layers?
+
+
+Bugs
+====
+
+
+
+Ideas
+=====
+
+* Have a dumb equivalent of OptimisingTestSuite that doesn't do any sorting.
+  Rely on others to do the sorting first.
+
+* Introduce timing hooks for better estimation of setUpCost and tearDownCost.
+
+* Store timing information so that cost estimations can improve over time.
+
+* Change the interface of TestResource so that make and clean are methods on
+  some *other* object, rather than methods to be overridden. This object could
+  well have the interface .setUp() and .tearDown()!
+
+* Move ResourcedTestCase.setUpResources and tearDownResources to be methods.
+
+* Change ResourcedTestCase.resources to a dict (currently a list of 2-tuples).
+
+* There are now many simple test helpers. These can probably be consolidated.
+
+* 'TestResource' isn't a very good name. Since the switch to instance-based
+  resources, it's even worse, since the objects are more like resource
+  factories or resource managers. Other possible names involve 'asset',
+  'liability' or 'fixture'.

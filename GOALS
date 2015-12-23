@@ -1,0 +1,27 @@
+
+testresources goals
+===================
+
+  * nice, declarative interface for providing a test with 'assets'
+
+  * supports both creating new assets for each test and sharing assets across
+    tests
+
+  * composable assets
+
+  * assets are easy to write
+
+  * assets are easy to test
+
+  * play well with scenarios
+
+  * the assets and the tests that use them are loosely coupled
+
+  * tests that use assets should be easy to debug
+
+  * fast
+
+  * usable in trial, bzr, Zope testrunner, nose and the default unittest
+    TestRunner
+
+  * play well with subunit

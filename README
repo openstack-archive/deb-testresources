@@ -29,6 +29,7 @@ Dependencies to build/selftest
 ==============================
 
 * Python 2.4+ (or 3.2+)
+* docutils
 * testtools (http://pypi.python.org/pypi/testtools/)
 * fixtures (http://pypi.python.org/pypi/fixtures)
 
@@ -54,6 +55,11 @@ which can be any kind of object returned from the manager class's
 Resources are either clean or dirty.  Being clean means they have same state in
 all important ways as a newly constructed instance and they can therefore be
 safely reused.
+
+At this time, testresources is incompatible with setUpClass and setUpModule -
+when an OptimisingTestSuite is wrapped around a test suite using those
+features, the result will be flattened for optimisation and those setup's will
+not run at all.
 
 Main Classes
 ============
@@ -252,3 +258,10 @@ FAQ
 
   I guess you should arrange for a single instance to be held in an appropriate
   module scope, then referenced by the test classes that want to share it.
+
+Releasing
+=========
+
+1. Add a section to NEWS (after In Development).
+2. git tag -s
+3. python setup.py sdist bdist_wheel upload -s
