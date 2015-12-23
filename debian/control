@@ -10,11 +10,13 @@ Build-Depends: debhelper (>= 9),
                python-fixtures,
                python-nose,
                python-setuptools,
+               python-pbr (>= 1.3),
                python-testtools,
                python3-all,
                python3-fixtures,
                python3-nose,
                python3-setuptools,
+               python3-pbr (>= 1.3),
                python3-testtools
 Build-Depends-Indep: python-fixtures, python-testtools
 Standards-Version: 3.9.5
