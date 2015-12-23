@@ -17,7 +17,7 @@ Build-Depends-Indep: python-fixtures,
                      python-testtools,
                      python3-fixtures,
                      python3-nose,
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=openstack/testresources.git
 Vcs-Git: git://anonscm.debian.org/openstack/testresources.git
 Homepage: https://pypi.python.org/pypi/testresources
