@@ -1,3 +1,0 @@
-include doc/*.py
-include MANIFEST.in
-include NEWS
