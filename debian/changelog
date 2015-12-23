@@ -5,6 +5,7 @@ testresources (1.0.0-1) unstable; urgency=medium
   * Switched to git tag packaging workflow.
   * Added export OSLO_PACKAGE_VERSION for pbr.
   * watch file now using github tag.
+  * ran wrap-and-sort -t -a
 
  -- Thomas Goirand <zigo@debian.org>  Wed, 23 Dec 2015 14:59:37 +0000
 
