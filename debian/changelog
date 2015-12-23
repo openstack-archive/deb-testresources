@@ -10,6 +10,8 @@ testresources (1.0.0-1) unstable; urgency=medium
   * Using -v flag when calling nosetests{3,}
   * Do not run undeterministic test:
     - test_optimising_test_suite.TestGraphStuff.testBasicSortTests
+  * Removed reference to lib/testresources/tests/TestUtil.py in
+    debian/copyright (the file doesn't exist upstream anymore).
 
  -- Thomas Goirand <zigo@debian.org>  Wed, 23 Dec 2015 14:59:37 +0000
 
