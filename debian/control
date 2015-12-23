@@ -15,8 +15,11 @@ Build-Depends: debhelper (>= 9),
 Build-Depends-Indep: python-fixtures,
                      python-nose,
                      python-testtools,
+                     python-unittest2,
                      python3-fixtures,
                      python3-nose,
+                     python3-testtools,
+                     python3-unittest2,
 Standards-Version: 3.9.6
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=openstack/testresources.git
 Vcs-Git: git://anonscm.debian.org/openstack/testresources.git
@@ -24,7 +27,8 @@ Homepage: https://pypi.python.org/pypi/testresources
 
 Package: python-testresources
 Architecture: all
-Depends: ${misc:Depends},
+Depends: python-unittest2,
+         ${misc:Depends},
          ${python:Depends},
 Description: PyUnit extension for managing expensive test fixtures - Python 2.x
  PyUnit extension to manage the initialisation and lifetime of expensive
@@ -38,7 +42,8 @@ Description: PyUnit extension for managing expensive test fixtures - Python 2.x
 
 Package: python3-testresources
 Architecture: all
-Depends: ${misc:Depends},
+Depends: python3-unittest2,
+         ${misc:Depends},
          ${python3:Depends},
 Description: PyUnit extension for managing expensive test fixtures - Python 3.x
  PyUnit extension to manage the initialisation and lifetime of expensive
