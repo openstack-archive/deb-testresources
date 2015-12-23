@@ -1,5 +1,6 @@
-testresources (0.2.7-5) unstable; urgency=medium
+testresources (1.0.0-1) unstable; urgency=medium
 
+  * New upstream release.
   * Switched to git tag packaging workflow.
 
  -- Thomas Goirand <zigo@debian.org>  Wed, 23 Dec 2015 14:59:37 +0000
