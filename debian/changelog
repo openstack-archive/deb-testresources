@@ -8,6 +8,8 @@ testresources (1.0.0-1) unstable; urgency=medium
   * ran wrap-and-sort -t -a
   * Standards-Version is now 3.9.6 (no change)
   * Using -v flag when calling nosetests{3,}
+  * Do not run undeterministic test:
+    - test_optimising_test_suite.TestGraphStuff.testBasicSortTests
 
  -- Thomas Goirand <zigo@debian.org>  Wed, 23 Dec 2015 14:59:37 +0000
 

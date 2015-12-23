@@ -23,8 +23,8 @@ override_dh_auto_install:
 
 override_dh_auto_test:
 ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
-	nosetests -v
-	nosetests3 -v
+	nosetests -v --exclude=testresources.tests.test_optimising_test_suite.TestGraphStuff.testBasicSortTests
+	nosetests3 -v --exclude=testresources.tests.test_optimising_test_suite.TestGraphStuff.testBasicSortTests
 endif
 
 override_dh_clean:
