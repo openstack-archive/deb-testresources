@@ -5,6 +5,13 @@ testresources release notes
 IN DEVELOPMENT
 --------------
 
+CHANGES
+~~~~~~~
+
+* Drop support for Python 2.4, 2.5, 3.2: while not deliberately breaking
+  compatibility, we cannot easily test those in CI, so stating that they
+  are supported is at best misleading. (Robert Collins)
+
 IMPROVEMENTS
 ~~~~~~~~~~~~
 
