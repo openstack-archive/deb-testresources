@@ -17,4 +17,4 @@ install:
 
 script:
   - python -m testtools.run discover 
-  - rst2html.py --strict README README.html
+  - rst2html.py --strict README.rst README.html
