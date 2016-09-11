@@ -10,6 +10,7 @@ testresources (1.0.0-2) unstable; urgency=medium
   * Updated VCS URLs to use OpenStack Gerrit.
   * Added a .gitreview file.
   * Standards-Version: 3.9.8 (no change).
+  * Fixed debian/copyright ordering.
 
  -- Thomas Goirand <zigo@debian.org>  Sun, 11 Sep 2016 18:36:57 +0200
 
