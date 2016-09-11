@@ -1,0 +1,47 @@
+Description: Remove non-deterministic FTBFS testBasicSortTests
+ Previously, this test was excluded using nose command:
+  --exclude=testresources.tests.test_optimising_test_suite.TestGraphStuff.testBasicSortTests
+ Though this created #834964, so I'm now just removing the test from the .py
+ file.
+Author: Thomas Goirand <zigo@debian.org>
+Bug-Debian: https://bugs.debian.org/834964
+Forwarded: no
+Last-Update: 2016-09-11
+
+--- testresources-1.0.0.orig/testresources/tests/test_optimising_test_suite.py
++++ testresources-1.0.0/testresources/tests/test_optimising_test_suite.py
+@@ -498,34 +498,6 @@ class TestGraphStuff(testtools.TestCase)
+         permutations.append([case4, case1, case3, case2])
+         return permutations
+ 
+-    def testBasicSortTests(self):
+-        # Test every permutation of inputs, with legacy tests.
+-        # Cannot use equal costs because of the use of
+-        # a 2*optimal heuristic for sorting: with equal
+-        # costs the wrong sort order is < twice the optimal
+-        # weight, and thus can be selected.
+-        resource_one = testresources.TestResource()
+-        resource_two = testresources.TestResource()
+-        resource_two.setUpCost = 5
+-        resource_two.tearDownCost = 5
+-        resource_three = testresources.TestResource()
+-
+-        self.case1.resources = [
+-            ("_one", resource_one), ("_two", resource_two)]
+-        self.case2.resources = [
+-            ("_two", resource_two), ("_three", resource_three)]
+-        self.case3.resources = [("_three", resource_three)]
+-        # acceptable sorted orders are:
+-        # 1, 2, 3, 4
+-        # 3, 2, 1, 4
+-
+-        for permutation in self._permute_four(self.cases):
+-            self.assertIn(
+-                self.sortTests(permutation), [
+-                    [self.case1, self.case2, self.case3, self.case4],
+-                    [self.case3, self.case2, self.case1, self.case4]],
+-                "failed with permutation %s" % (permutation,))
+-
+     def testGlobalMinimum(self):
+         # When a local minimum leads to a global non-minum, the global
+         # non-minimum is still reached. We construct this by having a resource
