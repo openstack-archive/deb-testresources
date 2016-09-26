@@ -1,3 +1,10 @@
+testresources (1.0.0-3) UNRELEASED; urgency=medium
+
+  * d/s/options: extend-diff-ignore of .gitreview
+  * d/control: Use correct branch in Vcs-* fields
+
+ -- Ondřej Nový <onovy@debian.org>  Mon, 26 Sep 2016 19:18:11 +0200
+
 testresources (1.0.0-2) unstable; urgency=medium
 
   [ Ondřej Nový ]
