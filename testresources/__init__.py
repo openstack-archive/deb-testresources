@@ -20,6 +20,7 @@
 import heapq
 import inspect
 import unittest
+import collections
 try:
     import unittest2
 except ImportError:
@@ -191,6 +192,59 @@ def _strongly_connected_components(graph, no_resources):
     return partitions
 
 
+class _OrderedSet(collections.MutableSet):
+    """This is taken from the OrderedSet recipe link in the Python 2 docs.
+
+    See:
+
+    - https://docs.python.org/2/library/collections.html
+    - https://code.activestate.com/recipes/576694/
+
+    """
+
+    def __init__(self, iterable=None):
+        self.end = end = []
+        end += [None, end, end]         # sentinel node for doubly linked list
+        self.map = {}                   # key --> [key, prev, next]
+        if iterable is not None:
+            self |= iterable
+
+    def __len__(self):
+        return len(self.map)
+
+    def __contains__(self, key):
+        return key in self.map
+
+    def add(self, key):
+        if key not in self.map:
+            end = self.end
+            curr = end[1]
+            curr[2] = end[1] = self.map[key] = [key, curr, end]
+
+    def discard(self, key):
+        if key in self.map:
+            key, prev, next = self.map.pop(key)
+            prev[2] = next
+            next[1] = prev
+
+    def update(self, iterable):
+        self |= iterable
+
+    def __iter__(self):
+        end = self.end
+        curr = end[2]
+        while curr is not end:
+            yield curr[0]
+            curr = curr[2]
+
+    def __reversed__(self):
+        end = self.end
+        curr = end[1]
+        while curr is not end:
+            yield curr[0]
+            curr = curr[1]
+
+
 class OptimisingTestSuite(unittest.TestSuite):
     """A resource creation optimising TestSuite."""
 
@@ -246,21 +300,27 @@ class OptimisingTestSuite(unittest.TestSuite):
 
         :param result: TestResult object to report activity on.
         """
+        # Ensure that we're being passed ordered sets, since the contract
+        # for this method didn't always require so and we don't want to
+        # break exsisting consumers (like our own unit tests).
+        old_resource_set = _OrderedSet(old_resource_set)
+        new_resource_set = _OrderedSet(new_resource_set)
+
         new_resources = new_resource_set - old_resource_set
         old_resources = old_resource_set - new_resource_set
-        for resource in old_resources:
+        for resource in reversed(old_resources):
             resource.finishedWith(resource._currentResource, result)
         for resource in new_resources:
             resource.getResource(result)
 
     def run(self, result):
         self.sortTests()
-        current_resources = set()
+        current_resources = _OrderedSet()
         for test in self._tests:
             if result.shouldStop:
                 break
             resources = getattr(test, 'resources', [])
-            new_resources = set()
+            new_resources = _OrderedSet()
             for name, resource in resources:
                 new_resources.update(resource.neededResources())
             self.switch(current_resources, new_resources, result)
@@ -571,16 +631,7 @@ class TestResourceManager(object):
         :return: A list of needed resources, in topological deepest-first
             order.
         """
-        seen = set([self])
-        result = []
-        for name, resource in self.resources:
-            for resource in resource.neededResources():
-                if resource in seen:
-                    continue
-                seen.add(resource)
-                result.append(resource)
-        result.append(self)
-        return result
+        return neededResources([self])
 
     def reset(self, old_resource, result=None):
         """Return a clean version of old_resource.
@@ -796,6 +847,27 @@ def tearDownResources(test, resources, result):
     for resource in resources:
         resource[1].finishedWith(getattr(test, resource[0]), result)
         delattr(test, resource[0])
+
+
+def neededResources(resources):
+    """
+    Return the resources needed for the given resources, including themselves.
+
+    :return: A list of needed resources, in topological deepest-first order.
+    """
+    seen = set()
+    result = []
+
+    for resource in resources:
+        dependencies = neededResources([
+            dependency for name, dependency in resource.resources])
+        for resource in dependencies + [resource]:
+            if resource in seen:
+                continue
+            seen.add(resource)
+            result.append(resource)
+
+    return result
 
 
 def _get_result():

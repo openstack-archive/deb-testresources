@@ -270,6 +270,45 @@ class TestOptimisingTestSuite(testtools.TestCase):
                           'test two',
                           ('clean', 'boo 2')])
 
+    def testSwitchConsidersDependencies(self):
+        """
+        Resources are switched in an order compatible with their dependency
+        graph.
+        """
+        makes = []
+        cleans = []
+
+        class Resource(testresources.TestResource):
+            """Dummy resource."""
+            def __init__(self, name):
+                super(Resource, self).__init__()
+                self.name = name
+
+            def make(self, dependency_resources):
+                makes.append(self.name)
+                return self
+
+            def clean(self, resource):
+                cleans.append(resource.name)
+
+        # Create two resources, the second depending on the first.
+        resource_one = Resource('one')
+        resource_two = Resource('two')
+        resource_two.resources = [('one', resource_one)]
+
+        test_case = self.makeTestCase(lambda x: None)
+        test_case.resources = [('two', resource_two)]
+
+        self.optimising_suite.addTest(test_case)
+        result = unittest.TestResult()
+        self.optimising_suite.run(result)
+
+        # The first resource was made before the second
+        self.assertEqual(makes, ['one', 'two'])
+
+        # The second resource was cleaned before the first
+        self.assertEqual(cleans, ['two', 'one'])
+
 
 class TestSplitByResources(testtools.TestCase):
     """Tests for split_by_resources."""
