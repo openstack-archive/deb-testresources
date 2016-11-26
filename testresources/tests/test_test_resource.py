@@ -435,6 +435,11 @@ class TestTestResource(testtools.TestCase):
         resource_manager.finishedWith(resource_manager._currentResource)
         self.assertEqual(expected, result._calls)
 
+    def testId(self):
+        resource_manager = testresources.TestResource()
+        self.assertEqual(
+            "testresources.TestResourceManager", resource_manager.id())
+
 
 class TestGenericResource(testtools.TestCase):
 
@@ -495,6 +500,14 @@ class TestGenericResource(testtools.TestCase):
         self.assertTrue(mgr.isDirty())
         mgr.finishedWith(resource)
 
+    def testId(self):
+        class Wrapped:
+            def setUp(self):pass
+            def tearDown(self):pass
+        mgr = testresources.GenericResource(Wrapped)
+        self.assertEqual(
+            "testresources.GenericResource[Wrapped]", mgr.id())
+
 
 class TestFixtureResource(testtools.TestCase):
 
@@ -522,3 +535,11 @@ class TestFixtureResource(testtools.TestCase):
         mgr.finishedWith(resource)
         self.assertEqual(
             ['setUp', 'reset', 'cleanUp'], fixture.calls)
+
+    def testId(self):
+        class MyLoggingFixture(LoggingFixture):
+            def __str__(self):
+                return "my-logger"
+        mgr = testresources.FixtureResource(MyLoggingFixture())
+        self.assertEqual(
+            "testresources.FixtureResource[my-logger]", mgr.id())

@@ -634,6 +634,24 @@ class TestResourceManager(object):
         self._call_result_method_if_exists(result, "stopResetResource", self)
         return resource
 
+    def id(self):
+        """Return a text identifier for this test resource.
+
+        This API is the equivalent of TestCase.id(): it provides and identifier
+        that is typically used by testresources-aware TestResult's to log
+        and/or serialize activity reports from resources.
+
+        You are supposed to override this to provide actual details about the
+        specific test resource being managed.
+        """
+        try:
+            strclass = unittest.util.strclass
+        except AttributeError:
+            # In Python 2.6 this is a private API, but since it's very unlikely
+            # that it will ever be removed from 2.6, let's fall back to it.
+            strclass = unittest._strclass
+        return strclass(self.__class__)
+
     def _reset(self, resource, dependency_resources):
         """Override this to reset resources other than via clean+make.
 
@@ -671,7 +689,8 @@ class GenericResource(TestResourceManager):
     """
 
     def __init__(self, resource_factory, setup_method_name='setUp',
-        teardown_method_name='tearDown'):
+                 teardown_method_name='tearDown',
+                 id_attribute_name="__name__"):
         """Create a GenericResource
 
         :param resource_factory: A factory to create a new resource.
@@ -679,11 +698,15 @@ class GenericResource(TestResourceManager):
             resource. Defaults to 'setUp'.
         :param teardown_method_name: Optional method name to call to tear down
             the resource. Defaults to 'tearDown'.
+        :param id_attribute_name: Optional class attribute name that will be
+            be embedded in the string returned by the id() method, to identify
+            the generic resource. Defaults to '__name__'.
         """
         super(GenericResource, self).__init__()
         self.resource_factory = resource_factory
         self.setup_method_name = setup_method_name
         self.teardown_method_name = teardown_method_name
+        self.id_attribute_name = id_attribute_name
 
     def clean(self, resource):
         getattr(resource, self.teardown_method_name)()
@@ -695,6 +718,15 @@ class GenericResource(TestResourceManager):
 
     def isDirty(self):
         return True
+
+    def id(self):
+        """Return an identifier that embeds the resource factory ID.
+
+        :see: The `id_attribute_name` parameter.
+        """
+        return "%s[%s]" % (
+            super(GenericResource, self).id(),
+            getattr(self.resource_factory, self.id_attribute_name))
 
 
 class FixtureResource(TestResourceManager):
@@ -732,6 +764,14 @@ class FixtureResource(TestResourceManager):
     def make(self, dependency_resources):
         self.fixture.setUp()
         return self.fixture
+
+    def id(self):
+        """Return an identifier that embeds information about the fixture.
+
+        The default is to call str(fixture) to get such information.
+        """
+        return "%s[%s]" % (
+            super(FixtureResource, self).id(), str(self.fixture))
 
     def _reset(self, resource, dependency_resources):
         self.fixture.reset()
