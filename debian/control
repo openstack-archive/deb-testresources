@@ -27,7 +27,8 @@ Homepage: https://pypi.python.org/pypi/testresources
 
 Package: python-testresources
 Architecture: all
-Depends: python-unittest2,
+Depends: python-pbr (>= 1.3),
+         python-unittest2,
          ${misc:Depends},
          ${python:Depends},
 Description: PyUnit extension for managing expensive test fixtures - Python 2.x
@@ -42,7 +43,8 @@ Description: PyUnit extension for managing expensive test fixtures - Python 2.x
 
 Package: python3-testresources
 Architecture: all
-Depends: python3-unittest2,
+Depends: python3-pbr (>= 1.3),
+         python3-unittest2,
          ${misc:Depends},
          ${python3:Depends},
 Description: PyUnit extension for managing expensive test fixtures - Python 3.x

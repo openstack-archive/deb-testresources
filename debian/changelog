@@ -1,8 +1,12 @@
-testresources (1.0.0-4) UNRELEASED; urgency=medium
+testresources (1.0.0-4) unstable; urgency=medium
 
+  [ Ondřej Nový ]
   * Bumped debhelper compat version to 10
 
- -- Ondřej Nový <onovy@debian.org>  Thu, 24 Nov 2016 00:14:39 +0100
+  [ Thomas Goirand ]
+  * Added missing runtime depends on python-pbr (Closes: #842341).
+
+ -- Thomas Goirand <zigo@debian.org>  Sun, 18 Dec 2016 11:36:29 +0100
 
 testresources (1.0.0-3) unstable; urgency=medium
 
